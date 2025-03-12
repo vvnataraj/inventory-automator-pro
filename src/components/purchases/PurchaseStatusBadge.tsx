@@ -20,7 +20,8 @@ export function PurchaseStatusBadge({ status }: PurchaseStatusBadgeProps) {
       case "cancelled":
         return { className: "bg-red-100 text-red-800", label: "Cancelled" };
       default:
-        // Handle unknown status properly to avoid the 'never' type issue
+        // Since we've handled all cases in the PurchaseStatus type,
+        // this default case should never execute, but TypeScript needs it
         const unknownStatus = status as string;
         return { 
           className: "bg-gray-100 text-gray-800", 
