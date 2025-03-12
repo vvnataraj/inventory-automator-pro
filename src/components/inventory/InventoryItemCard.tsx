@@ -57,8 +57,8 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
       <CardContent className="pb-2 flex-grow">
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <p className="text-muted-foreground">Price</p>
-            <p className="font-medium">${item.price.toFixed(2)}</p>
+            <p className="text-muted-foreground">RRP</p>
+            <p className="font-medium">${item.rrp ? item.rrp.toFixed(2) : "-"}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Cost</p>
