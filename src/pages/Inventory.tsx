@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, GridIcon, TableIcon, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownAZ, ArrowUpZA, ArrowDownZA, ArrowUp10, ArrowDown10 } from "lucide-react";
+import { Search, Filter, ArrowUpDown, GridIcon, TableIcon, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownZA, ArrowUpZA, ArrowDownZA, ArrowUp10, ArrowDown10 } from "lucide-react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItemCard } from "@/components/inventory/InventoryItemCard";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -226,7 +225,7 @@ export default function Inventory() {
                     {items.map((item) => (
                       <tr key={item.id} className="border-b hover:bg-muted/50">
                         <td className="py-3 px-4">{item.sku}</td>
-                        <td className="py-3 px-4 font-medium">{item.name}</td>
+                        <td className="py-3 px-4 font-medium break-words max-w-[200px]">{item.name}</td>
                         <td className="py-3 px-4">{item.category}</td>
                         <td className="py-3 px-4">${item.cost.toFixed(2)}</td>
                         <td className="py-3 px-4">${item.rrp ? item.rrp.toFixed(2) : "-"}</td>

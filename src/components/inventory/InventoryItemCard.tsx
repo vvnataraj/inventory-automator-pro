@@ -1,4 +1,3 @@
-
 import React from "react";
 import { InventoryItem } from "@/types/inventory";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -49,7 +48,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
       
       <CardHeader className="pb-0">
         <div className="flex flex-col space-y-1.5">
-          <h3 className="font-semibold text-base line-clamp-1">{item.name}</h3>
+          <h3 className="font-semibold text-base break-words">{item.name}</h3>
           <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
         </div>
       </CardHeader>
