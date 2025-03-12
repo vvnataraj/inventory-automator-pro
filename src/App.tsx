@@ -10,6 +10,7 @@ import Orders from "@/pages/Orders";
 import Purchases from "@/pages/Purchases";
 import Locations from "@/pages/Locations";
 import Sales from "@/pages/Sales";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -74,6 +75,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Sales />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               } 
             />
