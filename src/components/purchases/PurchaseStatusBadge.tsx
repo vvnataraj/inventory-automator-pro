@@ -20,9 +20,11 @@ export function PurchaseStatusBadge({ status }: PurchaseStatusBadgeProps) {
       case "cancelled":
         return { className: "bg-red-100 text-red-800", label: "Cancelled" };
       default:
+        // Handle unknown status properly to avoid the 'never' type issue
+        const unknownStatus = status as string;
         return { 
           className: "bg-gray-100 text-gray-800", 
-          label: typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'
+          label: unknownStatus ? unknownStatus.charAt(0).toUpperCase() + unknownStatus.slice(1) : 'Unknown'
         };
     }
   };
