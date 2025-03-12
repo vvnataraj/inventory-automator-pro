@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, GridIcon, TableIcon, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownAz, ArrowUp10, ArrowDown10 } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Grid, Table, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownAz, ArrowUp10, ArrowDown10 } from "lucide-react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItemCard } from "@/components/inventory/InventoryItemCard";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { useToast } from "@/hooks/use-toast";
 import { EditInventoryItem } from "@/components/inventory/EditInventoryItem";
 import { TransferInventoryItem } from "@/components/inventory/TransferInventoryItem";
+import { AddInventoryItem } from "@/components/inventory/AddInventoryItem";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
   DropdownMenu,
@@ -26,7 +27,7 @@ export default function Inventory() {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
-  const { items, isLoading, totalItems, updateItem } = useInventoryItems(
+  const { items, isLoading, totalItems, updateItem, addItem } = useInventoryItems(
     currentPage, 
     searchQuery,
     sortField,
@@ -79,6 +80,14 @@ export default function Inventory() {
     });
   };
 
+  const handleAddItem = (newItem: InventoryItem) => {
+    addItem(newItem);
+    toast({
+      title: "Item added",
+      description: `Successfully added ${newItem.name} to inventory`,
+    });
+  };
+
   const handleTransferItem = (item: InventoryItem, quantity: number, newLocation: string) => {
     const sourceItem = { ...item, stock: item.stock - quantity };
     
@@ -106,7 +115,7 @@ export default function Inventory() {
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Inventory</h1>
-        <Button>Add New Item</Button>
+        <AddInventoryItem onAdd={handleAddItem} />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -126,7 +135,7 @@ export default function Inventory() {
             onClick={() => setViewMode("grid")}
             className={viewMode === "grid" ? "bg-muted" : ""}
           >
-            <GridIcon className="h-4 w-4" />
+            <Grid className="h-4 w-4" />
           </Button>
           <Button 
             variant="outline" 
@@ -134,7 +143,7 @@ export default function Inventory() {
             onClick={() => setViewMode("table")}
             className={viewMode === "table" ? "bg-muted" : ""}
           >
-            <TableIcon className="h-4 w-4" />
+            <Table className="h-4 w-4" />
           </Button>
         </div>
         <Button variant="outline" className="gap-2">

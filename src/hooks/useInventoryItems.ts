@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
-import { getInventoryItems } from "@/data/inventoryData";
+import { getInventoryItems, inventoryItems } from "@/data/inventoryData";
 
 export function useInventoryItems(
   page: number = 1, 
@@ -48,12 +48,36 @@ export function useInventoryItems(
   }, [fetchItems]);
   
   const updateItem = useCallback((updatedItem: InventoryItem) => {
+    // Update in-memory items first
     setItems(currentItems => 
       currentItems.map(item => 
         item.id === updatedItem.id ? updatedItem : item
       )
     );
+    
+    // Update the global inventory items array
+    const itemIndex = inventoryItems.findIndex(item => item.id === updatedItem.id);
+    if (itemIndex !== -1) {
+      inventoryItems[itemIndex] = updatedItem;
+    }
   }, []);
   
-  return { items, totalItems, isLoading, error, updateItem };
+  const addItem = useCallback((newItem: InventoryItem) => {
+    // Add to global inventory items array
+    inventoryItems.unshift(newItem);
+    
+    // Add to current items if it should appear on the current page
+    setItems(currentItems => {
+      // If we're on the first page, add the item to the top
+      if (page === 1) {
+        return [newItem, ...currentItems.slice(0, -1)]; // Remove last item to maintain page size
+      }
+      return currentItems;
+    });
+    
+    // Update total count
+    setTotalItems(prev => prev + 1);
+  }, [page]);
+  
+  return { items, totalItems, isLoading, error, updateItem, addItem };
 }

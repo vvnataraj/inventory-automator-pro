@@ -1,3 +1,4 @@
+
 import { faker } from "@faker-js/faker";
 import { InventoryItem } from "@/types/inventory";
 import { Purchase, PurchaseItem, PurchaseStatus } from "@/types/purchase";
@@ -48,7 +49,9 @@ export const inventoryItems = generateInventoryItems();
 export const getInventoryItems = (
   page: number = 1,
   pageSize: number = 20,
-  searchQuery: string = ""
+  searchQuery: string = "",
+  sortField: string = "name",
+  sortDirection: "asc" | "desc" = "asc"
 ): { items: InventoryItem[], total: number } => {
   const filteredItems = inventoryItems.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
