@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,12 +12,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { InventoryItem } from "@/types/inventory";
 import { faker } from "@faker-js/faker";
+import { locationsData } from "@/data/inventoryData";
 
 interface AddInventoryItemProps {
   onAdd: (newItem: InventoryItem) => void;
 }
+
+// Extract unique location names from the locationsData
+const availableLocations = ["Warehouse A", "Warehouse B", "Storefront", "Online"];
 
 export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -92,6 +104,13 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
       [name]: name === 'stock' || name === 'cost' || name === 'rrp' || name === 'minStockCount' || name === 'lowStockThreshold' 
         ? Number(value) 
         : value
+    }));
+  };
+
+  const handleLocationChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      location: value
     }));
   };
 
@@ -187,14 +206,24 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="location" className="text-right">Location *</Label>
-              <Input
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-              />
+              <div className="col-span-3">
+                <Select
+                  value={formData.location}
+                  onValueChange={handleLocationChange}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableLocations.map(location => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="lowStockThreshold" className="text-right">Low Stock Alert</Label>
