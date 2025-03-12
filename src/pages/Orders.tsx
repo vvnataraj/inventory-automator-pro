@@ -12,8 +12,10 @@ import { Pagination } from "@/components/ui/pagination";
 import { 
   Calendar, 
   CreditCard, 
-  Download, 
+  Download,
   Filter, 
+  LayoutList,
+  LayoutGrid,
   Package, 
   Search, 
   Truck, 
@@ -25,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 const OrdersPage: React.FC = () => {
   const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [badgeDisplayMode, setBadgeDisplayMode] = useState<"inline" | "stacked">("inline");
   const { 
     orders, 
     totalOrders, 
@@ -58,6 +61,10 @@ const OrdersPage: React.FC = () => {
     });
   };
 
+  const toggleBadgeDisplayMode = () => {
+    setBadgeDisplayMode(prev => prev === "inline" ? "stacked" : "inline");
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return format(new Date(dateString), "MMM d, yyyy");
@@ -87,6 +94,21 @@ const OrdersPage: React.FC = () => {
           <Button variant="outline" size="icon" onClick={() => setSearchQuery("")}>
             <X className="h-4 w-4" />
             <span className="sr-only">Clear search</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleBadgeDisplayMode}
+            title={badgeDisplayMode === "inline" ? "Switch to stacked view" : "Switch to inline view"}
+          >
+            {badgeDisplayMode === "inline" ? (
+              <LayoutList className="h-4 w-4" />
+            ) : (
+              <LayoutGrid className="h-4 w-4" />
+            )}
+            <span className="sr-only">
+              {badgeDisplayMode === "inline" ? "Switch to stacked view" : "Switch to inline view"}
+            </span>
           </Button>
         </div>
       </div>
@@ -184,7 +206,8 @@ const OrdersPage: React.FC = () => {
             <OrderCard 
               key={order.id} 
               order={order} 
-              onViewDetails={handleViewDetails} 
+              onViewDetails={handleViewDetails}
+              badgeDisplayMode={badgeDisplayMode}
             />
           ))}
         </div>

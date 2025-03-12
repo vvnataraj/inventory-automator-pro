@@ -10,9 +10,14 @@ import { Eye, Package, Truck } from "lucide-react";
 interface OrderCardProps {
   order: Order;
   onViewDetails: (order: Order) => void;
+  badgeDisplayMode: "inline" | "stacked";
 }
 
-export const OrderCard: React.FC<OrderCardProps> = ({ order, onViewDetails }) => {
+export const OrderCard: React.FC<OrderCardProps> = ({ 
+  order, 
+  onViewDetails, 
+  badgeDisplayMode = "inline" 
+}) => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return format(new Date(dateString), "MMM d, yyyy");
@@ -26,7 +31,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onViewDetails }) =>
             <CardTitle className="text-lg">{order.orderNumber}</CardTitle>
             <CardDescription>{order.customer.name}</CardDescription>
           </div>
-          <OrderStatusBadge status={order.status} />
+          <div className={badgeDisplayMode === "stacked" ? "flex flex-col gap-2" : ""}>
+            <OrderStatusBadge status={order.status} />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pb-0">
