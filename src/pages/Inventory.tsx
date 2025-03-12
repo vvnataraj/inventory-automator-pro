@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, GridIcon, TableIcon, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownZA, ArrowUpZA, ArrowDownZA, ArrowUp10, ArrowDown10 } from "lucide-react";
+import { Search, Filter, ArrowUpDown, GridIcon, TableIcon, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownZ, ArrowUp10, ArrowDown10 } from "lucide-react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItemCard } from "@/components/inventory/InventoryItemCard";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -51,7 +51,7 @@ export default function Inventory() {
     if (field !== sortField) return null;
     
     if (field === 'name' || field === 'category' || field === 'sku' || field === 'location') {
-      return sortDirection === 'asc' ? <ArrowUpAZ className="h-4 w-4 ml-1" /> : <ArrowDownZA className="h-4 w-4 ml-1" />;
+      return sortDirection === 'asc' ? <ArrowUpAZ className="h-4 w-4 ml-1" /> : <ArrowDownZ className="h-4 w-4 ml-1" />;
     } else {
       return sortDirection === 'asc' ? <ArrowUp10 className="h-4 w-4 ml-1" /> : <ArrowDown10 className="h-4 w-4 ml-1" />;
     }
@@ -181,7 +181,7 @@ export default function Inventory() {
                 Ascending {sortDirection === 'asc' && <ArrowUpAZ className="h-4 w-4 ml-auto" />}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSortDirection('desc')}>
-                Descending {sortDirection === 'desc' && <ArrowDownZA className="h-4 w-4 ml-auto" />}
+                Descending {sortDirection === 'desc' && <ArrowDownZ className="h-4 w-4 ml-auto" />}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
