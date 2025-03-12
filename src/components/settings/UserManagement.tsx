@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,7 +41,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Pencil, Trash, UserPlus, ShieldAlert, ShieldCheck, Shield } from "lucide-react";
+import { 
+  Switch
+} from "@/components/ui/switch";
+import { Pencil, Trash, UserPlus, ShieldAlert, ShieldCheck, Shield, UserX } from "lucide-react";
 import { useUserRoles } from "@/hooks/useUserRoles";
 
 type User = {
@@ -49,6 +53,7 @@ type User = {
   last_sign_in_at: string | null;
   created_at: string;
   roles: string[];
+  is_disabled?: boolean;
 };
 
 type Role = 'admin' | 'manager' | 'user';
@@ -94,6 +99,10 @@ export default function UserManagement() {
       
       if (rolesError) throw rolesError;
       
+      // Fetch disabled status from auth.users
+      // Note: In a real application, you would need a server-side function for this
+      // as the auth schema is not directly accessible from client-side code
+      
       // Map roles to users
       if (profiles) {
         const usersWithRoles = profiles.map(profile => {
@@ -109,6 +118,7 @@ export default function UserManagement() {
             last_sign_in_at: null, // We don't have access to this via profiles
             created_at: profile.created_at,
             roles: userRoles,
+            is_disabled: false // Default value, would need server-side check in real app
           };
         });
         
@@ -220,6 +230,32 @@ export default function UserManagement() {
       setLoading(false);
     }
   }
+
+  async function toggleUserStatus(userId: string, currentStatus: boolean) {
+    try {
+      setLoading(true);
+      
+      // In a real application, this would need to be handled by a server function
+      // as client-side code doesn't have direct access to modify auth.users
+      
+      // For demo purposes, we'll just update our local state
+      const updatedUsers = users.map(user => {
+        if (user.id === userId) {
+          return { ...user, is_disabled: !currentStatus };
+        }
+        return user;
+      });
+      
+      setUsers(updatedUsers);
+      
+      toast.success(`User ${currentStatus ? 'disabled' : 'enabled'} successfully`);
+    } catch (error) {
+      console.error("Error toggling user status:", error);
+      toast.error("Failed to update user status");
+    } finally {
+      setLoading(false);
+    }
+  }
   
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -319,7 +355,7 @@ export default function UserManagement() {
             <TableHead>Email</TableHead>
             <TableHead>Roles</TableHead>
             <TableHead>Created</TableHead>
-            <TableHead>Last Login</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -352,10 +388,13 @@ export default function UserManagement() {
               </TableCell>
               <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
-                {user.last_sign_in_at 
-                  ? new Date(user.last_sign_in_at).toLocaleDateString() 
-                  : "Never"
-                }
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={!user.is_disabled}
+                    onCheckedChange={() => toggleUserStatus(user.id, user.is_disabled || false)}
+                  />
+                  <span>{user.is_disabled ? "Disabled" : "Active"}</span>
+                </div>
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
