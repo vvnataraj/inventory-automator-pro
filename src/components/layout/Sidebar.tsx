@@ -1,157 +1,94 @@
-import { useState, useEffect } from "react";
+
+import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import {
-  Home,
-  Package,
-  MapPin,
+  BarChart3,
+  Box,
+  Building2,
   CircleDollarSign,
-  ShoppingCart,
-  ClipboardList,
+  LayoutDashboard,
   Settings,
-  BarChart,
-  LogOut,
+  ShoppingCart,
+  Truck,
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 
-interface SidebarProps {
-  isMobile: boolean;
-  setIsMobile: (isMobile: boolean) => void;
-}
+const navigation = [
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Inventory", href: "/inventory", icon: Box },
+  { name: "Orders", href: "/orders", icon: ShoppingCart },
+  { name: "Purchases", href: "/purchases", icon: Truck },
+  { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Locations", href: "/locations", icon: Building2 },
+  { name: "Sales", href: "/sales", icon: CircleDollarSign },
+  { name: "Settings", href: "/settings", icon: Settings },
+];
 
-export const Sidebar = ({ isMobile, setIsMobile }: SidebarProps) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { auth, logout } = useAuth();
-  const [user, setUser] = useState({
-    name: "John Doe",
-    imageUrl: "https://github.com/shadcn.png",
-  });
-
-  useEffect(() => {
-    if (auth?.user) {
-      setUser({
-        name: auth.user.name || "User",
-        imageUrl: auth.user.image || "",
-      });
-    }
-  }, [auth?.user]);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
-
-  const navigationItems = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Inventory", href: "/inventory", icon: Package },
-    { name: "Locations", href: "/locations", icon: MapPin },
-    { name: "Sales", href: "/sales", icon: CircleDollarSign },
-    { name: "Purchases", href: "/purchases", icon: ShoppingCart },
-    { name: "Orders", href: "/orders", icon: ClipboardList },
-    { name: "Analytics", href: "/analytics", icon: BarChart },
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
-
+export function Sidebar() {
   return (
-    <nav className="flex flex-col h-full bg-gray-100 border-r py-4 dark:bg-gray-900 dark:border-gray-800">
-      <div className="px-6 mb-8">
-        <Link to="/" className="flex items-center text-lg font-semibold">
-          <Avatar className="mr-2">
-            <AvatarImage src={user.imageUrl} />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
-          {user.name}
-        </Link>
+    <div className="flex h-full flex-col bg-white border-r">
+      <div className="flex h-16 items-center gap-2 px-4 border-b">
+        <div className="flex items-center gap-2">
+          <div className="h-10 w-10 rounded flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png" 
+              alt="STOCKtopus Logo" 
+              className="h-10 w-10 object-contain"
+              style={{ mixBlendMode: 'multiply' }}
+              onError={(e) => {
+                // Fallback to SVG logo if image fails to load
+                e.currentTarget.style.display = 'none';
+                const parent = e.currentTarget.parentElement;
+                if (parent) {
+                  parent.innerHTML = `
+                    <svg 
+                      width="32" 
+                      height="32" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="text-primary"
+                    >
+                      <circle cx="12" cy="10" r="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.2" />
+                      <path d="M9.5 8.5C9.5 8.5 9.5 9 10 9C10.5 9 10.5 8.5 10.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M13.5 8.5C13.5 8.5 13.5 9 14 9C14.5 9 14.5 8.5 14.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M10 11C10.8333 11.6667 13.2 12.4 14 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M8 14C6 15.5 4.5 17 3.5 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M9 15C8.5 17.5 7.5 19.5 5.5 21.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M12 16C12 18.5 12 20.5 12 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M15 15C15.5 17.5 16.5 19.5 18.5 21.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M16 14C18 15.5 19.5 17 20.5 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M7 14C5.5 15 4.5 15 2.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M17 14C18.5 15 19.5 15 21.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M10 13C8.5 10.5 6.5 9.5 3 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  `;
+                }
+              }}
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-bold text-xl bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">STOCK<span className="text-purple-600">topus</span></span>
+            <span className="text-xs text-muted-foreground -mt-1">Inventory Management</span>
+          </div>
+        </div>
       </div>
-
-      <div className="flex-grow px-1">
-        {navigationItems.map((item) => (
+      <nav className="flex-1 space-y-1 p-2">
+        {navigation.map((item) => (
           <Link
             key={item.name}
             to={item.href}
-            className={`flex items-center px-6 py-3 text-sm font-medium rounded-md transition-colors hover:bg-gray-200 dark:hover:bg-gray-800 ${
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               location.pathname === item.href
-                ? "bg-gray-200 dark:bg-gray-800"
-                : "text-gray-700 dark:text-gray-400"
-            }`}
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
           >
-            <item.icon className="w-4 h-4 mr-2" />
+            <item.icon className="h-4 w-4" />
             {item.name}
           </Link>
         ))}
-      </div>
-
-      <div className="px-6 mt-8">
-        <Button
-          variant="ghost"
-          className="w-full justify-start dark:hover:bg-gray-800"
-          onClick={handleLogout}
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Logout
-        </Button>
-      </div>
-
-      {/* Mobile navigation */}
-      {isMobile && (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-4 left-4 md:hidden"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <SheetHeader className="pl-6 pt-6">
-              <SheetTitle>Menu</SheetTitle>
-              <SheetDescription>
-                Navigate through your dashboard.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="flex-grow px-1 mt-4">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center px-6 py-3 text-sm font-medium rounded-md transition-colors hover:bg-gray-200 dark:hover:bg-gray-800 ${
-                    location.pathname === item.href
-                      ? "bg-gray-200 dark:bg-gray-800"
-                      : "text-gray-700 dark:text-gray-400"
-                  }`}
-                  onClick={() => setIsMobile(false)}
-                >
-                  <item.icon className="w-4 h-4 mr-2" />
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-            <div className="px-6 mt-8">
-              <Button
-                variant="ghost"
-                className="w-full justify-start dark:hover:bg-gray-800"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
-    </nav>
+      </nav>
+    </div>
   );
-};
+}

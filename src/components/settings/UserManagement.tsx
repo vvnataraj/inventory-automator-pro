@@ -62,9 +62,6 @@ export default function UserManagement() {
           }
         });
         
-        // Get user data from auth admin API (requires service role key, so this would need to be done through a serverless function in production)
-        // Since we can't do that in this demo app, we'll try to get as much info as possible from public tables
-        
         // Try to get profile information if available
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
@@ -75,17 +72,10 @@ export default function UserManagement() {
           profiles.forEach(profile => {
             if (userRolesMap.has(profile.id)) {
               const user = userRolesMap.get(profile.id);
-              // Use username as email if available since we can't access auth.users directly from client
               user.email = profile.username || `User ${profile.id.substring(0, 8)}...`;
               user.created_at = profile.created_at;
             }
           });
-        }
-        
-        // Now, let's try to get user email information from the authenticated user (if that's the current user)
-        if (currentUser && userRolesMap.has(currentUser.id)) {
-          const user = userRolesMap.get(currentUser.id);
-          user.email = currentUser.email || user.email;
         }
         
         setUsers(Array.from(userRolesMap.values()));
