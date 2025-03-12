@@ -52,24 +52,35 @@ export default function Login() {
         </div>
       </div>
 
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome to STOCKtopus</CardTitle>
-          <CardDescription>
+      <Card className="w-full max-w-md shadow-lg border-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-2xl font-bold">Welcome to STOCKtopus</CardTitle>
+          <CardDescription className="text-base">
             Sign in to your account or create a new one to manage your inventory
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger 
+                value="signin"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium py-2.5"
+              >
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger 
+                value="signup"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium py-2.5"
+              >
+                Sign Up
+              </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="signin">
+            <TabsContent value="signin" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">Log in to your account</h3>
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                   <Input 
                     id="email" 
                     type="email" 
@@ -77,10 +88,11 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="border-gray-300"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                   <Input 
                     id="password" 
                     type="password" 
@@ -88,11 +100,12 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="border-gray-300"
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full" 
+                  className="w-full bg-primary hover:bg-primary/90" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -107,10 +120,14 @@ export default function Login() {
               </form>
             </TabsContent>
             
-            <TabsContent value="signup">
+            <TabsContent value="signup" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Create a new account</h3>
+                <p className="text-sm text-gray-600">Join STOCKtopus to start managing your inventory efficiently</p>
+              </div>
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
                   <Input 
                     id="signup-email" 
                     type="email" 
@@ -118,10 +135,11 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="border-gray-300"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
                   <Input 
                     id="signup-password" 
                     type="password" 
@@ -129,11 +147,12 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="border-gray-300"
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full" 
+                  className="w-full bg-primary hover:bg-primary/90" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
