@@ -1,111 +1,116 @@
-
-import React, { useState } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Plus, Edit, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { locations } from "@/data/inventoryData";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { MainLayout } from "@/components/layout/MainLayout";
+
+const locations = [
+  {
+    id: "location-1",
+    name: "Warehouse A",
+    type: "Warehouse",
+    itemCount: 345,
+    totalUnits: 12000,
+    stockValue: 540000,
+    spaceUtilization: 75,
+  },
+  {
+    id: "location-2",
+    name: "Retail Store - Downtown",
+    type: "Retail",
+    itemCount: 123,
+    totalUnits: 3500,
+    stockValue: 185000,
+    spaceUtilization: 40,
+  },
+  {
+    id: "location-3",
+    name: "Distribution Center",
+    type: "Distribution",
+    itemCount: 567,
+    totalUnits: 25000,
+    stockValue: 920000,
+    spaceUtilization: 85,
+  },
+  {
+    id: "location-4",
+    name: "Storage Unit - Overflow",
+    type: "Storage",
+    itemCount: 89,
+    totalUnits: 2000,
+    stockValue: 75000,
+    spaceUtilization: 60,
+  },
+];
 
 export default function Locations() {
-  const [locationList, setLocationList] = useState(locations);
-  const [newLocation, setNewLocation] = useState("");
-  const { toast } = useToast();
-
-  const handleAddLocation = () => {
-    if (!newLocation.trim()) {
-      toast({
-        title: "Location name required",
-        description: "Please enter a name for the new location",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (locationList.includes(newLocation)) {
-      toast({
-        title: "Location already exists",
-        description: "This location already exists in the system",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLocationList([...locationList, newLocation]);
-    setNewLocation("");
-    toast({
-      title: "Location added",
-      description: `Successfully added ${newLocation} to locations`,
-    });
-  };
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="flex h-screen bg-background">
-      <div className="hidden md:flex md:w-64 md:flex-col">
-        <Sidebar />
+    <MainLayout>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-semibold tracking-tight">Locations</h1>
+        <Button>Add New Location</Button>
       </div>
-      <div className="flex flex-1 flex-col">
-        <Header />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-semibold tracking-tight">Location Management</h1>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add New Location</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col space-y-4">
-                  <div className="flex space-x-2">
-                    <Input
-                      placeholder="Enter location name..."
-                      value={newLocation}
-                      onChange={(e) => setNewLocation(e.target.value)}
-                    />
-                    <Button onClick={handleAddLocation}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {locations.map((location) => (
+          <Card key={location.id}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-muted-foreground" />
+                {location.name}
+              </CardTitle>
+              <CardDescription>{location.type}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Stock Items:</span>
+                  <span className="font-medium">{location.itemCount}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total Units:</span>
+                  <span className="font-medium">{location.totalUnits}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Stock Value:</span>
+                  <span className="font-medium">${location.stockValue.toLocaleString()}</span>
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-sm font-medium mb-1">Space Utilization</div>
+                  <div className="w-full bg-muted rounded-full h-2.5">
+                    <div
+                      className="bg-primary h-2.5 rounded-full"
+                      style={{ width: `${location.spaceUtilization}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>{location.spaceUtilization}% used</span>
+                    <span>{100 - location.spaceUtilization}% available</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Current Locations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-2">
-                  {locationList.map((location) => (
-                    <div
-                      key={location}
-                      className="flex items-center justify-between p-3 border rounded-md"
-                    >
-                      <div className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>{location}</span>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+              </div>
+            </CardContent>
+            <CardFooter className="border-t pt-4 flex justify-between gap-2">
+              <Button variant="outline" size="sm" className="flex-1">
+                View Items
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1">
+                Manage
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
-    </div>
+    </MainLayout>
   );
 }
