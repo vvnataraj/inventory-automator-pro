@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 
@@ -8,10 +8,12 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  
   return (
     <div className="flex h-screen bg-background">
       <div className="hidden md:flex md:w-64 md:flex-col">
-        <Sidebar />
+        <Sidebar isMobile={isMobile} setIsMobile={setIsMobile} />
       </div>
       <div className="flex flex-1 flex-col">
         <Header />

@@ -20,6 +20,7 @@ import Orders from "@/pages/Orders";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 import Analytics from "@/pages/Analytics";
+import Administration from "@/pages/Administration";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ function App() {
               <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Router>
