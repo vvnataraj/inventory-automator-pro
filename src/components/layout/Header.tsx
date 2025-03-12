@@ -1,5 +1,5 @@
 
-import { Bell, LogOut, Menu, Search, UserCog } from "lucide-react";
+import { Bell, LogOut, Menu, MessageSquare, Search, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,9 +10,12 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useState } from "react";
+import { SlackMessageDialog } from "@/components/slack/SlackMessageDialog";
 
 export function Header() {
   const { signOut } = useAuth();
+  const [isSlackDialogOpen, setIsSlackDialogOpen] = useState(false);
   
   const handleLogout = async () => {
     await signOut();
@@ -38,6 +41,16 @@ export function Header() {
           </form>
         </div>
         <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2"
+            onClick={() => setIsSlackDialogOpen(true)}
+          >
+            <MessageSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Message Slack</span>
+          </Button>
+          
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
@@ -79,6 +92,11 @@ export function Header() {
           </DropdownMenu>
         </div>
       </div>
+      
+      <SlackMessageDialog 
+        isOpen={isSlackDialogOpen}
+        onClose={() => setIsSlackDialogOpen(false)}
+      />
     </header>
   );
 }
