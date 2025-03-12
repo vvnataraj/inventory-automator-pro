@@ -10,8 +10,9 @@ import { RefreshCw } from "lucide-react";
 
 export default function UsersTab() {
   const { assignAllUsersAdminRole } = useAuth();
-  const { isAdmin, loading: rolesLoading } = useUserRoles();
+  const { isAdmin, loading: rolesLoading, fetchRoles } = useUserRoles();
   const [assigningRoles, setAssigningRoles] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleAssignAllAdminRole = async () => {
     try {
@@ -22,6 +23,19 @@ export default function UsersTab() {
     }
   };
 
+  const handleRefreshUserData = async () => {
+    try {
+      setRefreshing(true);
+      await fetchRoles();
+      toast.success("User data refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+      toast.error("Failed to refresh user data");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -29,13 +43,24 @@ export default function UsersTab() {
           <>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-medium">User Management</h3>
-              <Button 
-                onClick={handleAssignAllAdminRole}
-                disabled={assigningRoles}
-                variant="outline"
-              >
-                {assigningRoles ? 'Assigning...' : 'Make All Users Admin'}
-              </Button>
+              <div className="space-x-2 flex">
+                <Button 
+                  onClick={handleRefreshUserData}
+                  disabled={refreshing}
+                  variant="outline"
+                  size="sm"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Refreshing...' : 'Refresh User Data'}
+                </Button>
+                <Button 
+                  onClick={handleAssignAllAdminRole}
+                  disabled={assigningRoles}
+                  variant="outline"
+                >
+                  {assigningRoles ? 'Assigning...' : 'Make All Users Admin'}
+                </Button>
+              </div>
             </div>
             <UserManagement />
           </>
