@@ -31,6 +31,47 @@ export default function UserManagement() {
     }
   }, [currentUser]);
 
+  // This function can be called programmatically to assign a role to a user by email
+  async function assignRoleToUserByEmail(email: string, role: string) {
+    try {
+      setLoading(true);
+      
+      // First find the user by email
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      
+      if (!user) {
+        toast.error(`User with email ${email} not found`);
+        return false;
+      }
+      
+      // Check if user already has this role
+      if (user.roles.includes(role)) {
+        toast.info(`User already has the ${role} role`);
+        return true;
+      }
+      
+      // Add the role to the user
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: user.id,
+          role: role
+        });
+      
+      if (error) throw error;
+      
+      toast.success(`Role ${role} assigned to ${email} successfully`);
+      await fetchUsers(); // Refresh the user list
+      return true;
+    } catch (error) {
+      console.error("Error assigning role:", error);
+      toast.error(`Failed to assign role: ${error.message}`);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function fetchUsers() {
     try {
       setLoading(true);
@@ -104,6 +145,18 @@ export default function UserManagement() {
       setLoading(false);
     }
   }
+  
+  // Immediately try to assign admin role to johnson.lucym@gmail.com
+  useEffect(() => {
+    if (users.length > 0) {
+      const targetEmail = "johnson.lucym@gmail.com";
+      const targetUser = users.find(u => u.email.toLowerCase() === targetEmail.toLowerCase());
+      
+      if (targetUser && !targetUser.roles.includes('admin')) {
+        assignRoleToUserByEmail(targetEmail, 'admin');
+      }
+    }
+  }, [users]);
   
   if (!isAdmin()) {
     return (
