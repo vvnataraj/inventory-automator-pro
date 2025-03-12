@@ -74,7 +74,7 @@ export function Header() {
                   Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => signOut()}>Sign out</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>Sign out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

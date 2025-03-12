@@ -76,7 +76,7 @@ export default function Login() {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="signin" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md">
+            <TabsContent value="signin" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md shadow-sm">
               <h3 className="text-lg font-semibold mb-4 text-gray-800">Log in to your account</h3>
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
@@ -120,7 +120,7 @@ export default function Login() {
               </form>
             </TabsContent>
             
-            <TabsContent value="signup" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md">
+            <TabsContent value="signup" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md shadow-sm">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Create a new account</h3>
                 <p className="text-sm text-gray-600">Join STOCKtopus to start managing your inventory efficiently</p>
