@@ -8,6 +8,7 @@ import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { useToast } from "@/hooks/use-toast";
 import { EditInventoryItem } from "@/components/inventory/EditInventoryItem";
 import { TransferInventoryItem } from "@/components/inventory/TransferInventoryItem";
+import { DeleteInventoryItem } from "@/components/inventory/DeleteInventoryItem";
 import { AddInventoryItem } from "@/components/inventory/AddInventoryItem";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
@@ -27,7 +28,7 @@ export default function Inventory() {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
-  const { items, isLoading, totalItems, updateItem, addItem } = useInventoryItems(
+  const { items, isLoading, totalItems, updateItem, addItem, deleteItem } = useInventoryItems(
     currentPage, 
     searchQuery,
     sortField,
@@ -85,6 +86,16 @@ export default function Inventory() {
     toast({
       title: "Item added",
       description: `Successfully added ${newItem.name} to inventory`,
+    });
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    const itemName = items.find(item => item.id === itemId)?.name || "Item";
+    deleteItem(itemId);
+    toast({
+      title: "Item deleted",
+      description: `Successfully deleted ${itemName} from inventory`,
+      variant: "destructive"
     });
   };
 
@@ -211,6 +222,7 @@ export default function Inventory() {
                   item={item} 
                   onSave={handleSaveItem}
                   onTransfer={handleTransferItem}
+                  onDelete={handleDeleteItem}
                 />
               ))}
             </div>
@@ -254,6 +266,7 @@ export default function Inventory() {
                           <div className="flex">
                             <EditInventoryItem item={item} onSave={handleSaveItem} />
                             <TransferInventoryItem item={item} onTransfer={handleTransferItem} />
+                            <DeleteInventoryItem item={item} onDelete={handleDeleteItem} />
                           </div>
                         </td>
                       </tr>

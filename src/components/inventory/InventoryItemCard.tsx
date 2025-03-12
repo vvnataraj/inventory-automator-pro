@@ -1,3 +1,4 @@
+
 import React from "react";
 import { InventoryItem } from "@/types/inventory";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -5,17 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EditInventoryItem } from "./EditInventoryItem";
 import { TransferInventoryItem } from "./TransferInventoryItem";
+import { DeleteInventoryItem } from "./DeleteInventoryItem";
 
 interface InventoryItemCardProps {
   item: InventoryItem;
   onSave: (updatedItem: InventoryItem) => void;
   onTransfer: (item: InventoryItem, quantity: number, newLocation: string) => void;
+  onDelete: (itemId: string) => void;
 }
 
 export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ 
   item, 
   onSave,
-  onTransfer
+  onTransfer,
+  onDelete
 }) => {
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
@@ -73,6 +77,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
       <CardFooter className="pt-0 flex gap-2">
         <EditInventoryItem item={item} onSave={onSave} />
         <TransferInventoryItem item={item} onTransfer={onTransfer} />
+        <DeleteInventoryItem item={item} onDelete={onDelete} />
       </CardFooter>
     </Card>
   );

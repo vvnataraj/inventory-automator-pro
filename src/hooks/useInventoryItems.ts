@@ -79,5 +79,21 @@ export function useInventoryItems(
     setTotalItems(prev => prev + 1);
   }, [page]);
   
-  return { items, totalItems, isLoading, error, updateItem, addItem };
+  const deleteItem = useCallback((itemId: string) => {
+    // Remove from current items
+    setItems(currentItems => 
+      currentItems.filter(item => item.id !== itemId)
+    );
+    
+    // Remove from global inventory items array
+    const itemIndex = inventoryItems.findIndex(item => item.id === itemId);
+    if (itemIndex !== -1) {
+      inventoryItems.splice(itemIndex, 1);
+    }
+    
+    // Update total count
+    setTotalItems(prev => prev - 1);
+  }, []);
+  
+  return { items, totalItems, isLoading, error, updateItem, addItem, deleteItem };
 }
