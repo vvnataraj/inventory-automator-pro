@@ -10,6 +10,7 @@ import Orders from "@/pages/Orders";
 import Purchases from "@/pages/Purchases";
 import Locations from "@/pages/Locations";
 import Sales from "@/pages/Sales";
+import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
@@ -75,6 +76,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Sales />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
+                <ProtectedRoute>
+                  <Analytics />
                 </ProtectedRoute>
               } 
             />
