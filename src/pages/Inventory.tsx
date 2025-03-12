@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, GridIcon, TableIcon, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, Filter, ArrowUpDown, GridIcon, TableIcon, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownAZ, ArrowUpZA, ArrowDownZA, ArrowUp10, ArrowDown10 } from "lucide-react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItemCard } from "@/components/inventory/InventoryItemCard";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -9,6 +10,15 @@ import { useToast } from "@/hooks/use-toast";
 import { EditInventoryItem } from "@/components/inventory/EditInventoryItem";
 import { TransferInventoryItem } from "@/components/inventory/TransferInventoryItem";
 import { MainLayout } from "@/components/layout/MainLayout";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,12 +48,22 @@ export default function Inventory() {
     }
   };
 
+  const getSortIcon = (field: SortField) => {
+    if (field !== sortField) return null;
+    
+    if (field === 'name' || field === 'category' || field === 'sku' || field === 'location') {
+      return sortDirection === 'asc' ? <ArrowUpAZ className="h-4 w-4 ml-1" /> : <ArrowDownZA className="h-4 w-4 ml-1" />;
+    } else {
+      return sortDirection === 'asc' ? <ArrowUp10 className="h-4 w-4 ml-1" /> : <ArrowDown10 className="h-4 w-4 ml-1" />;
+    }
+  };
+
   const SortHeader = ({ field, label }: { field: SortField, label: string }) => (
     <th 
       className="py-3 px-4 text-left font-medium text-muted-foreground cursor-pointer hover:bg-muted/50"
       onClick={() => handleSort(field)}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {label}
         {sortField === field && (
           sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
@@ -122,10 +142,51 @@ export default function Inventory() {
           <Filter className="h-4 w-4" />
           Filter
         </Button>
-        <Button variant="outline" className="gap-2">
-          <ArrowUpDown className="h-4 w-4" />
-          Sort
-        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <ArrowUpDown className="h-4 w-4" />
+              Sort {getSortIcon(sortField)}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => handleSort('name')}>
+                Name {getSortIcon('name')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('sku')}>
+                SKU {getSortIcon('sku')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('category')}>
+                Category {getSortIcon('category')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('cost')}>
+                Cost {getSortIcon('cost')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('rrp')}>
+                RRP {getSortIcon('rrp')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('stock')}>
+                Stock {getSortIcon('stock')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('location')}>
+                Location {getSortIcon('location')}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setSortDirection('asc')}>
+                Ascending {sortDirection === 'asc' && <ArrowUpAZ className="h-4 w-4 ml-auto" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortDirection('desc')}>
+                Descending {sortDirection === 'desc' && <ArrowDownZA className="h-4 w-4 ml-auto" />}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {isLoading ? (
