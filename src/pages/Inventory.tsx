@@ -7,22 +7,51 @@ import { Button } from "@/components/ui/button";
 import { Search, Filter, ArrowUpDown } from "lucide-react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { EditInventoryItem } from "@/components/inventory/EditInventoryItem";
+import { TransferInventoryItem } from "@/components/inventory/TransferInventoryItem";
 import { InventoryItem } from "@/types/inventory";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const { items, isLoading, totalItems } = useInventoryItems(currentPage, searchQuery);
+  const { items, isLoading, totalItems, updateItem } = useInventoryItems(currentPage, searchQuery);
   const { toast } = useToast();
   
   const itemsPerPage = 20;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handleSaveItem = (updatedItem: InventoryItem) => {
+    updateItem(updatedItem);
     toast({
       title: "Item updated",
       description: `Successfully updated ${updatedItem.name}`,
+    });
+  };
+
+  const handleTransferItem = (item: InventoryItem, quantity: number, newLocation: string) => {
+    // Create a clone of the item at the new location with the transferred quantity
+    const sourceItem = { ...item, stock: item.stock - quantity };
+    
+    // Find if there's already an item with the same SKU at the destination
+    const existingDestItem = items.find(i => 
+      i.sku === item.sku && i.location === newLocation
+    );
+    
+    if (existingDestItem) {
+      // Update the existing item at the destination
+      const destinationItem = { 
+        ...existingDestItem, 
+        stock: existingDestItem.stock + quantity 
+      };
+      updateItem(destinationItem);
+    }
+    
+    // Update the source item with reduced stock
+    updateItem(sourceItem);
+    
+    toast({
+      title: "Inventory transferred",
+      description: `Successfully transferred ${quantity} units of ${item.name} to ${newLocation}`,
     });
   };
 
@@ -103,7 +132,10 @@ export default function Inventory() {
                           </td>
                           <td className="py-3 px-4">{item.location}</td>
                           <td className="py-3 px-4">
-                            <EditInventoryItem item={item} onSave={handleSaveItem} />
+                            <div className="flex">
+                              <EditInventoryItem item={item} onSave={handleSaveItem} />
+                              <TransferInventoryItem item={item} onTransfer={handleTransferItem} />
+                            </div>
                           </td>
                         </tr>
                       ))}
