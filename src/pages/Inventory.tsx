@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
@@ -6,14 +5,25 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, ArrowUpDown } from "lucide-react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
+import { EditInventoryItem } from "@/components/inventory/EditInventoryItem";
+import { InventoryItem } from "@/types/inventory";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { items, isLoading, totalItems } = useInventoryItems(currentPage, searchQuery);
+  const { toast } = useToast();
   
   const itemsPerPage = 20;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handleSaveItem = (updatedItem: InventoryItem) => {
+    toast({
+      title: "Item updated",
+      description: `Successfully updated ${updatedItem.name}`,
+    });
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -65,6 +75,7 @@ export default function Inventory() {
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Price</th>
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Stock</th>
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Location</th>
+                        <th className="py-3 px-4 text-left font-medium text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -86,6 +97,9 @@ export default function Inventory() {
                             </span>
                           </td>
                           <td className="py-3 px-4">{item.location}</td>
+                          <td className="py-3 px-4">
+                            <EditInventoryItem item={item} onSave={handleSaveItem} />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
