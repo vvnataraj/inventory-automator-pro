@@ -1,18 +1,7 @@
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Truck, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  Search, 
-  Filter, 
-  ArrowUpDown, 
-  Edit, 
-  Trash2, 
-  Check, 
-  X,
-  ShoppingCart,
-  Truck 
-} from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -45,10 +34,14 @@ import { PurchaseStatusBadge } from "@/components/purchases/PurchaseStatusBadge"
 import { AddPurchaseModal } from "@/components/purchases/AddPurchaseModal";
 import { EditPurchaseModal } from "@/components/purchases/EditPurchaseModal";
 import { Purchase, PurchaseStatus } from "@/types/purchase";
+import { ListControls } from "@/components/common/ListControls";
 
 export default function Purchases() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState("poNumber");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  
   const { 
     purchases, 
     totalPurchases, 
@@ -66,11 +59,6 @@ export default function Purchases() {
   
   const itemsPerPage = 12;
   const totalPages = Math.ceil(totalPurchases / itemsPerPage);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page when searching
-  };
 
   const handleEdit = (purchase: Purchase) => {
     setEditingPurchase(purchase);
@@ -94,6 +82,43 @@ export default function Purchases() {
     updatePurchaseStatus(purchaseId, status);
   };
 
+  const sortOptions = [
+    { field: 'poNumber', label: 'PO Number' },
+    { field: 'supplier', label: 'Supplier' },
+    { field: 'orderDate', label: 'Order Date' },
+    { field: 'expectedDeliveryDate', label: 'Expected Delivery' },
+    { field: 'status', label: 'Status' },
+    { field: 'totalCost', label: 'Total Cost' },
+  ];
+
+  const handleSort = (field: string) => {
+    if (field === sortField) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortedPurchases = () => {
+    return [...purchases].sort((a: any, b: any) => {
+      let valueA = a[sortField];
+      let valueB = b[sortField];
+      
+      // Handle date fields
+      if (sortField === 'orderDate' || sortField === 'expectedDeliveryDate' || sortField === 'receivedDate') {
+        valueA = valueA ? new Date(valueA).getTime() : 0;
+        valueB = valueB ? new Date(valueB).getTime() : 0;
+      }
+
+      if (sortDirection === "asc") {
+        return valueA > valueB ? 1 : -1;
+      } else {
+        return valueA < valueB ? 1 : -1;
+      }
+    });
+  };
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -101,25 +126,16 @@ export default function Purchases() {
         <AddPurchaseModal onPurchaseAdded={addPurchase} />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search purchases..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filter
-        </Button>
-        <Button variant="outline" className="gap-2">
-          <ArrowUpDown className="h-4 w-4" />
-          Sort
-        </Button>
-      </div>
+      <ListControls 
+        searchPlaceholder="Search purchases..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSortChange={handleSort}
+        onSortDirectionChange={setSortDirection}
+        sortOptions={sortOptions}
+      />
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -129,7 +145,7 @@ export default function Purchases() {
         <>
           {purchases.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {purchases.map((purchase) => (
+              {getSortedPurchases().map((purchase) => (
                 <Card key={purchase.id} className="animate-fade-in">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
@@ -172,11 +188,9 @@ export default function Purchases() {
                           <DropdownMenuLabel>Manage Purchase</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleEdit(purchase)}>
-                            <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDelete(purchase.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />

@@ -7,7 +7,9 @@ export function useInventoryItems(
   page: number = 1, 
   searchQuery: string = "",
   sortField: SortField = 'name',
-  sortDirection: SortDirection = 'asc'
+  sortDirection: SortDirection = 'asc',
+  categoryFilter?: string,
+  locationFilter?: string
 ) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -18,7 +20,24 @@ export function useInventoryItems(
     setIsLoading(true);
     try {
       const result = getInventoryItems(page, 20, searchQuery);
-      const sortedItems = [...result.items].sort((a, b) => {
+      
+      // Apply any additional filtering
+      let filteredItems = [...result.items];
+      
+      if (categoryFilter) {
+        filteredItems = filteredItems.filter(item => 
+          item.category.toLowerCase() === categoryFilter.toLowerCase()
+        );
+      }
+      
+      if (locationFilter) {
+        filteredItems = filteredItems.filter(item => 
+          item.location.toLowerCase() === locationFilter.toLowerCase()
+        );
+      }
+      
+      // Apply sorting
+      const sortedItems = filteredItems.sort((a, b) => {
         const aValue = a[sortField];
         const bValue = b[sortField];
         
@@ -40,7 +59,7 @@ export function useInventoryItems(
     } finally {
       setIsLoading(false);
     }
-  }, [page, searchQuery, sortField, sortDirection]);
+  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter]);
   
   useEffect(() => {
     const timeoutId = setTimeout(fetchItems, 500);
@@ -95,5 +114,14 @@ export function useInventoryItems(
     setTotalItems(prev => prev - 1);
   }, []);
   
-  return { items, totalItems, isLoading, error, updateItem, addItem, deleteItem };
+  return { 
+    items, 
+    totalItems, 
+    isLoading, 
+    error, 
+    updateItem, 
+    addItem, 
+    deleteItem,
+    fetchItems
+  };
 }

@@ -1,24 +1,15 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PlusCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { SalesTable } from "@/components/sales/SalesTable";
 import { CreateSaleModal } from "@/components/sales/CreateSaleModal";
 import { SalesAnalytics } from "@/components/sales/SalesAnalytics";
-import { Search, Filter, ArrowUpDown, PlusCircle, Rows, GripHorizontal, ChevronUp, ChevronDown } from "lucide-react";
 import { useSales } from "@/hooks/useSales";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sale, SaleStatus } from "@/types/sale";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ListControls, ViewMode } from "@/components/common/ListControls";
 
 type SortField = "saleNumber" | "customerName" | "date" | "total" | "status";
 type SortDirection = "asc" | "desc";
@@ -27,26 +18,35 @@ export default function Sales() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [statusFilter, setStatusFilter] = useState<SaleStatus | undefined>(undefined);
   
   const { sales, totalSales, isLoading, addSale } = useSales(currentPage, 10, searchQuery);
 
-  const handleCreateSale = (newSale) => {
+  const handleCreateSale = (newSale: any) => {
     addSale(newSale);
     setIsCreateModalOpen(false);
   };
 
-  const handleSort = (field: SortField) => {
-    if (field === sortField) {
+  const handleSort = (field: string) => {
+    const saleField = field as SortField;
+    if (saleField === sortField) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortField(field);
+      setSortField(saleField);
       setSortDirection('asc');
     }
   };
+
+  const sortOptions = [
+    { field: 'saleNumber', label: 'Sale Number' },
+    { field: 'customerName', label: 'Customer Name' },
+    { field: 'date', label: 'Date' },
+    { field: 'total', label: 'Total' },
+    { field: 'status', label: 'Status' },
+  ];
 
   const getSortedSales = () => {
     return [...sales].sort((a, b) => {
@@ -99,30 +99,6 @@ export default function Sales() {
             <PlusCircle className="h-4 w-4" />
             New Sale
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                {viewMode === "grid" ? (
-                  <GripHorizontal className="h-4 w-4" />
-                ) : (
-                  <Rows className="h-4 w-4" />
-                )}
-                View
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Layout</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setViewMode("grid")}>
-                <GripHorizontal className="h-4 w-4 mr-2" />
-                Grid View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setViewMode("table")}>
-                <Rows className="h-4 w-4 mr-2" />
-                Table View
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
@@ -130,76 +106,19 @@ export default function Sales() {
         <SalesAnalytics sales={sales} />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search sales..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filter
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <ArrowUpDown className="h-4 w-4" />
-              Sort
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => handleSort('saleNumber')}>
-                Sale Number
-                {sortField === 'saleNumber' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('customerName')}>
-                Customer Name
-                {sortField === 'customerName' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('date')}>
-                Date
-                {sortField === 'date' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('total')}>
-                Total
-                {sortField === 'total' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('status')}>
-                Status
-                {sortField === 'status' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setSortDirection('asc')}>
-                Ascending
-                {sortDirection === 'asc' && <ChevronUp className="h-4 w-4 ml-auto" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortDirection('desc')}>
-                Descending
-                {sortDirection === 'desc' && <ChevronDown className="h-4 w-4 ml-auto" />}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <ListControls 
+        searchPlaceholder="Search sales..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        availableViewModes={["grid", "table"]}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSortChange={handleSort}
+        onSortDirectionChange={setSortDirection}
+        sortOptions={sortOptions}
+      />
 
       {viewMode === "table" ? (
         <SalesTable 

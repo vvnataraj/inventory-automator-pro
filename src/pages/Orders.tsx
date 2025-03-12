@@ -1,8 +1,6 @@
-
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, LayoutIcon, Rows, GripHorizontal, ChevronUp, ChevronDown, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { OrderCard } from "@/components/orders/OrderCard";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -18,15 +16,7 @@ import {
 } from "@/components/ui/table";
 import { formatDistanceToNow } from "date-fns";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ListControls, ViewMode } from "@/components/common/ListControls";
 
 type SortField = "orderNumber" | "customerName" | "createdAt" | "total" | "status";
 type SortDirection = "asc" | "desc";
@@ -35,7 +25,7 @@ export default function Orders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [badgeDisplayMode, setBadgeDisplayMode] = useState<"inline" | "stacked">("inline");
-  const [viewMode, setViewMode] = useState<"card" | "table" | "collapsible">("card");
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | undefined>(undefined);
@@ -58,14 +48,23 @@ export default function Orders() {
     setBadgeDisplayMode(prev => prev === "inline" ? "stacked" : "inline");
   };
 
-  const handleSort = (field: SortField) => {
-    if (field === sortField) {
+  const handleSort = (field: string) => {
+    const orderField = field as SortField;
+    if (orderField === sortField) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortField(field);
+      setSortField(orderField);
       setSortDirection('asc');
     }
   };
+
+  const sortOptions = [
+    { field: 'orderNumber', label: 'Order Number' },
+    { field: 'customerName', label: 'Customer Name' },
+    { field: 'createdAt', label: 'Date' },
+    { field: 'total', label: 'Total' },
+    { field: 'status', label: 'Status' },
+  ];
 
   const getSortedOrders = () => {
     return [...orders].sort((a, b) => {
@@ -129,115 +128,27 @@ export default function Orders() {
             <Plus className="h-4 w-4" />
             New Order
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                {viewMode === "card" ? (
-                  <GripHorizontal className="h-4 w-4" />
-                ) : viewMode === "table" ? (
-                  <Rows className="h-4 w-4" />
-                ) : (
-                  <Rows className="h-4 w-4" />
-                )}
-                View
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Layout</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setViewMode("card")}>
-                <GripHorizontal className="h-4 w-4 mr-2" />
-                Card View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setViewMode("table")}>
-                <Rows className="h-4 w-4 mr-2" />
-                Table View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setViewMode("collapsible")}>
-                <LayoutIcon className="h-4 w-4 mr-2" />
-                Collapsible View
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           {viewMode === "card" && (
             <Button variant="outline" className="gap-2" onClick={toggleBadgeDisplayMode}>
-              <LayoutIcon className="h-4 w-4" />
               {badgeDisplayMode === "inline" ? "Stacked" : "Inline"} Display
             </Button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search orders..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filter
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <ArrowUpDown className="h-4 w-4" />
-              Sort
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => handleSort('orderNumber')}>
-                Order Number
-                {sortField === 'orderNumber' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('customerName')}>
-                Customer Name
-                {sortField === 'customerName' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('createdAt')}>
-                Date
-                {sortField === 'createdAt' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('total')}>
-                Total
-                {sortField === 'total' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('status')}>
-                Status
-                {sortField === 'status' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setSortDirection('asc')}>
-                Ascending
-                {sortDirection === 'asc' && <ChevronUp className="h-4 w-4 ml-auto" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortDirection('desc')}>
-                Descending
-                {sortDirection === 'desc' && <ChevronDown className="h-4 w-4 ml-auto" />}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <ListControls 
+        searchPlaceholder="Search orders..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        viewMode={viewMode as ViewMode}
+        onViewModeChange={setViewMode}
+        availableViewModes={["card", "table", "collapsible"]}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSortChange={handleSort}
+        onSortDirectionChange={setSortDirection}
+        sortOptions={sortOptions}
+      />
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">

@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Building2, Edit, Trash2, Search, Grid, List, ChevronUp, ChevronDown, Plus } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +19,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useLocations } from "@/hooks/useLocations";
 import { AddLocationModal } from "@/components/locations/AddLocationModal";
@@ -33,19 +31,10 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ListControls, ViewMode } from "@/components/common/ListControls";
 
 type SortField = "name" | "type" | "itemCount" | "totalUnits" | "stockValue" | "spaceUtilization";
 type SortDirection = "asc" | "desc";
-type ViewMode = "grid" | "table";
 
 export default function Locations() {
   const { locations, addLocation, updateLocation, deleteLocation } = useLocations();
@@ -82,14 +71,24 @@ export default function Locations() {
     setDeleteConfirmOpen(false);
   };
 
-  const handleSort = (field: SortField) => {
-    if (field === sortField) {
+  const handleSort = (field: string) => {
+    const locationField = field as SortField;
+    if (locationField === sortField) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortField(field);
+      setSortField(locationField);
       setSortDirection('asc');
     }
   };
+
+  const sortOptions = [
+    { field: 'name', label: 'Name' },
+    { field: 'type', label: 'Type' },
+    { field: 'itemCount', label: 'Item Count' },
+    { field: 'totalUnits', label: 'Total Units' },
+    { field: 'stockValue', label: 'Stock Value' },
+    { field: 'spaceUtilization', label: 'Space Utilization' },
+  ];
 
   const getSortedLocations = () => {
     return [...filteredLocations].sort((a, b) => {
@@ -104,121 +103,28 @@ export default function Locations() {
     });
   };
 
-  const SortHeader = ({ field, label }: { field: SortField, label: string }) => (
-    <th 
-      className="py-3 px-4 text-left font-medium text-muted-foreground cursor-pointer hover:bg-muted/50"
-      onClick={() => handleSort(field)}
-    >
-      <div className="flex items-center gap-1">
-        {label}
-        {sortField === field && (
-          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-        )}
-      </div>
-    </th>
-  );
-
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Locations</h1>
         <div className="flex gap-2">
           <AddLocationModal onLocationAdded={addLocation} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                {viewMode === "grid" ? <Grid className="h-4 w-4" /> : <List className="h-4 w-4" />}
-                View
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Layout</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setViewMode("grid")}>
-                <Grid className="h-4 w-4 mr-2" />
-                Grid View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setViewMode("table")}>
-                <List className="h-4 w-4 mr-2" />
-                Table View
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search locations..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <ChevronDown className="h-4 w-4" />
-              Sort
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => handleSort('name')}>
-                Name
-                {sortField === 'name' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('type')}>
-                Type
-                {sortField === 'type' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('itemCount')}>
-                Item Count
-                {sortField === 'itemCount' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('totalUnits')}>
-                Total Units
-                {sortField === 'totalUnits' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('stockValue')}>
-                Stock Value
-                {sortField === 'stockValue' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('spaceUtilization')}>
-                Space Utilization
-                {sortField === 'spaceUtilization' && (
-                  sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />
-                )}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => setSortDirection('asc')}>
-                Ascending
-                {sortDirection === 'asc' && <ChevronUp className="h-4 w-4 ml-auto" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortDirection('desc')}>
-                Descending
-                {sortDirection === 'desc' && <ChevronDown className="h-4 w-4 ml-auto" />}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <ListControls 
+        searchPlaceholder="Search locations..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        availableViewModes={["grid", "table"]}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSortChange={handleSort}
+        onSortDirectionChange={setSortDirection}
+        sortOptions={sortOptions}
+      />
 
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -263,12 +169,10 @@ export default function Locations() {
               </CardContent>
               <CardFooter className="border-t pt-4 flex justify-between gap-2">
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(location)}>
-                  <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive"
                   onClick={() => handleDelete(location.id)}>
-                  <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
               </CardFooter>
@@ -281,12 +185,20 @@ export default function Locations() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <SortHeader field="name" label="Name" />
-                  <SortHeader field="type" label="Type" />
-                  <SortHeader field="itemCount" label="Items" />
-                  <SortHeader field="totalUnits" label="Units" />
-                  <SortHeader field="stockValue" label="Stock Value" />
-                  <SortHeader field="spaceUtilization" label="Utilization" />
+                  {sortOptions.map(option => (
+                    <TableHead 
+                      key={option.field}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort(option.field)}
+                    >
+                      <div className="flex items-center gap-1">
+                        {option.label}
+                        {sortField === option.field && (
+                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
+                    </TableHead>
+                  ))}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -311,7 +223,6 @@ export default function Locations() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(location)}>
-                        <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </Button>
                       <Button 
@@ -320,7 +231,6 @@ export default function Locations() {
                         className="text-destructive hover:text-destructive"
                         onClick={() => handleDelete(location.id)}
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </Button>
                     </TableCell>
