@@ -2,16 +2,18 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, LayoutIcon } from "lucide-react";
+import { Search, Filter, ArrowUpDown, LayoutIcon, Rows, GripHorizontal } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { OrderCard } from "@/components/orders/OrderCard";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Order } from "@/types/order"; // Add the Order type import
+import { Order } from "@/types/order";
+import { CollapsibleOrderRow } from "@/components/orders/CollapsibleOrderRow";
 
 export default function Orders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [badgeDisplayMode, setBadgeDisplayMode] = useState<"inline" | "stacked">("inline");
+  const [viewMode, setViewMode] = useState<"card" | "collapsible">("card");
   const { orders, totalOrders, isLoading } = useOrders(currentPage, 12);
   
   const handleViewDetails = (order: Order) => {
@@ -25,16 +27,29 @@ export default function Orders() {
     setBadgeDisplayMode(prev => prev === "inline" ? "stacked" : "inline");
   };
 
+  const toggleViewMode = () => {
+    setViewMode(prev => prev === "card" ? "collapsible" : "card");
+  };
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Orders</h1>
         <div className="flex gap-2">
           <Button>New Order</Button>
-          <Button variant="outline" className="gap-2" onClick={toggleBadgeDisplayMode}>
-            <LayoutIcon className="h-4 w-4" />
-            {badgeDisplayMode === "inline" ? "Stacked" : "Inline"} Display
+          <Button variant="outline" className="gap-2" onClick={toggleViewMode}>
+            {viewMode === "card" ? (
+              <><Rows className="h-4 w-4" />Compact View</>
+            ) : (
+              <><GripHorizontal className="h-4 w-4" />Card View</>
+            )}
           </Button>
+          {viewMode === "card" && (
+            <Button variant="outline" className="gap-2" onClick={toggleBadgeDisplayMode}>
+              <LayoutIcon className="h-4 w-4" />
+              {badgeDisplayMode === "inline" ? "Stacked" : "Inline"} Display
+            </Button>
+          )}
         </div>
       </div>
 
@@ -64,16 +79,30 @@ export default function Orders() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
-            {orders.map((order) => (
-              <OrderCard 
-                key={order.id} 
-                order={order} 
-                badgeDisplayMode={badgeDisplayMode}
-                onViewDetails={handleViewDetails}
-              />
-            ))}
-          </div>
+          {viewMode === "card" ? (
+            // Card view
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+              {orders.map((order) => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  badgeDisplayMode={badgeDisplayMode}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
+            </div>
+          ) : (
+            // Collapsible view
+            <div className="flex flex-col gap-2 mb-4">
+              {orders.map((order) => (
+                <CollapsibleOrderRow 
+                  key={order.id} 
+                  order={order}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-muted-foreground">
