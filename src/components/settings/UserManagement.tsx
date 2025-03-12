@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +40,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Pencil, Trash, UserPlus } from "lucide-react";
+import { Pencil, Trash, UserPlus, ShieldAlert, ShieldCheck, Shield } from "lucide-react";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 type User = {
   id: string;
@@ -55,9 +55,9 @@ type Role = 'admin' | 'manager' | 'user';
 
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
+  const { isAdmin } = useUserRoles();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   
   // For adding a new user
   const [newUserEmail, setNewUserEmail] = useState("");
@@ -72,27 +72,9 @@ export default function UserManagement() {
 
   useEffect(() => {
     if (currentUser) {
-      checkIsAdmin();
       fetchUsers();
     }
   }, [currentUser]);
-
-  async function checkIsAdmin() {
-    try {
-      const { data, error } = await supabase
-        .rpc('is_admin');
-      
-      if (error) throw error;
-      setIsAdmin(data);
-      
-      if (!data) {
-        toast.error("You don't have admin privileges to manage users");
-      }
-    } catch (error) {
-      console.error("Error checking admin status:", error);
-      toast.error("Failed to check admin privileges");
-    }
-  }
 
   async function fetchUsers() {
     try {
@@ -144,8 +126,6 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // We need to use the admin API - this won't work with the client
-      // Instead, we'll create a user and then assign the role
       // First, create user via signup
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newUserEmail,
@@ -160,7 +140,7 @@ export default function UserManagement() {
       
       const newUserId = authData.user.id;
       
-      // 2. Assign the role
+      // Assign the role
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({ user_id: newUserId, role: newUserRole });
@@ -223,7 +203,7 @@ export default function UserManagement() {
       setLoading(true);
       
       // We can't directly delete users with the client SDK
-      // Let's just remove all their roles and set a flag in their profile
+      // Let's just remove all their roles
       const { error: roleDeleteError } = await supabase
         .from('user_roles')
         .delete()
@@ -241,34 +221,22 @@ export default function UserManagement() {
     }
   }
   
-  async function makeCurrentUserAdmin() {
-    if (!currentUser) return;
-    
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({ user_id: currentUser.id, role: 'admin' });
-      
-      if (error) throw error;
-      
-      toast.success("You now have admin privileges");
-      checkIsAdmin();
-    } catch (error) {
-      console.error("Error adding admin role:", error);
-      toast.error("Failed to add admin role");
-    } finally {
-      setLoading(false);
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <ShieldAlert className="h-4 w-4 mr-1" />;
+      case 'manager':
+        return <ShieldCheck className="h-4 w-4 mr-1" />;
+      default:
+        return <Shield className="h-4 w-4 mr-1" />;
     }
-  }
+  };
   
-  if (!isAdmin) {
+  if (!isAdmin()) {
     return (
       <div className="space-y-4">
         <h3 className="text-lg font-medium">User Management</h3>
         <p>You need admin privileges to access this section.</p>
-        <Button onClick={makeCurrentUserAdmin}>Make Yourself Admin</Button>
       </div>
     );
   }
@@ -369,12 +337,16 @@ export default function UserManagement() {
                           : role === 'manager' 
                             ? 'secondary' 
                             : 'outline'
-                      }>
+                      } className="flex items-center">
+                        {getRoleIcon(role)}
                         {role}
                       </Badge>
                     ))
                   ) : (
-                    <Badge variant="outline">No Role</Badge>
+                    <Badge variant="outline" className="flex items-center">
+                      <Shield className="h-4 w-4 mr-1" />
+                      No Role
+                    </Badge>
                   )}
                 </div>
               </TableCell>

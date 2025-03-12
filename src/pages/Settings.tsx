@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import UserManagement from "@/components/settings/UserManagement";
+import RolesManagement from "@/components/settings/RolesManagement";
 
 interface UserProfile {
   id: string;
@@ -18,6 +20,7 @@ interface UserProfile {
 
 export default function Settings() {
   const { user } = useAuth();
+  const { isAdmin } = useUserRoles();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [username, setUsername] = useState("");
@@ -126,7 +129,8 @@ export default function Settings() {
         <TabsList className="mb-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="roles">Roles</TabsTrigger>
+          {isAdmin() && <TabsTrigger value="users">Users</TabsTrigger>}
         </TabsList>
         
         <TabsContent value="profile">
@@ -192,6 +196,10 @@ export default function Settings() {
         
         <TabsContent value="security">
           <PasswordChangeForm onChangePassword={changePassword} loading={loading} />
+        </TabsContent>
+        
+        <TabsContent value="roles">
+          <RolesManagement />
         </TabsContent>
         
         <TabsContent value="users">
