@@ -38,8 +38,11 @@ export function Header() {
                 <img
                   alt="Avatar"
                   className="rounded-full"
-                  src="https://avatar.vercel.sh/inventory"
+                  src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png"
                   style={{ aspectRatio: "32/32", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.currentTarget.src = "https://avatar.vercel.sh/inventory";
+                  }}
                 />
               </Button>
             </DropdownMenuTrigger>

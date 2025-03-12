@@ -20,7 +20,10 @@ export function PurchaseStatusBadge({ status }: PurchaseStatusBadgeProps) {
       case "cancelled":
         return { className: "bg-red-100 text-red-800", label: "Cancelled" };
       default:
-        return { className: "bg-gray-100 text-gray-800", label: status.charAt(0).toUpperCase() + status.slice(1) };
+        return { 
+          className: "bg-gray-100 text-gray-800", 
+          label: typeof status === 'string' ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'
+        };
     }
   };
 

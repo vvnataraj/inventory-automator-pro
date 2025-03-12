@@ -28,12 +28,11 @@ export function Sidebar() {
     <div className="flex h-full flex-col bg-white border-r">
       <div className="flex h-16 items-center gap-2 px-4 border-b">
         <div className="flex items-center gap-2">
-          <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">
-            {/* Custom logo - you can replace this with your image */}
+          <div className="h-10 w-10 rounded flex items-center justify-center">
             <img 
-              src="/logo.png" 
+              src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png" 
               alt="STOCKtopus Logo" 
-              className="h-8 w-8 object-contain"
+              className="h-10 w-10 object-contain"
               onError={(e) => {
                 // Fallback to SVG logo if image fails to load
                 e.currentTarget.style.display = 'none';
