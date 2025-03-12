@@ -26,15 +26,29 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
+        {badgeDisplayMode === "inline" ? (
+          // Inline display mode - status badge next to order number
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-lg">{order.orderNumber}</CardTitle>
+              <CardDescription>{order.customer.name}</CardDescription>
+            </div>
+            <div>
+              <OrderStatusBadge status={order.status} />
+            </div>
+          </div>
+        ) : (
+          // Stacked display mode - order info and status badge in columns
           <div>
-            <CardTitle className="text-lg">{order.orderNumber}</CardTitle>
-            <CardDescription>{order.customer.name}</CardDescription>
+            <div className="mb-3">
+              <CardTitle className="text-lg">{order.orderNumber}</CardTitle>
+              <CardDescription>{order.customer.name}</CardDescription>
+            </div>
+            <div className="flex flex-col gap-2">
+              <OrderStatusBadge status={order.status} />
+            </div>
           </div>
-          <div className={badgeDisplayMode === "stacked" ? "flex flex-col gap-2" : ""}>
-            <OrderStatusBadge status={order.status} />
-          </div>
-        </div>
+        )}
       </CardHeader>
       <CardContent className="pb-0">
         <div className="space-y-3">
