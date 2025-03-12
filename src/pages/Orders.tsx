@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ChevronUp, ChevronDown } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { OrderCard } from "@/components/orders/OrderCard";
 import { MainLayout } from "@/components/layout/MainLayout";

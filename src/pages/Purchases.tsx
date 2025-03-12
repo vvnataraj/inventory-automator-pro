@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Truck, ChevronUp, ChevronDown } from "lucide-react";
+import { Truck, ChevronUp, ChevronDown, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -105,7 +104,6 @@ export default function Purchases() {
       let valueA = a[sortField];
       let valueB = b[sortField];
       
-      // Handle date fields
       if (sortField === 'orderDate' || sortField === 'expectedDeliveryDate' || sortField === 'receivedDate') {
         valueA = valueA ? new Date(valueA).getTime() : 0;
         valueB = valueB ? new Date(valueB).getTime() : 0;

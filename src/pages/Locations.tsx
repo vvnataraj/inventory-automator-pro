@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2 } from "lucide-react";
+import { Building2, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,7 +47,6 @@ export default function Locations() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
 
-  // Filter locations based on search query
   const filteredLocations = locations.filter(location =>
     location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     location.type.toLowerCase().includes(searchQuery.toLowerCase())
