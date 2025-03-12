@@ -2,6 +2,7 @@ import { generateInventoryItems } from "./inventoryData";
 import { subDays, subHours, subMinutes } from "date-fns";
 import { faker } from "@faker-js/faker";
 import { InventoryItem } from "@/types/inventory";
+import { Order, OrderStatus } from "@/types/order";
 
 // Sample customer data
 const customers = [
