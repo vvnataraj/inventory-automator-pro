@@ -35,44 +35,55 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Get all profiles (users) from the profiles table
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, created_at')
-        .order('created_at', { ascending: false });
-      
-      if (profilesError) throw profilesError;
-      
-      // Fetch all user roles
+      // Get all user roles - this will be our primary source of users
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
       
       if (rolesError) throw rolesError;
       
-      // Map roles to users
-      if (profiles) {
-        const usersWithRoles = profiles.map(profile => {
-          const userRoles = rolesData
-            ? rolesData
-                .filter(r => r.user_id === profile.id)
-                .map(r => r.role)
-            : [];
-          
-          return {
-            id: profile.id,
-            email: profile.username || 'No email available',
-            last_sign_in_at: null, // We don't have access to this via profiles
-            created_at: profile.created_at,
-            roles: userRoles,
-            is_disabled: false // Default value, would need server-side check in real app
-          };
+      if (rolesData && rolesData.length > 0) {
+        // Create a map to group roles by user_id
+        const userRolesMap = new Map();
+        
+        rolesData.forEach(role => {
+          if (!userRolesMap.has(role.user_id)) {
+            userRolesMap.set(role.user_id, {
+              id: role.user_id,
+              email: `User ${role.user_id.substring(0, 8)}...`, // Placeholder email
+              roles: [role.role],
+              created_at: new Date().toISOString(), // Default value
+              last_sign_in_at: null,
+              is_disabled: false
+            });
+          } else {
+            const user = userRolesMap.get(role.user_id);
+            user.roles.push(role.role);
+          }
         });
         
-        setUsers(usersWithRoles);
+        // Try to get profile information if available
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, created_at');
+        
+        // Update user information with profile data if available
+        if (profiles && !profilesError) {
+          profiles.forEach(profile => {
+            if (userRolesMap.has(profile.id)) {
+              const user = userRolesMap.get(profile.id);
+              user.email = profile.username || `User ${profile.id.substring(0, 8)}...`;
+              user.created_at = profile.created_at;
+            }
+          });
+        }
+        
+        setUsers(Array.from(userRolesMap.values()));
+        toast.success("Users loaded successfully");
+      } else {
+        setUsers([]);
+        toast.info("No users found in the system");
       }
-      
-      toast.success("Users loaded successfully");
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
