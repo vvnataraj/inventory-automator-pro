@@ -12,6 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  assignUserRole: (email: string, role: 'admin' | 'manager' | 'user') => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +42,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Utility function to assign a role to a user by email
+  const assignUserRole = async (email: string, role: 'admin' | 'manager' | 'user'): Promise<boolean> => {
+    try {
+      // First find the user by email
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', email)
+        .single();
+      
+      if (userError || !userData) {
+        // Try to fetch directly from auth users
+        const { data: authData, error: authError } = await supabase.auth.admin.getUserByEmail(email);
+        
+        if (authError || !authData.user) {
+          toast.error(`User with email ${email} not found`);
+          return false;
+        }
+        
+        // Add user role with the user ID from auth
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: authData.user.id,
+            role: role
+          });
+        
+        if (roleError) {
+          console.error("Error assigning role:", roleError);
+          toast.error(`Failed to assign ${role} role to ${email}`);
+          return false;
+        }
+      } else {
+        // Add user role with the user ID from profiles
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userData.id,
+            role: role
+          });
+        
+        if (roleError) {
+          console.error("Error assigning role:", roleError);
+          toast.error(`Failed to assign ${role} role to ${email}`);
+          return false;
+        }
+      }
+      
+      toast.success(`Role ${role} assigned to ${email} successfully`);
+      return true;
+    } catch (error) {
+      console.error("Error in assignUserRole:", error);
+      toast.error(`Error assigning role: ${error.message}`);
+      return false;
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -112,8 +170,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Immediately try to assign admin role to johnson.lucym@gmail.com when the provider is mounted
+  useEffect(() => {
+    if (!loading && user) {
+      const targetEmail = "johnson.lucym@gmail.com";
+      assignUserRole(targetEmail, 'admin');
+    }
+  }, [loading]);
+
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      user, 
+      loading, 
+      signIn, 
+      signUp, 
+      signOut,
+      assignUserRole 
+    }}>
       {children}
     </AuthContext.Provider>
   );

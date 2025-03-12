@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +19,7 @@ type User = {
 };
 
 export default function UserManagement() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, assignUserRole } = useAuth();
   const { isAdmin } = useUserRoles();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,47 +29,6 @@ export default function UserManagement() {
       fetchUsers();
     }
   }, [currentUser]);
-
-  // This function can be called programmatically to assign a role to a user by email
-  async function assignRoleToUserByEmail(email: string, roleToAssign: "admin" | "manager" | "user") {
-    try {
-      setLoading(true);
-      
-      // First find the user by email
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-      
-      if (!user) {
-        toast.error(`User with email ${email} not found`);
-        return false;
-      }
-      
-      // Check if user already has this role
-      if (user.roles.includes(roleToAssign)) {
-        toast.info(`User already has the ${roleToAssign} role`);
-        return true;
-      }
-      
-      // Add the role to the user
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: user.id,
-          role: roleToAssign
-        });
-      
-      if (error) throw error;
-      
-      toast.success(`Role ${roleToAssign} assigned to ${email} successfully`);
-      await fetchUsers(); // Refresh the user list
-      return true;
-    } catch (error) {
-      console.error("Error assigning role:", error);
-      toast.error(`Failed to assign role: ${error.message}`);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function fetchUsers() {
     try {
@@ -153,10 +111,10 @@ export default function UserManagement() {
       const targetUser = users.find(u => u.email.toLowerCase() === targetEmail.toLowerCase());
       
       if (targetUser && !targetUser.roles.includes('admin')) {
-        assignRoleToUserByEmail(targetEmail, 'admin');
+        assignUserRole(targetEmail, 'admin');
       }
     }
-  }, [users]);
+  }, [users, assignUserRole]);
   
   if (!isAdmin()) {
     return (
