@@ -39,18 +39,20 @@ export function Sidebar() {
             >
               {/* Octopus head */}
               <circle cx="12" cy="10" r="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.2" />
-              {/* Eyes */}
-              <circle cx="10" cy="9" r="1" fill="currentColor" />
-              <circle cx="14" cy="9" r="1" fill="currentColor" />
-              {/* Tentacle arms */}
-              <path d="M8 14C6 16 4 17 3 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M9 15C8 18 7 20 5 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M12 16C12 19 12 21 12 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M15 15C16 18 17 20 19 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M16 14C18 16 20 17 21 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M7 14C5 15 4 15 2 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M17 14C19 15 20 15 22 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M10 13C8 10 6 9 2 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              {/* Happier eyes - slightly curved upward */}
+              <path d="M9.5 8.5C9.5 8.5 9.5 9 10 9C10.5 9 10.5 8.5 10.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M13.5 8.5C13.5 8.5 13.5 9 14 9C14.5 9 14.5 8.5 14.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              {/* Happy smile */}
+              <path d="M10 11C10.8333 11.6667 13.2 12.4 14 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              {/* Tentacle arms - more playful curves */}
+              <path d="M8 14C6 15.5 4.5 17 3.5 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M9 15C8.5 17.5 7.5 19.5 5.5 21.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M12 16C12 18.5 12 20.5 12 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M15 15C15.5 17.5 16.5 19.5 18.5 21.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M16 14C18 15.5 19.5 17 20.5 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M7 14C5.5 15 4.5 15 2.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M17 14C18.5 15 19.5 15 21.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M10 13C8.5 10.5 6.5 9.5 3 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
           <span className="font-semibold text-lg">STOCKtopus</span>
