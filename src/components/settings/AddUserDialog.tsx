@@ -33,7 +33,7 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
   const [loading, setLoading] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
-  const [newUserRole, setNewUserRole] = useState<Role>("admin"); // Default to "admin"
+  const [newUserRole, setNewUserRole] = useState<Role>("user");
   
   async function addUser() {
     try {
@@ -61,18 +61,13 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       if (roleError) throw roleError;
       
       toast.success("User created successfully. Please check email for confirmation.");
-      
-      // Explicitly refresh user list
-      setTimeout(() => {
-        onUserAdded();
-      }, 500);
-      
+      onUserAdded();
       setOpen(false);
       
       // Reset form
       setNewUserEmail("");
       setNewUserPassword("");
-      setNewUserRole("admin");
+      setNewUserRole("user");
     } catch (error) {
       console.error("Error creating user:", error);
       toast.error("Failed to create user: " + error.message);

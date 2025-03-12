@@ -20,7 +20,7 @@ type User = {
 };
 
 export default function UserManagement() {
-  const { user: currentUser, assignUserRole } = useAuth();
+  const { user: currentUser } = useAuth();
   const { isAdmin } = useUserRoles();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,66 +35,53 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Get all authenticated users from auth.users via the admin API
-      // This is simulated since we can't directly access auth.users from the client
-      
-      // First get user profiles - this will be our most comprehensive source of users
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, created_at, avatar_url');
-      
-      if (profilesError) throw profilesError;
-      
-      // Then get all user roles
+      // Get all user roles - this will be our primary source of users
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
       
       if (rolesError) throw rolesError;
       
-      // Create a map to group roles by user_id and build our user list
-      const userRolesMap = new Map();
-      
-      // Add all profiles first
-      if (profiles && profiles.length > 0) {
-        profiles.forEach(profile => {
-          userRolesMap.set(profile.id, {
-            id: profile.id,
-            email: profile.username || `User ${profile.id.substring(0, 8)}...`,
-            created_at: profile.created_at,
-            last_sign_in_at: null,
-            roles: [],
-            is_disabled: false
-          });
-        });
-      }
-      
-      // Add roles to users
       if (rolesData && rolesData.length > 0) {
+        // Create a map to group roles by user_id
+        const userRolesMap = new Map();
+        
         rolesData.forEach(role => {
           if (!userRolesMap.has(role.user_id)) {
-            // If user doesn't exist in map yet, add them
             userRolesMap.set(role.user_id, {
               id: role.user_id,
-              email: `User ${role.user_id.substring(0, 8)}...`,
+              email: `User ${role.user_id.substring(0, 8)}...`, // Placeholder email
               roles: [role.role],
-              created_at: new Date().toISOString(),
+              created_at: new Date().toISOString(), // Default value
               last_sign_in_at: null,
               is_disabled: false
             });
           } else {
-            // Otherwise just add the role
             const user = userRolesMap.get(role.user_id);
             user.roles.push(role.role);
           }
         });
-      }
-      
-      setUsers(Array.from(userRolesMap.values()));
-      
-      if (userRolesMap.size > 0) {
-        toast.success(`${userRolesMap.size} users loaded successfully`);
+        
+        // Try to get profile information if available
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, created_at');
+        
+        // Update user information with profile data if available
+        if (profiles && !profilesError) {
+          profiles.forEach(profile => {
+            if (userRolesMap.has(profile.id)) {
+              const user = userRolesMap.get(profile.id);
+              user.email = profile.username || `User ${profile.id.substring(0, 8)}...`;
+              user.created_at = profile.created_at;
+            }
+          });
+        }
+        
+        setUsers(Array.from(userRolesMap.values()));
+        toast.success("Users loaded successfully");
       } else {
+        setUsers([]);
         toast.info("No users found in the system");
       }
     } catch (error) {
@@ -105,21 +92,9 @@ export default function UserManagement() {
     }
   }
   
-  // Immediately try to assign admin role to lucy.tuhill@gmail.com
-  useEffect(() => {
-    if (users.length > 0) {
-      const targetEmail = "lucy.tuhill@gmail.com";
-      const targetUser = users.find(u => u.email.toLowerCase() === targetEmail.toLowerCase());
-      
-      if (targetUser && !targetUser.roles.includes('admin')) {
-        assignUserRole(targetEmail, 'admin');
-      }
-    }
-  }, [users, assignUserRole]);
-  
   if (!isAdmin()) {
     return (
-      <div className="space-y-4 w-full">
+      <div className="space-y-4">
         <h3 className="text-lg font-medium">User Management</h3>
         <p>You need admin privileges to access this section.</p>
       </div>
@@ -127,10 +102,10 @@ export default function UserManagement() {
   }
   
   return (
-    <Card className="w-full">
-      <CardContent className="pt-6 px-0 sm:px-6">
-        <div className="space-y-6 w-full">
-          <div className="flex items-center justify-between px-6 sm:px-0">
+    <Card>
+      <CardContent className="pt-6">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-medium">User Management</h3>
               <p className="text-sm text-muted-foreground">
@@ -157,9 +132,7 @@ export default function UserManagement() {
               <p>Loading users...</p>
             </div>
           ) : (
-            <div className="w-full overflow-x-auto">
-              <UserTable users={users} loading={loading} onUserUpdated={fetchUsers} />
-            </div>
+            <UserTable users={users} loading={loading} onUserUpdated={fetchUsers} />
           )}
         </div>
       </CardContent>

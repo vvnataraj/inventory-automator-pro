@@ -38,9 +38,10 @@ export default function Login() {
       <div className="mb-8 text-center">
         <div className="flex flex-col items-center mb-4">
           <img 
-            src="/lovable-uploads/bc0b9ecb-0e38-45ea-80dc-54e336b23c9f.png" 
+            src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png" 
             alt="STOCKtopus Logo" 
             className="h-32 w-32 object-contain mb-2"
+            style={{ mixBlendMode: 'multiply' }}
           />
           <div className="flex flex-col">
             <span className="font-bold text-4xl bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
@@ -75,7 +76,7 @@ export default function Login() {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="signin" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md shadow-sm">
+            <TabsContent value="signin" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md">
               <h3 className="text-lg font-semibold mb-4 text-gray-800">Log in to your account</h3>
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
@@ -119,7 +120,7 @@ export default function Login() {
               </form>
             </TabsContent>
             
-            <TabsContent value="signup" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md shadow-sm">
+            <TabsContent value="signup" className="mt-0 pt-4 pb-2 px-2 bg-white/70 rounded-md">
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Create a new account</h3>
                 <p className="text-sm text-gray-600">Join STOCKtopus to start managing your inventory efficiently</p>

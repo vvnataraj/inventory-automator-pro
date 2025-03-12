@@ -44,11 +44,9 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
 
   return (
     <TableRow>
-      <TableCell className="truncate max-w-[200px]" title={user.email}>
-        {user.email}
-      </TableCell>
+      <TableCell>{user.email}</TableCell>
       <TableCell>
-        <div className="flex flex-wrap gap-1 items-center">
+        <div className="flex flex-wrap gap-1">
           {user.roles.length > 0 ? (
             user.roles.map((role, index) => (
               <UserRoleBadge key={index} role={role} />
