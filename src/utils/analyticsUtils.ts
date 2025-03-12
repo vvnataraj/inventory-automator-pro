@@ -62,7 +62,8 @@ export const getPaymentMethodDistribution = (sales: Sale[]) => {
 };
 
 // Custom label for pie chart - returns props that will be used in the component
-export const renderCustomizedPieChartLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+export const renderCustomizedPieChartLabel = (props: any) => {
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
