@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, GridIcon, TableIcon } from "lucide-react";
+import { Search, Filter, ArrowUpDown, GridIcon, TableIcon, ChevronUp, ChevronDown } from "lucide-react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItemCard } from "@/components/inventory/InventoryItemCard";
-import { InventoryItem } from "@/types/inventory";
+import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { useToast } from "@/hooks/use-toast";
 import { EditInventoryItem } from "@/components/inventory/EditInventoryItem";
 import { TransferInventoryItem } from "@/components/inventory/TransferInventoryItem";
@@ -14,11 +14,43 @@ export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
-  const { items, isLoading, totalItems, updateItem } = useInventoryItems(currentPage, searchQuery);
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  
+  const { items, isLoading, totalItems, updateItem } = useInventoryItems(
+    currentPage, 
+    searchQuery,
+    sortField,
+    sortDirection
+  );
+  
   const { toast } = useToast();
   
   const itemsPerPage = 20;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortHeader = ({ field, label }: { field: SortField, label: string }) => (
+    <th 
+      className="py-3 px-4 text-left font-medium text-muted-foreground cursor-pointer hover:bg-muted/50"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-2">
+        {label}
+        {sortField === field && (
+          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+        )}
+      </div>
+    </th>
+  );
 
   const handleSaveItem = (updatedItem: InventoryItem) => {
     updateItem(updatedItem);
@@ -119,13 +151,13 @@ export default function Inventory() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="py-3 px-4 text-left font-medium text-muted-foreground">SKU</th>
-                      <th className="py-3 px-4 text-left font-medium text-muted-foreground">Name</th>
-                      <th className="py-3 px-4 text-left font-medium text-muted-foreground">Category</th>
-                      <th className="py-3 px-4 text-left font-medium text-muted-foreground">Cost</th>
-                      <th className="py-3 px-4 text-left font-medium text-muted-foreground">RRP</th>
-                      <th className="py-3 px-4 text-left font-medium text-muted-foreground">Stock</th>
-                      <th className="py-3 px-4 text-left font-medium text-muted-foreground">Location</th>
+                      <SortHeader field="sku" label="SKU" />
+                      <SortHeader field="name" label="Name" />
+                      <SortHeader field="category" label="Category" />
+                      <SortHeader field="cost" label="Cost" />
+                      <SortHeader field="rrp" label="RRP" />
+                      <SortHeader field="stock" label="Stock" />
+                      <SortHeader field="location" label="Location" />
                       <th className="py-3 px-4 text-left font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>

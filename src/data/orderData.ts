@@ -1,7 +1,7 @@
-
 import { Order, OrderStatus } from "@/types/order";
 import { generateInventoryItems } from "./inventoryData";
 import { format, subDays, subHours, subMinutes } from "date-fns";
+import { faker } from "faker";
 
 // Sample customer data
 const customers = [
@@ -219,5 +219,54 @@ export const getOrders = (
   return {
     items: paginatedOrders,
     total: filteredOrders.length
+  };
+};
+
+// Update where price was being used to use cost instead
+export const generateOrder = (items: InventoryItem[]): Order => {
+  const selectedItems = items.map(item => ({
+    id: faker.string.uuid(),
+    productId: item.id,
+    name: item.name,
+    quantity: Math.floor(Math.random() * 5) + 1,
+    cost: item.cost,
+    total: item.cost * (Math.floor(Math.random() * 5) + 1)
+  }));
+
+  const orderItems = selectedItems.map(item => ({
+    id: faker.string.uuid(),
+    productId: item.id,
+    name: item.name,
+    quantity: Math.floor(Math.random() * 5) + 1,
+    cost: item.cost,
+    total: item.cost * (Math.floor(Math.random() * 5) + 1)
+  }));
+
+  const subtotal = orderItems.reduce((sum, item) => sum + item.total, 0);
+  const tax = parseFloat((subtotal * 0.08).toFixed(2)); // 8% tax
+  const shipping = parseFloat((5 + Math.random() * 15).toFixed(2)); // $5-$20 shipping
+
+  const grandTotal = parseFloat((subtotal + tax + shipping).toFixed(2));
+
+  const { status, shippedAt, deliveredAt } = generateStatusWithDates(randomDate(90));
+
+  return {
+    id: `order-${Math.floor(Math.random() * 1000) + 1}`,
+    orderNumber: generateOrderNumber(Math.floor(Math.random() * 1000)),
+    customer: customers[Math.floor(Math.random() * customers.length)],
+    items: orderItems,
+    status,
+    total: subtotal,
+    tax,
+    shipping,
+    discount: undefined,
+    grandTotal,
+    paymentMethod: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+    shippingAddress: generateShippingAddress(),
+    notes: Math.random() > 0.8 ? "Customer requested gift wrapping" : undefined,
+    createdAt: randomDate(90),
+    updatedAt: subHours(new Date(), Math.floor(Math.random() * 48)).toISOString(),
+    shippedAt,
+    deliveredAt
   };
 };

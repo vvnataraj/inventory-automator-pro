@@ -1,4 +1,3 @@
-
 export interface InventoryItem {
   id: string;
   sku: string;
@@ -31,3 +30,6 @@ export interface InventoryItem {
   supplier: string;
   tags: string[];
 }
+
+export type SortField = 'name' | 'sku' | 'category' | 'cost' | 'rrp' | 'stock' | 'location';
+export type SortDirection = 'asc' | 'desc';
