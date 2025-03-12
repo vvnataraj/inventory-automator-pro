@@ -1,7 +1,7 @@
-import { Order, OrderStatus } from "@/types/order";
 import { generateInventoryItems } from "./inventoryData";
-import { format, subDays, subHours, subMinutes } from "date-fns";
-import { faker } from "faker";
+import { subDays, subHours, subMinutes } from "date-fns";
+import { faker } from "@faker-js/faker";
+import { InventoryItem } from "@/types/inventory";
 
 // Sample customer data
 const customers = [
@@ -67,10 +67,9 @@ const generateOrderItems = () => {
   for (let i = 0; i < numItems; i++) {
     const randomIndex = Math.floor(Math.random() * allItems.length);
     const item = allItems[randomIndex];
-    
     const quantity = Math.floor(Math.random() * 5) + 1; // 1 to 5 quantity
-    const price = item.price;
-    const subtotal = price * quantity;
+    const cost = item.cost;
+    const subtotal = cost * quantity;
     
     selectedItems.push({
       id: `item-${i + 1}`,
@@ -78,11 +77,11 @@ const generateOrderItems = () => {
         id: item.id,
         name: item.name,
         sku: item.sku,
-        price: item.price,
+        cost: item.cost,
         imageUrl: item.imageUrl
       },
       quantity,
-      price,
+      price: cost, // Using cost as the price
       subtotal
     });
   }
@@ -224,28 +223,23 @@ export const getOrders = (
 
 // Update where price was being used to use cost instead
 export const generateOrder = (items: InventoryItem[]): Order => {
-  const selectedItems = items.map(item => ({
+  const orderItems = items.map(item => ({
     id: faker.string.uuid(),
-    productId: item.id,
-    name: item.name,
+    product: {
+      id: item.id,
+      name: item.name,
+      sku: item.sku,
+      cost: item.cost,
+      imageUrl: item.imageUrl
+    },
     quantity: Math.floor(Math.random() * 5) + 1,
-    cost: item.cost,
-    total: item.cost * (Math.floor(Math.random() * 5) + 1)
+    price: item.cost,
+    subtotal: item.cost * (Math.floor(Math.random() * 5) + 1)
   }));
 
-  const orderItems = selectedItems.map(item => ({
-    id: faker.string.uuid(),
-    productId: item.id,
-    name: item.name,
-    quantity: Math.floor(Math.random() * 5) + 1,
-    cost: item.cost,
-    total: item.cost * (Math.floor(Math.random() * 5) + 1)
-  }));
-
-  const subtotal = orderItems.reduce((sum, item) => sum + item.total, 0);
+  const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
   const tax = parseFloat((subtotal * 0.08).toFixed(2)); // 8% tax
   const shipping = parseFloat((5 + Math.random() * 15).toFixed(2)); // $5-$20 shipping
-
   const grandTotal = parseFloat((subtotal + tax + shipping).toFixed(2));
 
   const { status, shippedAt, deliveredAt } = generateStatusWithDates(randomDate(90));
