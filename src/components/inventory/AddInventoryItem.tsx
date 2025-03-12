@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +44,6 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
       category: formData.category || faker.commerce.department(),
       subcategory: faker.commerce.productAdjective(),
       brand: faker.company.name(),
-      price: parseFloat(faker.commerce.price({ min: 50, max: 200 })),
       rrp: formData.rrp,
       cost: formData.cost,
       stock: formData.stock,
