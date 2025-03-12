@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
@@ -72,7 +73,9 @@ export default function Inventory() {
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">SKU</th>
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Name</th>
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Category</th>
+                        <th className="py-3 px-4 text-left font-medium text-muted-foreground">Cost</th>
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Price</th>
+                        <th className="py-3 px-4 text-left font-medium text-muted-foreground">RRP</th>
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Stock</th>
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Location</th>
                         <th className="py-3 px-4 text-left font-medium text-muted-foreground">Actions</th>
@@ -84,7 +87,9 @@ export default function Inventory() {
                           <td className="py-3 px-4">{item.sku}</td>
                           <td className="py-3 px-4 font-medium">{item.name}</td>
                           <td className="py-3 px-4">{item.category}</td>
+                          <td className="py-3 px-4">${item.cost.toFixed(2)}</td>
                           <td className="py-3 px-4">${item.price.toFixed(2)}</td>
+                          <td className="py-3 px-4">${item.rrp ? item.rrp.toFixed(2) : item.price.toFixed(2)}</td>
                           <td className="py-3 px-4">
                             <span className={`px-2 py-1 rounded-full text-xs ${
                               item.stock <= item.lowStockThreshold

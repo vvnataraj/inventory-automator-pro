@@ -8,6 +8,7 @@ export interface InventoryItem {
   subcategory: string;
   brand: string;
   price: number;
+  rrp?: number;
   cost: number;
   stock: number;
   lowStockThreshold: number;

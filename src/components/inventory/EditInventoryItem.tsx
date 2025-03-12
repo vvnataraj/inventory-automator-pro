@@ -33,7 +33,7 @@ export const EditInventoryItem = ({ item, onSave }: EditInventoryItemProps) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' || name === 'stock' ? Number(value) : value
+      [name]: name === 'price' || name === 'stock' || name === 'cost' || name === 'rrp' ? Number(value) : value
     }));
   };
 
@@ -64,12 +64,34 @@ export const EditInventoryItem = ({ item, onSave }: EditInventoryItemProps) => {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="price" className="text-right">Price</Label>
+              <Label htmlFor="price" className="text-right">Retail Price</Label>
               <Input
                 id="price"
                 name="price"
                 type="number"
                 value={formData.price}
+                onChange={handleChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="cost" className="text-right">Cost Price</Label>
+              <Input
+                id="cost"
+                name="cost"
+                type="number"
+                value={formData.cost}
+                onChange={handleChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="rrp" className="text-right">RRP</Label>
+              <Input
+                id="rrp"
+                name="rrp"
+                type="number"
+                value={formData.rrp || formData.price}
                 onChange={handleChange}
                 className="col-span-3"
               />
