@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,10 +10,10 @@ import { MainLayout } from "@/components/layout/MainLayout";
 export default function Purchases() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const { purchases, isLoading, totalItems } = usePurchases(currentPage, searchQuery);
+  const { purchases, totalPurchases, isLoading } = usePurchases(currentPage, searchQuery);
   
   const itemsPerPage = 12;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = Math.ceil(totalPurchases / itemsPerPage);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -106,8 +105,8 @@ export default function Purchases() {
           <div className="flex justify-between items-center mt-6">
             <div className="text-sm text-muted-foreground">
               Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-              <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{" "}
-              <span className="font-medium">{totalItems}</span> purchases
+              <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalPurchases)}</span> of{" "}
+              <span className="font-medium">{totalPurchases}</span> purchases
             </div>
             
             <div className="flex gap-2">

@@ -10,10 +10,14 @@ export default function Orders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [badgeDisplayMode, setBadgeDisplayMode] = useState<"inline" | "stacked">("inline");
-  const { orders, isLoading, totalItems } = useOrders(currentPage, searchQuery);
+  const { orders, totalOrders, isLoading } = useOrders(currentPage, 12);
   
+  const handleViewDetails = (order: Order) => {
+    console.log("Viewing details for order:", order);
+  };
+
   const itemsPerPage = 12;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = Math.ceil(totalOrders / itemsPerPage);
 
   const toggleBadgeDisplayMode = () => {
     setBadgeDisplayMode(prev => prev === "inline" ? "stacked" : "inline");
@@ -60,15 +64,20 @@ export default function Orders() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
             {orders.map((order) => (
-              <OrderCard key={order.id} order={order} badgeDisplayMode={badgeDisplayMode} />
+              <OrderCard 
+                key={order.id} 
+                order={order} 
+                badgeDisplayMode={badgeDisplayMode}
+                onViewDetails={handleViewDetails}
+              />
             ))}
           </div>
 
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-muted-foreground">
-              Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-              <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{" "}
-              <span className="font-medium">{totalItems}</span> orders
+              Showing <span className="font-medium">{(currentPage - 1) * 12 + 1}</span> to{" "}
+              <span className="font-medium">{Math.min(currentPage * 12, totalOrders)}</span> of{" "}
+              <span className="font-medium">{totalOrders}</span> orders
             </div>
             
             <div className="flex gap-2">

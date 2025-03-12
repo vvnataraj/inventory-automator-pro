@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { InventoryItem } from "@/types/inventory";
-import { Purchase, PurchaseStatus } from "@/types/purchase";
+import { Purchase, PurchaseItem, PurchaseStatus } from "@/types/purchase";
 
 const locations = ["Warehouse A", "Warehouse B", "Storefront", "Online"];
 
@@ -173,3 +173,23 @@ export const locationsData = [
     spaceUtilization: 0,
   },
 ];
+
+// Function to get paginated and filtered purchase orders
+export const getPurchases = (
+  page: number = 1,
+  pageSize: number = 20,
+  searchQuery: string = ""
+): { items: Purchase[], total: number } => {
+  const filteredPurchases = purchaseOrders.filter(purchase =>
+    purchase.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    purchase.supplier.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const start = (page - 1) * pageSize;
+  const paginatedPurchases = filteredPurchases.slice(start, start + pageSize);
+
+  return {
+    items: paginatedPurchases,
+    total: filteredPurchases.length
+  };
+};
