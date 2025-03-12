@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -102,9 +101,7 @@ export default function Sales() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <SalesAnalytics sales={sales} />
-      </div>
+      <SalesAnalytics sales={sales} />
 
       <ListControls 
         searchPlaceholder="Search sales..."
