@@ -9,7 +9,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, FileText } from "lucide-react";
+import { Eye, FileText, ChevronUp, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Sale } from "@/types/sale";
 import { SaleStatusBadge } from "./SaleStatusBadge";
@@ -17,9 +17,18 @@ import { SaleStatusBadge } from "./SaleStatusBadge";
 interface SalesTableProps {
   sales: Sale[];
   isLoading: boolean;
+  sortField?: string;
+  sortDirection?: "asc" | "desc";
+  onSort?: (field: string) => void;
 }
 
-export const SalesTable: React.FC<SalesTableProps> = ({ sales, isLoading }) => {
+export const SalesTable: React.FC<SalesTableProps> = ({ 
+  sales, 
+  isLoading, 
+  sortField, 
+  sortDirection, 
+  onSort 
+}) => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -36,17 +45,35 @@ export const SalesTable: React.FC<SalesTableProps> = ({ sales, isLoading }) => {
     );
   }
 
+  const SortableHeader = ({ field, label }: { field: string, label: string }) => {
+    const isSorted = sortField === field;
+
+    return (
+      <TableHead 
+        className={`py-3 px-4 ${onSort ? 'cursor-pointer hover:bg-muted/50' : ''}`}
+        onClick={() => onSort && onSort(field)}
+      >
+        <div className="flex items-center gap-1">
+          {label}
+          {isSorted && (
+            sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+          )}
+        </div>
+      </TableHead>
+    );
+  };
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-32">Sale ID</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Date</TableHead>
+            <SortableHeader field="saleNumber" label="Sale ID" />
+            <SortableHeader field="customerName" label="Customer" />
+            <SortableHeader field="date" label="Date" />
             <TableHead>Items</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead>Status</TableHead>
+            <SortableHeader field="total" label="Total" />
+            <SortableHeader field="status" label="Status" />
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>

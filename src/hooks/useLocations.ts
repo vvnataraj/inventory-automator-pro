@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { locationsData } from "@/data/inventoryData";
 import { LocationFormData } from "@/components/locations/AddLocationModal";
 
@@ -15,6 +15,7 @@ interface Location {
 
 export function useLocations() {
   const [locations, setLocations] = useState<Location[]>(locationsData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const addLocation = useCallback((locationData: LocationFormData) => {
     const newLocation: Location = {
@@ -52,6 +53,7 @@ export function useLocations() {
 
   return {
     locations,
+    isLoading,
     addLocation,
     updateLocation,
     deleteLocation
