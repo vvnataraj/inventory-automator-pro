@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Search, Filter, ArrowUpDown, LayoutIcon } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { OrderCard } from "@/components/orders/OrderCard";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Order } from "@/types/order"; // Add the Order type import
 
 export default function Orders() {
   const [searchQuery, setSearchQuery] = useState("");
