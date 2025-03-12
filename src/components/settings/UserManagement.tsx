@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,10 +105,10 @@ export default function UserManagement() {
     }
   }
   
-  // Immediately try to assign admin role to johnson.lucym@gmail.com
+  // Immediately try to assign admin role to lucy.tuhill@gmail.com
   useEffect(() => {
     if (users.length > 0) {
-      const targetEmail = "johnson.lucym@gmail.com";
+      const targetEmail = "lucy.tuhill@gmail.com";
       const targetUser = users.find(u => u.email.toLowerCase() === targetEmail.toLowerCase());
       
       if (targetUser && !targetUser.roles.includes('admin')) {

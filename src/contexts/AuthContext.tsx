@@ -232,7 +232,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && user) {
-      const targetEmail = "johnson.lucym@gmail.com";
+      // Update to assign admin role to lucy.tuhill@gmail.com
+      const targetEmail = "lucy.tuhill@gmail.com";
       assignUserRole(targetEmail, 'admin');
     }
   }, [loading]);
