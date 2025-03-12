@@ -13,6 +13,24 @@ export const PaymentMethodsChart: React.FC<PaymentMethodsChartProps> = ({ sales 
   // Prepare data for payment methods
   const paymentMethodData = getPaymentMethodDistribution(sales);
 
+  // Custom label component that uses the output from renderCustomizedPieChartLabel
+  const CustomLabel = (props: any) => {
+    const labelProps = renderCustomizedPieChartLabel(props);
+    
+    return (
+      <text 
+        x={labelProps.x}
+        y={labelProps.y}
+        fill={labelProps.fill}
+        textAnchor={labelProps.textAnchor}
+        dominantBaseline={labelProps.dominantBaseline}
+        fontSize={labelProps.fontSize}
+      >
+        {labelProps.content}
+      </text>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -26,7 +44,7 @@ export const PaymentMethodsChart: React.FC<PaymentMethodsChartProps> = ({ sales 
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={renderCustomizedPieChartLabel}
+              label={CustomLabel}
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
