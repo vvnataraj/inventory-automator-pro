@@ -28,10 +28,10 @@ export function Sidebar() {
     <div className="flex h-full flex-col bg-white border-r">
       <div className="flex h-16 items-center gap-2 px-4 border-b">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
+          <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">
             <svg 
-              width="24" 
-              height="24" 
+              width="32" 
+              height="32" 
               viewBox="0 0 24 24" 
               fill="none" 
               xmlns="http://www.w3.org/2000/svg"
@@ -53,7 +53,7 @@ export function Sidebar() {
               <path d="M10 13C8 10 6 9 2 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
-          <span className="font-semibold">STOCKtopus</span>
+          <span className="font-semibold text-lg">STOCKtopus</span>
         </div>
       </div>
       <nav className="flex-1 space-y-1 p-2">
