@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import UserManagement from "@/components/settings/UserManagement";
 
 interface UserProfile {
   id: string;
@@ -125,6 +126,7 @@ export default function Settings() {
         <TabsList className="mb-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -190,6 +192,14 @@ export default function Settings() {
         
         <TabsContent value="security">
           <PasswordChangeForm onChangePassword={changePassword} loading={loading} />
+        </TabsContent>
+        
+        <TabsContent value="users">
+          <Card>
+            <CardContent className="pt-6">
+              <UserManagement />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
