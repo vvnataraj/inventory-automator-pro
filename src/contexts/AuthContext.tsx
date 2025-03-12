@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
@@ -72,6 +72,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         toast.error(error.message);
         return;
+      }
+      
+      // If sign-up is successful and we have a user, assign the "user" role
+      if (data && data.user) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({ 
+            user_id: data.user.id, 
+            role: 'user' 
+          });
+        
+        if (roleError) {
+          console.error("Error assigning user role:", roleError);
+          // We don't want to show this error to the user as their account was created
+          // but the role assignment failed - it can be fixed later.
+        }
       }
       
       toast.success("Registration successful! Please check your email to confirm your account.");
