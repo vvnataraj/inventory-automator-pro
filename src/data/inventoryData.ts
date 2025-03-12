@@ -1,42 +1,69 @@
-import { InventoryItem } from "@/types/inventory";
-import { Purchase, PurchaseItem, PurchaseStatus } from "@/types/purchase";
 import { faker } from "@faker-js/faker";
+import { InventoryItem } from "@/types/inventory";
+import { Purchase, PurchaseStatus } from "@/types/purchase";
 
 const locations = ["Warehouse A", "Warehouse B", "Storefront", "Online"];
 
-export const inventoryItems: InventoryItem[] = Array.from({ length: 100 }, (_, i) => {
-  const name = faker.commerce.productName();
-  const category = faker.commerce.department();
-  const cost = parseFloat(faker.commerce.price({ min: 10, max: 100 }));
-  const price = cost * (1 + Math.random() * 0.5);
-  const rrp = price * (1 + Math.random() * 0.3);
-  const stock = Math.floor(Math.random() * 100);
-  const lowStockThreshold = Math.floor(Math.random() * 10) + 5;
-  const sku = faker.string.alphanumeric(8).toUpperCase();
-  const supplier = faker.company.name();
-  const location = locations[Math.floor(Math.random() * locations.length)];
+// Helper function to generate inventory items
+export const generateInventoryItems = (): InventoryItem[] => {
+  return Array.from({ length: 100 }, (_, i) => ({
+    id: `item-${i + 1}`,
+    sku: faker.string.alphanumeric(8).toUpperCase(),
+    name: faker.commerce.productName(),
+    description: faker.commerce.productDescription(),
+    category: faker.commerce.department(),
+    subcategory: faker.commerce.productAdjective(),
+    brand: faker.company.name(),
+    price: parseFloat(faker.commerce.price({ min: 50, max: 200 })),
+    rrp: parseFloat(faker.commerce.price({ min: 200, max: 400 })),
+    cost: parseFloat(faker.commerce.price({ min: 20, max: 100 })),
+    stock: Math.floor(Math.random() * 100),
+    lowStockThreshold: Math.floor(Math.random() * 10) + 5,
+    minStockCount: Math.floor(Math.random() * 5) + 1,
+    location: locations[Math.floor(Math.random() * locations.length)],
+    barcode: faker.string.numeric(13),
+    dateAdded: faker.date.past().toISOString(),
+    lastUpdated: faker.date.recent().toISOString(),
+    imageUrl: faker.image.url(),
+    dimensions: {
+      length: parseFloat(faker.number.float({ min: 1, max: 100 }).toFixed(2)),
+      width: parseFloat(faker.number.float({ min: 1, max: 100 }).toFixed(2)),
+      height: parseFloat(faker.number.float({ min: 1, max: 100 }).toFixed(2)),
+      unit: 'cm'
+    },
+    weight: {
+      value: parseFloat(faker.number.float({ min: 0.1, max: 50 }).toFixed(2)),
+      unit: 'kg'
+    },
+    isActive: faker.datatype.boolean(),
+    supplier: faker.company.name(),
+    tags: Array.from({ length: Math.floor(Math.random() * 4) + 1 }, () => faker.commerce.productAdjective())
+  }));
+};
+
+// Generate the inventory items once
+export const inventoryItems = generateInventoryItems();
+
+// Function to get paginated and filtered inventory items
+export const getInventoryItems = (
+  page: number = 1,
+  pageSize: number = 20,
+  searchQuery: string = ""
+): { items: InventoryItem[], total: number } => {
+  const filteredItems = inventoryItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const start = (page - 1) * pageSize;
+  const paginatedItems = filteredItems.slice(start, start + pageSize);
 
   return {
-    id: `item-${i + 1}`,
-    name,
-    description: faker.commerce.productDescription(),
-    category,
-    cost,
-    price,
-    rrp,
-    stock,
-    lowStockThreshold,
-    sku,
-    supplier,
-    location,
-    images: [
-      faker.image.url(),
-      faker.image.url(),
-    ],
-    createdAt: faker.date.past().toISOString(),
-    updatedAt: faker.date.recent().toISOString(),
+    items: paginatedItems,
+    total: filteredItems.length
   };
-});
+};
 
 export const generatePurchaseOrders = (count: number): Purchase[] => {
   const suppliers = ["Acme Supplies", "Global Parts Inc.", "Tech Components Ltd.", "Industrial Warehouse", "Quality Materials Co."];
