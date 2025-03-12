@@ -98,12 +98,12 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Fetch all users
-      const { data: authUsers, error: authError } = await supabase
-        .from('auth.users')
-        .select('id, email, last_sign_in_at, created_at');
+      // We can only get users indirectly via their profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, created_at');
       
-      if (authError) throw authError;
+      if (profilesError) throw profilesError;
       
       // Fetch all user roles
       const { data: rolesData, error: rolesError } = await supabase
@@ -113,18 +113,25 @@ export default function UserManagement() {
       if (rolesError) throw rolesError;
       
       // Map roles to users
-      const usersWithRoles = authUsers.map(user => {
-        const userRoles = rolesData
-          .filter(r => r.user_id === user.id)
-          .map(r => r.role);
+      if (profiles) {
+        const usersWithRoles = profiles.map(profile => {
+          const userRoles = rolesData
+            ? rolesData
+                .filter(r => r.user_id === profile.id)
+                .map(r => r.role)
+            : [];
+          
+          return {
+            id: profile.id,
+            email: profile.username || 'No email available',
+            last_sign_in_at: null, // We don't have access to this via profiles
+            created_at: profile.created_at,
+            roles: userRoles,
+          };
+        });
         
-        return {
-          ...user,
-          roles: userRoles,
-        };
-      });
-      
-      setUsers(usersWithRoles);
+        setUsers(usersWithRoles);
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
@@ -137,14 +144,19 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // 1. Create the user in auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // We need to use the admin API - this won't work with the client
+      // Instead, we'll create a user and then assign the role
+      // First, create user via signup
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: newUserEmail,
         password: newUserPassword,
-        email_confirm: true,
       });
       
       if (authError) throw authError;
+      
+      if (!authData.user) {
+        throw new Error("Failed to create user");
+      }
       
       const newUserId = authData.user.id;
       
@@ -155,7 +167,7 @@ export default function UserManagement() {
       
       if (roleError) throw roleError;
       
-      toast.success("User created successfully");
+      toast.success("User created successfully. Please check email for confirmation.");
       fetchUsers();
       setAddUserOpen(false);
       
@@ -210,16 +222,20 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Delete user
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      // We can't directly delete users with the client SDK
+      // Let's just remove all their roles and set a flag in their profile
+      const { error: roleDeleteError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
       
-      if (error) throw error;
+      if (roleDeleteError) throw roleDeleteError;
       
-      toast.success("User deleted successfully");
+      toast.success("User roles removed successfully");
       fetchUsers();
     } catch (error) {
       console.error("Error deleting user:", error);
-      toast.error("Failed to delete user");
+      toast.error("Failed to remove user roles");
     } finally {
       setLoading(false);
     }
