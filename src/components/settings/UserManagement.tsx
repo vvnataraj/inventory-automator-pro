@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import AddUserDialog from "./AddUserDialog";
 import UserTable from "./UserTable";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 type User = {
   id: string;
@@ -32,10 +35,11 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // We can only get users indirectly via their profiles
+      // Get all profiles (users) from the profiles table
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, created_at');
+        .select('id, username, created_at')
+        .order('created_at', { ascending: false });
       
       if (profilesError) throw profilesError;
       
@@ -67,6 +71,8 @@ export default function UserManagement() {
         
         setUsers(usersWithRoles);
       }
+      
+      toast.success("Users loaded successfully");
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
@@ -85,15 +91,40 @@ export default function UserManagement() {
   }
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">User Management</h3>
-        <AddUserDialog onUserAdded={fetchUsers} />
-      </div>
-      
-      {loading && <div className="py-4 text-center">Loading users...</div>}
-      
-      <UserTable users={users} loading={loading} onUserUpdated={fetchUsers} />
-    </div>
+    <Card>
+      <CardContent className="pt-6">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium">User Management</h3>
+              <p className="text-sm text-muted-foreground">
+                {users.length} {users.length === 1 ? 'user' : 'users'} in the system
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchUsers}
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <AddUserDialog onUserAdded={fetchUsers} />
+            </div>
+          </div>
+          
+          {loading ? (
+            <div className="py-8 text-center">
+              <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+              <p>Loading users...</p>
+            </div>
+          ) : (
+            <UserTable users={users} loading={loading} onUserUpdated={fetchUsers} />
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
