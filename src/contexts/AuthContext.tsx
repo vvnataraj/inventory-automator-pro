@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -13,6 +12,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   assignUserRole: (email: string, role: 'admin' | 'manager' | 'user') => Promise<boolean>;
+  assignAllUsersAdminRole: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,14 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -43,10 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Utility function to assign a role to a user by email
   const assignUserRole = async (email: string, role: 'admin' | 'manager' | 'user'): Promise<boolean> => {
     try {
-      // First find the user by email - we'll need to query profiles
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
@@ -54,17 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
       
       if (userError || !userData) {
-        // If we can't find the user in profiles, we need to look up from auth
-        // However, we can't use getUserByEmail as it doesn't exist
-        // Instead, let's query using auth.getUser() and make a separate supabase call
         let userId = null;
         
-        // Get all users from profiles to search for matching email
         const { data: allProfiles } = await supabase
           .from('profiles')
           .select('id, username');
         
-        // Find a profile with matching email (case insensitive)
         const matchingProfile = allProfiles?.find(
           p => p.username && p.username.toLowerCase() === email.toLowerCase()
         );
@@ -76,7 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return false;
         }
         
-        // Add user role with the user ID we found
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
@@ -90,7 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return false;
         }
       } else {
-        // Add user role with the user ID from profiles
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
@@ -111,6 +100,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Error in assignUserRole:", error);
       toast.error(`Error assigning role: ${error.message}`);
       return false;
+    }
+  };
+
+  const assignAllUsersAdminRole = async (): Promise<void> => {
+    try {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username');
+      
+      if (profilesError) {
+        toast.error(`Error fetching profiles: ${profilesError.message}`);
+        return;
+      }
+      
+      if (!profiles || profiles.length === 0) {
+        toast.info("No users found to assign admin role to.");
+        return;
+      }
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (const profile of profiles) {
+        const { data: existingRole } = await supabase
+          .from('user_roles')
+          .select('id')
+          .eq('user_id', profile.id)
+          .eq('role', 'admin')
+          .single();
+        
+        if (existingRole) {
+          successCount++;
+          continue;
+        }
+        
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: profile.id,
+            role: 'admin'
+          });
+        
+        if (roleError) {
+          console.error(`Error assigning admin role to user ${profile.username}:`, roleError);
+          failCount++;
+        } else {
+          successCount++;
+        }
+      }
+      
+      if (failCount === 0) {
+        toast.success(`Successfully assigned admin role to all ${successCount} users.`);
+      } else {
+        toast.info(`Operation completed: ${successCount} successes, ${failCount} failures.`);
+      }
+    } catch (error) {
+      console.error("Error in assignAllUsersAdminRole:", error);
+      toast.error(`Error assigning admin roles: ${error.message}`);
     }
   };
 
@@ -146,7 +193,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // If sign-up is successful and we have a user, assign the "user" role
       if (data && data.user) {
         const { error: roleError } = await supabase
           .from('user_roles')
@@ -157,8 +203,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (roleError) {
           console.error("Error assigning user role:", roleError);
-          // We don't want to show this error to the user as their account was created
-          // but the role assignment failed - it can be fixed later.
         }
       }
       
@@ -184,7 +228,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Immediately try to assign admin role to johnson.lucym@gmail.com when the provider is mounted
   useEffect(() => {
     if (!loading && user) {
       const targetEmail = "johnson.lucym@gmail.com";
@@ -200,7 +243,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn, 
       signUp, 
       signOut,
-      assignUserRole 
+      assignUserRole,
+      assignAllUsersAdminRole
     }}>
       {children}
     </AuthContext.Provider>

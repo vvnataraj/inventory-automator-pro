@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,9 +18,10 @@ interface UserProfile {
 }
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, assignAllUsersAdminRole } = useAuth();
   const { isAdmin, loading: rolesLoading } = useUserRoles();
   const [loading, setLoading] = useState(false);
+  const [assigningRoles, setAssigningRoles] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -111,6 +111,15 @@ export default function Settings() {
       setLoading(false);
     }
   }
+  
+  const handleAssignAllAdminRole = async () => {
+    try {
+      setAssigningRoles(true);
+      await assignAllUsersAdminRole();
+    } finally {
+      setAssigningRoles(false);
+    }
+  };
   
   if (!user) {
     return (
@@ -206,7 +215,19 @@ export default function Settings() {
           <Card>
             <CardContent className="pt-6">
               {!rolesLoading && isAdmin() ? (
-                <UserManagement />
+                <>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-medium">User Management</h3>
+                    <Button 
+                      onClick={handleAssignAllAdminRole}
+                      disabled={assigningRoles}
+                      variant="outline"
+                    >
+                      {assigningRoles ? 'Assigning...' : 'Make All Users Admin'}
+                    </Button>
+                  </div>
+                  <UserManagement />
+                </>
               ) : (
                 <div className="py-6 text-center space-y-3">
                   <h3 className="text-lg font-medium">User Management</h3>
