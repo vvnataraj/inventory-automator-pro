@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Building2 } from "lucide-react";
+import { Building2, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,59 +10,71 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layout/MainLayout";
-
-const locations = [
-  {
-    id: "location-1",
-    name: "Warehouse A",
-    type: "Warehouse",
-    itemCount: 345,
-    totalUnits: 12000,
-    stockValue: 540000,
-    spaceUtilization: 75,
-  },
-  {
-    id: "location-2",
-    name: "Retail Store - Downtown",
-    type: "Retail",
-    itemCount: 123,
-    totalUnits: 3500,
-    stockValue: 185000,
-    spaceUtilization: 40,
-  },
-  {
-    id: "location-3",
-    name: "Distribution Center",
-    type: "Distribution",
-    itemCount: 567,
-    totalUnits: 25000,
-    stockValue: 920000,
-    spaceUtilization: 85,
-  },
-  {
-    id: "location-4",
-    name: "Storage Unit - Overflow",
-    type: "Storage",
-    itemCount: 89,
-    totalUnits: 2000,
-    stockValue: 75000,
-    spaceUtilization: 60,
-  },
-];
+import { useLocations } from "@/hooks/useLocations";
+import { AddLocationModal } from "@/components/locations/AddLocationModal";
+import { EditLocationModal } from "@/components/locations/EditLocationModal";
 
 export default function Locations() {
+  const { locations, addLocation, updateLocation, deleteLocation } = useLocations();
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingLocation, setEditingLocation] = useState<any>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
+
+  // Filter locations based on search query
+  const filteredLocations = locations.filter(location =>
+    location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    location.type.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleEdit = (location: any) => {
+    setEditingLocation(location);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = (locationId: string) => {
+    setLocationToDelete(locationId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (locationToDelete) {
+      deleteLocation(locationToDelete);
+      setLocationToDelete(null);
+    }
+    setDeleteConfirmOpen(false);
+  };
 
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Locations</h1>
-        <Button>Add New Location</Button>
+        <AddLocationModal onLocationAdded={addLocation} />
+      </div>
+
+      <div className="w-full mb-6">
+        <Input
+          placeholder="Search locations..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {locations.map((location) => (
+        {filteredLocations.map((location) => (
           <Card key={location.id}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -101,16 +114,53 @@ export default function Locations() {
               </div>
             </CardContent>
             <CardFooter className="border-t pt-4 flex justify-between gap-2">
-              <Button variant="outline" size="sm" className="flex-1">
-                View Items
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(location)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
               </Button>
-              <Button variant="outline" size="sm" className="flex-1">
-                Manage
+              <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive"
+                onClick={() => handleDelete(location.id)}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
               </Button>
             </CardFooter>
           </Card>
         ))}
       </div>
+
+      {filteredLocations.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-64 text-center">
+          <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-medium">No locations found</h3>
+          <p className="text-muted-foreground mt-2">
+            {searchQuery ? "Try a different search term" : "Add your first location to get started"}
+          </p>
+        </div>
+      )}
+
+      <EditLocationModal
+        location={editingLocation}
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        onLocationUpdated={updateLocation}
+      />
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this location. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }
