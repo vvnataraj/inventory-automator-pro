@@ -55,7 +55,10 @@ export function Sidebar() {
               <path d="M10 13C8.5 10.5 6.5 9.5 3 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
-          <span className="font-semibold text-lg">STOCKtopus</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-xl bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">STOCK<span className="text-purple-600">topus</span></span>
+            <span className="text-xs text-muted-foreground -mt-1">Inventory Management</span>
+          </div>
         </div>
       </div>
       <nav className="flex-1 space-y-1 p-2">
