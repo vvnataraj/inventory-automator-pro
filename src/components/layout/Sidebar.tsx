@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Home,
@@ -10,7 +9,6 @@ import {
   Settings,
   BarChart,
   LogOut,
-  Shield,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,30 +25,30 @@ import { Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
-  isMobile?: boolean;
-  setIsMobile?: (isMobile: boolean) => void;
+  isMobile: boolean;
+  setIsMobile: (isMobile: boolean) => void;
 }
 
 export const Sidebar = ({ isMobile, setIsMobile }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const [userState, setUserState] = useState({
+  const { auth, logout } = useAuth();
+  const [user, setUser] = useState({
     name: "John Doe",
     imageUrl: "https://github.com/shadcn.png",
   });
 
   useEffect(() => {
-    if (user) {
-      setUserState({
-        name: user.email?.split('@')[0] || "User",
-        imageUrl: "https://github.com/shadcn.png",
+    if (auth?.user) {
+      setUser({
+        name: auth.user.name || "User",
+        imageUrl: auth.user.image || "",
       });
     }
-  }, [user]);
+  }, [auth?.user]);
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
     navigate("/login");
   };
 
@@ -62,7 +60,6 @@ export const Sidebar = ({ isMobile, setIsMobile }: SidebarProps) => {
     { name: "Purchases", href: "/purchases", icon: ShoppingCart },
     { name: "Orders", href: "/orders", icon: ClipboardList },
     { name: "Analytics", href: "/analytics", icon: BarChart },
-    { name: "Administration", href: "/administration", icon: Shield },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
@@ -71,10 +68,10 @@ export const Sidebar = ({ isMobile, setIsMobile }: SidebarProps) => {
       <div className="px-6 mb-8">
         <Link to="/" className="flex items-center text-lg font-semibold">
           <Avatar className="mr-2">
-            <AvatarImage src={userState.imageUrl} />
+            <AvatarImage src={user.imageUrl} />
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
-          {userState.name}
+          {user.name}
         </Link>
       </div>
 
@@ -135,7 +132,7 @@ export const Sidebar = ({ isMobile, setIsMobile }: SidebarProps) => {
                       ? "bg-gray-200 dark:bg-gray-800"
                       : "text-gray-700 dark:text-gray-400"
                   }`}
-                  onClick={() => setIsMobile && setIsMobile(false)}
+                  onClick={() => setIsMobile(false)}
                 >
                   <item.icon className="w-4 h-4 mr-2" />
                   {item.name}

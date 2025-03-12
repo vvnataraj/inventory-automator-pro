@@ -1,6 +1,6 @@
 
 import { Sale } from "@/types/sale";
-import { format, subDays, parseISO } from "date-fns";
+import { format, subDays, isAfter, parseISO } from "date-fns";
 
 // Colors for charts
 export const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
@@ -61,21 +61,24 @@ export const getPaymentMethodDistribution = (sales: Sale[]) => {
   }));
 };
 
-// Custom label for pie chart - returns props that will be used in the component
+// Custom label for pie chart
 export const renderCustomizedPieChartLabel = (props: any) => {
   const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  
-  return {
-    x,
-    y,
-    fill: "white",
-    textAnchor: x > cx ? "start" : "end",
-    dominantBaseline: "central",
-    fontSize: 12,
-    content: `${(percent * 100).toFixed(0)}%`
-  };
+
+  return (
+    <text 
+      x={x} 
+      y={y} 
+      fill="white" 
+      textAnchor={x > cx ? 'start' : 'end'} 
+      dominantBaseline="central"
+      fontSize={12}
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
 };
