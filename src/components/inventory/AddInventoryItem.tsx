@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { PlusCircle } from "lucide-react";
 import {
   Dialog,
@@ -11,28 +10,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { InventoryItem } from "@/types/inventory";
-import { faker } from "@faker-js/faker";
-import { locationsData } from "@/data/inventoryData";
+import { InventoryItemForm, InventoryItemFormData } from "./InventoryItemForm";
+import { generateInventoryItem } from "@/utils/inventoryItemGenerator";
 
 interface AddInventoryItemProps {
   onAdd: (newItem: InventoryItem) => void;
 }
 
-// Extract unique location names from the locationsData
-const availableLocations = ["Warehouse A", "Warehouse B", "Storefront", "Online"];
-
 export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<InventoryItemFormData>({
     name: "",
     sku: "",
     category: "",
@@ -47,39 +35,8 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Create a new item with the form data and generate the rest
-    const newItem: InventoryItem = {
-      id: `item-${Date.now()}`,
-      sku: formData.sku || faker.string.alphanumeric(8).toUpperCase(),
-      name: formData.name,
-      description: faker.commerce.productDescription(),
-      category: formData.category || faker.commerce.department(),
-      subcategory: faker.commerce.productAdjective(),
-      brand: faker.company.name(),
-      rrp: formData.rrp,
-      cost: formData.cost,
-      stock: formData.stock,
-      lowStockThreshold: formData.lowStockThreshold,
-      minStockCount: formData.minStockCount,
-      location: formData.location,
-      barcode: faker.string.numeric(13),
-      dateAdded: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      imageUrl: faker.image.url(),
-      dimensions: {
-        length: parseFloat(faker.number.float({ min: 1, max: 100 }).toFixed(2)),
-        width: parseFloat(faker.number.float({ min: 1, max: 100 }).toFixed(2)),
-        height: parseFloat(faker.number.float({ min: 1, max: 100 }).toFixed(2)),
-        unit: 'cm'
-      },
-      weight: {
-        value: parseFloat(faker.number.float({ min: 0.1, max: 50 }).toFixed(2)),
-        unit: 'kg'
-      },
-      isActive: true,
-      supplier: faker.company.name(),
-      tags: Array.from({ length: Math.floor(Math.random() * 4) + 1 }, () => faker.commerce.productAdjective())
-    };
+    // Create a new item using our generator utility
+    const newItem = generateInventoryItem(formData);
     
     onAdd(newItem);
     setIsOpen(false);
@@ -129,134 +86,13 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
             Fill in the details for the new inventory item.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Name *</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="sku" className="text-right">SKU</Label>
-              <Input
-                id="sku"
-                name="sku"
-                value={formData.sku}
-                onChange={handleChange}
-                placeholder="Auto-generated if empty"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right">Category</Label>
-              <Input
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                placeholder="Auto-generated if empty"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="cost" className="text-right">Cost Price *</Label>
-              <Input
-                id="cost"
-                name="cost"
-                type="number"
-                value={formData.cost}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="rrp" className="text-right">RRP</Label>
-              <Input
-                id="rrp"
-                name="rrp"
-                type="number"
-                value={formData.rrp}
-                onChange={handleChange}
-                className="col-span-3"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="stock" className="text-right">Initial Stock *</Label>
-              <Input
-                id="stock"
-                name="stock"
-                type="number"
-                value={formData.stock}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-                min="0"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">Location *</Label>
-              <div className="col-span-3">
-                <Select
-                  value={formData.location}
-                  onValueChange={handleLocationChange}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableLocations.map(location => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="lowStockThreshold" className="text-right">Low Stock Alert</Label>
-              <Input
-                id="lowStockThreshold"
-                name="lowStockThreshold"
-                type="number"
-                value={formData.lowStockThreshold}
-                onChange={handleChange}
-                className="col-span-3"
-                min="0"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="minStockCount" className="text-right">Min Stock</Label>
-              <Input
-                id="minStockCount"
-                name="minStockCount"
-                type="number"
-                value={formData.minStockCount}
-                onChange={handleChange}
-                className="col-span-3"
-                min="0"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Add Item</Button>
-          </div>
-        </form>
+        <InventoryItemForm 
+          formData={formData}
+          onSubmit={handleSubmit}
+          onChange={handleChange}
+          onLocationChange={handleLocationChange}
+          onCancel={() => setIsOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );
