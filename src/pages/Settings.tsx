@@ -20,7 +20,7 @@ interface UserProfile {
 
 export default function Settings() {
   const { user } = useAuth();
-  const { isAdmin } = useUserRoles();
+  const { isAdmin, loading: rolesLoading } = useUserRoles();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [username, setUsername] = useState("");
@@ -130,7 +130,7 @@ export default function Settings() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="roles">Roles</TabsTrigger>
-          {isAdmin() && <TabsTrigger value="users">Users</TabsTrigger>}
+          <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -205,7 +205,20 @@ export default function Settings() {
         <TabsContent value="users">
           <Card>
             <CardContent className="pt-6">
-              <UserManagement />
+              {!rolesLoading && isAdmin() ? (
+                <UserManagement />
+              ) : (
+                <div className="py-6 text-center space-y-3">
+                  <h3 className="text-lg font-medium">User Management</h3>
+                  <p className="text-muted-foreground">You need admin privileges to access this section.</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => toast.info("Please ask an administrator to grant you admin privileges.")}
+                  >
+                    Request Admin Access
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

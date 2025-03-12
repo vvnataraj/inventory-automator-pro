@@ -18,10 +18,10 @@ export default function UserRoleBadge({ role }: UserRoleBadgeProps) {
     }
   };
 
-  const getBadgeVariant = (role: string) => {
+  const getBadgeVariant = (role: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (role) {
       case 'admin':
-        return 'default';
+        return 'destructive';
       case 'manager':
         return 'secondary';
       default:
