@@ -39,7 +39,7 @@ export function Header() {
                   alt="Avatar"
                   className="rounded-full"
                   src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png"
-                  style={{ aspectRatio: "32/32", objectFit: "cover" }}
+                  style={{ aspectRatio: "32/32", objectFit: "cover", mixBlendMode: 'multiply' }}
                   onError={(e) => {
                     e.currentTarget.src = "https://avatar.vercel.sh/inventory";
                   }}

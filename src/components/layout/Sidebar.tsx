@@ -33,6 +33,7 @@ export function Sidebar() {
               src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png" 
               alt="STOCKtopus Logo" 
               className="h-10 w-10 object-contain"
+              style={{ mixBlendMode: 'multiply' }}
               onError={(e) => {
                 // Fallback to SVG logo if image fails to load
                 e.currentTarget.style.display = 'none';
