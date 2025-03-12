@@ -1,5 +1,5 @@
 
-import { Bell, Menu, Search, UserCog } from "lucide-react";
+import { Bell, LogOut, Menu, Search, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,9 +9,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 export function Header() {
   const { signOut } = useAuth();
+  
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("You have been logged out successfully");
+  };
   
   return (
     <header className="border-b bg-white">
@@ -36,6 +42,17 @@ export function Header() {
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
           </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-2" 
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Logout</span>
+          </Button>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
