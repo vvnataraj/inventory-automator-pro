@@ -1,10 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { SalesTable } from "@/components/sales/SalesTable";
 import { CreateSaleModal } from "@/components/sales/CreateSaleModal";
-import { SalesAnalytics } from "@/components/sales/SalesAnalytics";
 import { useSales } from "@/hooks/useSales";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sale, SaleStatus } from "@/types/sale";
@@ -100,8 +100,6 @@ export default function Sales() {
           </Button>
         </div>
       </div>
-
-      <SalesAnalytics sales={sales} />
 
       <ListControls 
         searchPlaceholder="Search sales..."
