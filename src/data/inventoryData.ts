@@ -1,5 +1,6 @@
-
 import { InventoryItem } from "@/types/inventory";
+import { Purchase } from "@/types/purchase";
+import { formatDistanceToNow, subDays } from "date-fns";
 
 // Define realistic categories for a hardware store
 const categories = [
@@ -22,8 +23,20 @@ const brands = [
   "3M", "Rubbermaid", "Simpson Strong-Tie", "Kreg", "Wago", "Lutron", "Legrand"
 ];
 
-const locations = ["Main Floor", "Warehouse A", "Warehouse B", "Outdoor Storage", "Mezzanine"];
+// Expanded locations list
+export const locations = [
+  "Main Floor", 
+  "Warehouse A", 
+  "Warehouse B", 
+  "Outdoor Storage", 
+  "Mezzanine",
+  "Back Room"
+];
+
 const suppliers = ["Central Supplies", "Eastern Hardware", "Western Distribution", "Northern Tools", "Southern Materials"];
+
+// Purchase statuses
+const purchaseStatuses = ["pending", "ordered", "shipped", "delivered", "cancelled"];
 
 // Generate a 7-character alphanumeric SKU
 const generateSKU = (category: string, index: number): string => {
@@ -177,6 +190,64 @@ export const generateInventoryItems = (): InventoryItem[] => {
   return items;
 };
 
+// Generate 100 purchase orders
+export const generatePurchases = (): Purchase[] => {
+  const items = generateInventoryItems();
+  const purchases: Purchase[] = [];
+  
+  for (let i = 0; i < 100; i++) {
+    const randomItems = [];
+    const numberOfItems = Math.floor(Math.random() * 5) + 1; // 1-5 items per purchase
+    
+    for (let j = 0; j < numberOfItems; j++) {
+      const randomItem = items[Math.floor(Math.random() * items.length)];
+      const quantity = Math.floor(Math.random() * 20) + 1; // 1-20 items
+      
+      randomItems.push({
+        itemId: randomItem.id,
+        name: randomItem.name,
+        sku: randomItem.sku,
+        quantity,
+        unitCost: randomItem.cost,
+        totalCost: randomItem.cost * quantity
+      });
+    }
+    
+    const totalCost = randomItems.reduce((sum, item) => sum + item.totalCost, 0);
+    const randomDaysAgo = Math.floor(Math.random() * 90); // Within last 90 days
+    const orderDate = subDays(new Date(), randomDaysAgo);
+    
+    // Generate expected delivery date (0-30 days after order date)
+    const expectedDeliveryDate = new Date(orderDate);
+    expectedDeliveryDate.setDate(expectedDeliveryDate.getDate() + Math.floor(Math.random() * 30));
+    
+    // Determine status based on dates
+    let status = purchaseStatuses[Math.floor(Math.random() * purchaseStatuses.length)];
+    
+    // If expected delivery is in the future, it can't be delivered or cancelled
+    if (expectedDeliveryDate > new Date() && (status === "delivered" || status === "cancelled")) {
+      status = "shipped";
+    }
+    
+    purchases.push({
+      id: `po-${i + 1}`,
+      poNumber: `PO-${(2023000 + i + 1).toString()}`,
+      supplier: suppliers[Math.floor(Math.random() * suppliers.length)],
+      items: randomItems,
+      status: status,
+      totalCost,
+      orderDate: orderDate.toISOString(),
+      expectedDeliveryDate: expectedDeliveryDate.toISOString(),
+      notes: Math.random() > 0.7 ? "Rush delivery requested" : undefined,
+    });
+  }
+  
+  // Sort purchases by order date, newest first
+  return purchases.sort((a, b) => 
+    new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
+  );
+};
+
 // Mock function to get inventory items with pagination and search
 export const getInventoryItems = (
   page: number = 1,
@@ -202,5 +273,31 @@ export const getInventoryItems = (
   return {
     items: paginatedItems,
     total: filteredItems.length
+  };
+};
+
+// Mock function to get purchases with pagination
+export const getPurchases = (
+  page: number = 1, 
+  pageSize: number = 20,
+  searchQuery: string = ""
+): { items: Purchase[], total: number } => {
+  const allPurchases = generatePurchases();
+  
+  // Filter purchases based on search query
+  const filteredPurchases = searchQuery 
+    ? allPurchases.filter(purchase => 
+        purchase.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        purchase.supplier.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allPurchases;
+  
+  // Paginate the results
+  const startIndex = (page - 1) * pageSize;
+  const paginatedPurchases = filteredPurchases.slice(startIndex, startIndex + pageSize);
+  
+  return {
+    items: paginatedPurchases,
+    total: filteredPurchases.length
   };
 };

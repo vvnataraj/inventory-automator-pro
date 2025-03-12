@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
@@ -9,6 +8,8 @@ import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItemCard } from "@/components/inventory/InventoryItemCard";
 import { InventoryItem } from "@/types/inventory";
 import { useToast } from "@/hooks/use-toast";
+import { EditInventoryItem } from "@/components/inventory/EditInventoryItem";
+import { TransferInventoryItem } from "@/components/inventory/TransferInventoryItem";
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,16 +30,13 @@ export default function Inventory() {
   };
 
   const handleTransferItem = (item: InventoryItem, quantity: number, newLocation: string) => {
-    // Create a clone of the item at the new location with the transferred quantity
     const sourceItem = { ...item, stock: item.stock - quantity };
     
-    // Find if there's already an item with the same SKU at the destination
     const existingDestItem = items.find(i => 
       i.sku === item.sku && i.location === newLocation
     );
     
     if (existingDestItem) {
-      // Update the existing item at the destination
       const destinationItem = { 
         ...existingDestItem, 
         stock: existingDestItem.stock + quantity 
@@ -46,7 +44,6 @@ export default function Inventory() {
       updateItem(destinationItem);
     }
     
-    // Update the source item with reduced stock
     updateItem(sourceItem);
     
     toast({
@@ -209,3 +206,4 @@ export default function Inventory() {
     </div>
   );
 }
+
