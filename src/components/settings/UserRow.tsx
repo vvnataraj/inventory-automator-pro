@@ -44,7 +44,9 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
 
   return (
     <TableRow>
-      <TableCell>{user.email}</TableCell>
+      <TableCell className="truncate max-w-[200px]" title={user.email}>
+        {user.email}
+      </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
           {user.roles.length > 0 ? (

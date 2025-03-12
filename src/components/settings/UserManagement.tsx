@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -106,7 +107,7 @@ export default function UserManagement() {
   
   if (!isAdmin()) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         <h3 className="text-lg font-medium">User Management</h3>
         <p>You need admin privileges to access this section.</p>
       </div>
@@ -114,10 +115,10 @@ export default function UserManagement() {
   }
   
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
+    <Card className="w-full">
+      <CardContent className="pt-6 px-0 sm:px-6">
+        <div className="space-y-6 w-full">
+          <div className="flex items-center justify-between px-6 sm:px-0">
             <div>
               <h3 className="text-lg font-medium">User Management</h3>
               <p className="text-sm text-muted-foreground">
@@ -144,7 +145,9 @@ export default function UserManagement() {
               <p>Loading users...</p>
             </div>
           ) : (
-            <UserTable users={users} loading={loading} onUserUpdated={fetchUsers} />
+            <div className="w-full overflow-x-auto">
+              <UserTable users={users} loading={loading} onUserUpdated={fetchUsers} />
+            </div>
           )}
         </div>
       </CardContent>

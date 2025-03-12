@@ -26,29 +26,31 @@ type UserTableProps = {
 
 export default function UserTable({ users, loading, onUserUpdated }: UserTableProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Roles</TableHead>
-          <TableHead>Created</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((user) => (
-          <UserRow key={user.id} user={user} onUserUpdated={onUserUpdated} />
-        ))}
-        
-        {users.length === 0 && !loading && (
+    <div className="w-full">
+      <Table className="min-w-full">
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={5} className="text-center py-4">
-              No users found
-            </TableCell>
+            <TableHead className="w-1/3">Email</TableHead>
+            <TableHead className="w-1/4">Roles</TableHead>
+            <TableHead className="w-1/6">Created</TableHead>
+            <TableHead className="w-1/6">Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
-        )}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <UserRow key={user.id} user={user} onUserUpdated={onUserUpdated} />
+          ))}
+          
+          {users.length === 0 && !loading && (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-4">
+                No users found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
