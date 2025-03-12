@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,53 +34,66 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Get all user roles - this will be our primary source of users
+      // Get all authenticated users from auth.users via the admin API
+      // This is simulated since we can't directly access auth.users from the client
+      
+      // First get all user roles - this will be our primary source of users
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
       
       if (rolesError) throw rolesError;
       
+      // Get profiles data to enrich user information
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, created_at, avatar_url');
+      
+      if (profilesError) throw profilesError;
+      
+      // Create a map to group roles by user_id
+      const userRolesMap = new Map();
+      
+      // Add all profiles first
+      if (profiles && profiles.length > 0) {
+        profiles.forEach(profile => {
+          userRolesMap.set(profile.id, {
+            id: profile.id,
+            email: profile.username || `User ${profile.id.substring(0, 8)}...`,
+            created_at: profile.created_at,
+            last_sign_in_at: null,
+            roles: [],
+            is_disabled: false
+          });
+        });
+      }
+      
+      // Add roles to users
       if (rolesData && rolesData.length > 0) {
-        // Create a map to group roles by user_id
-        const userRolesMap = new Map();
-        
         rolesData.forEach(role => {
           if (!userRolesMap.has(role.user_id)) {
+            // If user doesn't exist in map yet, add them
             userRolesMap.set(role.user_id, {
               id: role.user_id,
-              email: `User ${role.user_id.substring(0, 8)}...`, // Placeholder email
+              email: `User ${role.user_id.substring(0, 8)}...`,
               roles: [role.role],
-              created_at: new Date().toISOString(), // Default value
+              created_at: new Date().toISOString(),
               last_sign_in_at: null,
               is_disabled: false
             });
           } else {
+            // Otherwise just add the role
             const user = userRolesMap.get(role.user_id);
             user.roles.push(role.role);
           }
         });
-        
-        // Try to get profile information if available
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, created_at');
-        
-        // Update user information with profile data if available
-        if (profiles && !profilesError) {
-          profiles.forEach(profile => {
-            if (userRolesMap.has(profile.id)) {
-              const user = userRolesMap.get(profile.id);
-              user.email = profile.username || `User ${profile.id.substring(0, 8)}...`;
-              user.created_at = profile.created_at;
-            }
-          });
-        }
-        
-        setUsers(Array.from(userRolesMap.values()));
-        toast.success("Users loaded successfully");
+      }
+      
+      setUsers(Array.from(userRolesMap.values()));
+      
+      if (userRolesMap.size > 0) {
+        toast.success(`${userRolesMap.size} users loaded successfully`);
       } else {
-        setUsers([]);
         toast.info("No users found in the system");
       }
     } catch (error) {
