@@ -1,17 +1,146 @@
+
 import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { ButtonProps, buttonVariants } from "@/components/ui/button"
 
-const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
-  <nav
-    role="navigation"
-    aria-label="pagination"
-    className={cn("mx-auto flex w-full justify-center", className)}
-    {...props}
-  />
-)
+interface PaginationProps extends React.ComponentProps<"nav"> {
+  currentPage?: number
+  totalPages?: number
+  onPageChange?: (page: number) => void
+}
+
+const Pagination = ({ 
+  className, 
+  currentPage = 1, 
+  totalPages = 1, 
+  onPageChange,
+  ...props 
+}: PaginationProps) => {
+  // Handle pagination logic
+  const handlePageChange = (page: number) => {
+    if (onPageChange && page >= 1 && page <= totalPages) {
+      onPageChange(page)
+    }
+  }
+
+  // Generate pagination items
+  const generatePaginationItems = () => {
+    const items = []
+    const maxVisiblePages = 5
+    
+    // Previous button
+    items.push(
+      <PaginationItem key="prev">
+        <PaginationPrevious 
+          onClick={() => handlePageChange(currentPage - 1)}
+          className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+        />
+      </PaginationItem>
+    )
+    
+    // Page numbers and ellipsis
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink 
+              isActive={currentPage === i}
+              onClick={() => handlePageChange(i)}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        )
+      }
+    } else {
+      // Show first page
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink 
+            isActive={currentPage === 1}
+            onClick={() => handlePageChange(1)}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      )
+      
+      // Calculate start and end of visible pages
+      let startPage = Math.max(2, currentPage - 1)
+      let endPage = Math.min(totalPages - 1, startPage + 2)
+      
+      if (currentPage > 3) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        )
+      }
+      
+      // Middle pages
+      for (let i = startPage; i <= endPage; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink 
+              isActive={currentPage === i}
+              onClick={() => handlePageChange(i)}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        )
+      }
+      
+      if (currentPage < totalPages - 2) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        )
+      }
+      
+      // Last page
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink 
+            isActive={currentPage === totalPages}
+            onClick={() => handlePageChange(totalPages)}
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      )
+    }
+    
+    // Next button
+    items.push(
+      <PaginationItem key="next">
+        <PaginationNext 
+          onClick={() => handlePageChange(currentPage + 1)}
+          className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+        />
+      </PaginationItem>
+    )
+    
+    return items
+  }
+
+  return (
+    <nav
+      role="navigation"
+      aria-label="pagination"
+      className={cn("mx-auto flex w-full justify-center", className)}
+      {...props}
+    >
+      <PaginationContent>
+        {generatePaginationItems()}
+      </PaginationContent>
+    </nav>
+  )
+}
 Pagination.displayName = "Pagination"
 
 const PaginationContent = React.forwardRef<
