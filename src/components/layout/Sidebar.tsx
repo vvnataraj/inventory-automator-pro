@@ -30,10 +30,9 @@ export function Sidebar() {
         <div className="flex items-center gap-2">
           <div className="h-10 w-10 rounded flex items-center justify-center">
             <img 
-              src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png" 
+              src="/lovable-uploads/bc0b9ecb-0e38-45ea-80dc-54e336b23c9f.png" 
               alt="STOCKtopus Logo" 
               className="h-10 w-10 object-contain"
-              style={{ mixBlendMode: 'multiply' }}
               onError={(e) => {
                 // Fallback to SVG logo if image fails to load
                 e.currentTarget.style.display = 'none';

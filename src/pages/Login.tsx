@@ -38,10 +38,9 @@ export default function Login() {
       <div className="mb-8 text-center">
         <div className="flex flex-col items-center mb-4">
           <img 
-            src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png" 
+            src="/lovable-uploads/bc0b9ecb-0e38-45ea-80dc-54e336b23c9f.png" 
             alt="STOCKtopus Logo" 
             className="h-32 w-32 object-contain mb-2"
-            style={{ mixBlendMode: 'multiply' }}
           />
           <div className="flex flex-col">
             <span className="font-bold text-4xl bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
