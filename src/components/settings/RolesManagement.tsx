@@ -7,25 +7,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Shield, ShieldAlert, ShieldCheck } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type Role = 'admin' | 'manager' | 'user';
 
 export default function RolesManagement() {
   const { user } = useAuth();
-  const { roles, loading, isAdmin, addRole } = useUserRoles();
+  const { roles, loading, addRole } = useUserRoles();
   const [isPromoting, setIsPromoting] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role>('admin');
   
-  const makeAdmin = async () => {
+  const assignRole = async () => {
     if (!user) return;
     
     try {
       setIsPromoting(true);
-      const success = await addRole('admin');
+      const success = await addRole(selectedRole);
       
       if (success) {
-        toast.success("You now have admin privileges");
+        toast.success(`You now have ${selectedRole} privileges`);
       }
     } catch (error) {
-      console.error("Error adding admin role:", error);
-      toast.error("Failed to add admin role");
+      console.error(`Error adding ${selectedRole} role:`, error);
+      toast.error(`Failed to add ${selectedRole} role`);
     } finally {
       setIsPromoting(false);
     }
@@ -41,6 +51,10 @@ export default function RolesManagement() {
         return <Shield className="h-4 w-4 mr-1" />;
     }
   };
+  
+  const hasRole = (role: string) => roles.includes(role as Role);
+  
+  const isAdmin = () => hasRole('admin');
   
   return (
     <Card>
@@ -83,21 +97,39 @@ export default function RolesManagement() {
             )}
           </div>
           
-          {!isAdmin() && (
-            <div className="pt-2">
-              <p className="text-sm mb-2">
-                Need admin access? You can grant yourself admin privileges to access all features.
-              </p>
+          <div className="pt-2">
+            <p className="text-sm mb-2">
+              Assign yourself a role to access different features:
+            </p>
+            
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <label htmlFor="role" className="text-sm font-medium">Select Role</label>
+                <Select 
+                  value={selectedRole} 
+                  onValueChange={(value) => setSelectedRole(value as Role)}
+                >
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <Button 
-                onClick={makeAdmin} 
-                disabled={loading || isPromoting}
-                className="flex items-center gap-2"
+                onClick={assignRole} 
+                disabled={loading || isPromoting || hasRole(selectedRole)}
+                className="flex items-center gap-2 w-fit"
               >
-                <ShieldAlert className="h-4 w-4" />
-                {isPromoting ? "Granting access..." : "Make Yourself Admin"}
+                {getRoleIcon(selectedRole)}
+                {isPromoting ? "Assigning role..." : `Assign ${selectedRole} Role`}
               </Button>
             </div>
-          )}
+          </div>
           
           {isAdmin() && (
             <div className="pt-2">
