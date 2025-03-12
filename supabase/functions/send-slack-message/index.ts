@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, sender, timestamp } = await req.json();
+    const { message, sender, timestamp, channel } = await req.json();
 
     if (!message) {
       return new Response(
@@ -48,6 +48,11 @@ serve(async (req) => {
       ]
     };
 
+    // If a specific channel is provided, add it to the payload
+    if (channel) {
+      slackPayload.channel = channel;
+    }
+
     // Send the message to Slack
     const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
       method: "POST",
@@ -58,7 +63,15 @@ serve(async (req) => {
     });
 
     if (!slackResponse.ok) {
-      throw new Error(`Failed to send to Slack: ${slackResponse.statusText}`);
+      const errorText = await slackResponse.text();
+      console.error("Slack error response:", errorText);
+      
+      // Check for common private channel errors
+      if (errorText.includes("channel_not_found") || errorText.includes("not_in_channel")) {
+        throw new Error("Unable to send message to private channel. Make sure the Slack app is invited to this channel.");
+      } else {
+        throw new Error(`Failed to send to Slack: ${slackResponse.statusText}`);
+      }
     }
 
     return new Response(
@@ -69,7 +82,12 @@ serve(async (req) => {
     console.error("Error sending message to Slack:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        hint: error.message.includes("private channel") 
+          ? "To send messages to a private Slack channel, invite the Slack app to that channel first"
+          : undefined
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

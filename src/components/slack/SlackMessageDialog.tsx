@@ -15,6 +15,7 @@ type SlackMessageDialogProps = {
 export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps) {
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
+  const [channel, setChannel] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSendMessage = async () => {
@@ -36,12 +37,14 @@ export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps)
           message,
           sender: name || "Anonymous User",
           timestamp: new Date().toISOString(),
+          channel: channel.trim() || undefined,
         }),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to send message");
+        throw new Error(data.error || "Failed to send message");
       }
 
       toast.success("Message sent to Slack successfully!");
@@ -49,7 +52,13 @@ export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps)
       onClose();
     } catch (error) {
       console.error("Error sending message to Slack:", error);
-      toast.error("Failed to send message to Slack. Please try again.");
+      
+      // Check for specific private channel error
+      if (error.message.includes("private channel")) {
+        toast.error("Unable to send to private channel. Make sure the Slack app is invited to this channel.");
+      } else {
+        toast.error("Failed to send message to Slack. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +83,19 @@ export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps)
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="channel">Channel (optional)</Label>
+            <Input
+              id="channel"
+              placeholder="For private channels, e.g., #my-channel"
+              value={channel}
+              onChange={(e) => setChannel(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              For private channels, make sure the Slack app is invited to the channel
+            </p>
           </div>
           
           <div className="grid gap-2">
