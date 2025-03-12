@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -194,15 +195,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (data && data.user) {
+        // Assign admin role to new user instead of 'user' role
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({ 
             user_id: data.user.id, 
-            role: 'user' 
+            role: 'admin' 
           });
         
         if (roleError) {
-          console.error("Error assigning user role:", roleError);
+          console.error("Error assigning admin role:", roleError);
         }
       }
       
