@@ -90,6 +90,9 @@ export const generateInventoryItems = (): InventoryItem[] => {
     // Low stock threshold is typically 10-20% of max stock
     const lowStockThreshold = Math.max(2, Math.floor(maxStock * (0.1 + Math.random() * 0.1)));
     
+    // Minimum stock count is typically 5-50% of low stock threshold
+    const minStockCount = Math.max(1, Math.floor(lowStockThreshold * (0.05 + Math.random() * 0.45)));
+    
     const location = locations[Math.floor(Math.random() * locations.length)];
     const supplier = suppliers[Math.floor(Math.random() * suppliers.length)];
     
@@ -138,6 +141,7 @@ export const generateInventoryItems = (): InventoryItem[] => {
       cost,
       stock,
       lowStockThreshold,
+      minStockCount,
       location,
       barcode: generateBarcode(),
       dateAdded,

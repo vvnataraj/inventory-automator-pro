@@ -12,6 +12,7 @@ export interface InventoryItem {
   cost: number;
   stock: number;
   lowStockThreshold: number;
+  minStockCount: number;
   location: string;
   barcode: string;
   dateAdded: string;

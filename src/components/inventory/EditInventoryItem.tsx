@@ -33,7 +33,7 @@ export const EditInventoryItem = ({ item, onSave }: EditInventoryItemProps) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' || name === 'stock' || name === 'cost' || name === 'rrp' ? Number(value) : value
+      [name]: name === 'price' || name === 'stock' || name === 'cost' || name === 'rrp' || name === 'minStockCount' ? Number(value) : value
     }));
   };
 
@@ -103,6 +103,17 @@ export const EditInventoryItem = ({ item, onSave }: EditInventoryItemProps) => {
                 name="stock"
                 type="number"
                 value={formData.stock}
+                onChange={handleChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="minStockCount" className="text-right">Min Stock</Label>
+              <Input
+                id="minStockCount"
+                name="minStockCount"
+                type="number"
+                value={formData.minStockCount}
                 onChange={handleChange}
                 className="col-span-3"
               />
