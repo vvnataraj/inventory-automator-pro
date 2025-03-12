@@ -33,7 +33,7 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
   const [loading, setLoading] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
-  const [newUserRole, setNewUserRole] = useState<Role>("admin"); // Changed default to "admin"
+  const [newUserRole, setNewUserRole] = useState<Role>("admin"); // Default to "admin"
   
   async function addUser() {
     try {
@@ -61,7 +61,12 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       if (roleError) throw roleError;
       
       toast.success("User created successfully. Please check email for confirmation.");
-      onUserAdded();
+      
+      // Explicitly refresh user list
+      setTimeout(() => {
+        onUserAdded();
+      }, 500);
+      
       setOpen(false);
       
       // Reset form

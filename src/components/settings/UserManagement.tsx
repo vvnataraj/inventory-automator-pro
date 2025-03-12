@@ -38,21 +38,21 @@ export default function UserManagement() {
       // Get all authenticated users from auth.users via the admin API
       // This is simulated since we can't directly access auth.users from the client
       
-      // First get all user roles - this will be our primary source of users
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-      
-      if (rolesError) throw rolesError;
-      
-      // Get profiles data to enrich user information
+      // First get user profiles - this will be our most comprehensive source of users
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, created_at, avatar_url');
       
       if (profilesError) throw profilesError;
       
-      // Create a map to group roles by user_id
+      // Then get all user roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+      
+      if (rolesError) throw rolesError;
+      
+      // Create a map to group roles by user_id and build our user list
       const userRolesMap = new Map();
       
       // Add all profiles first
