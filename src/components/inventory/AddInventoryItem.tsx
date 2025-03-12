@@ -79,7 +79,7 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
           Add New Item
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Item</DialogTitle>
           <DialogDescription>
