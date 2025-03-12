@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Utility function to assign a role to a user by email
   const assignUserRole = async (email: string, role: 'admin' | 'manager' | 'user'): Promise<boolean> => {
     try {
-      // First find the user by email
+      // First find the user by email - we'll need to query profiles
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
@@ -54,19 +54,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
       
       if (userError || !userData) {
-        // Try to fetch directly from auth users
-        const { data: authData, error: authError } = await supabase.auth.admin.getUserByEmail(email);
+        // If we can't find the user in profiles, we need to look up from auth
+        // However, we can't use getUserByEmail as it doesn't exist
+        // Instead, let's query using auth.getUser() and make a separate supabase call
+        let userId = null;
         
-        if (authError || !authData.user) {
+        // Get all users from profiles to search for matching email
+        const { data: allProfiles } = await supabase
+          .from('profiles')
+          .select('id, username');
+        
+        // Find a profile with matching email (case insensitive)
+        const matchingProfile = allProfiles?.find(
+          p => p.username && p.username.toLowerCase() === email.toLowerCase()
+        );
+        
+        if (matchingProfile) {
+          userId = matchingProfile.id;
+        } else {
           toast.error(`User with email ${email} not found`);
           return false;
         }
         
-        // Add user role with the user ID from auth
+        // Add user role with the user ID we found
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
-            user_id: authData.user.id,
+            user_id: userId,
             role: role
           });
         
