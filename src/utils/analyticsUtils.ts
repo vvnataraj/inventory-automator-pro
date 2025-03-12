@@ -1,6 +1,6 @@
 
 import { Sale } from "@/types/sale";
-import { format, subDays, isAfter, parseISO } from "date-fns";
+import { format, subDays, parseISO } from "date-fns";
 
 // Colors for charts
 export const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
