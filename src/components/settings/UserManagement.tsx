@@ -32,7 +32,7 @@ export default function UserManagement() {
   }, [currentUser]);
 
   // This function can be called programmatically to assign a role to a user by email
-  async function assignRoleToUserByEmail(email: string, role: string) {
+  async function assignRoleToUserByEmail(email: string, roleToAssign: "admin" | "manager" | "user") {
     try {
       setLoading(true);
       
@@ -45,8 +45,8 @@ export default function UserManagement() {
       }
       
       // Check if user already has this role
-      if (user.roles.includes(role)) {
-        toast.info(`User already has the ${role} role`);
+      if (user.roles.includes(roleToAssign)) {
+        toast.info(`User already has the ${roleToAssign} role`);
         return true;
       }
       
@@ -55,12 +55,12 @@ export default function UserManagement() {
         .from('user_roles')
         .insert({
           user_id: user.id,
-          role: role
+          role: roleToAssign
         });
       
       if (error) throw error;
       
-      toast.success(`Role ${role} assigned to ${email} successfully`);
+      toast.success(`Role ${roleToAssign} assigned to ${email} successfully`);
       await fetchUsers(); // Refresh the user list
       return true;
     } catch (error) {
