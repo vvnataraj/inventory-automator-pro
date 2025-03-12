@@ -28,10 +28,32 @@ export function Sidebar() {
     <div className="flex h-full flex-col bg-white border-r">
       <div className="flex h-16 items-center gap-2 px-4 border-b">
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded bg-primary/10">
-            <Box className="h-4 w-4 m-1.5 text-primary" />
+          <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
+            <svg 
+              width="24" 
+              height="24" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-primary"
+            >
+              {/* Octopus head */}
+              <circle cx="12" cy="10" r="6" stroke="currentColor" strokeWidth="1.5" fill="currentColor" fillOpacity="0.2" />
+              {/* Eyes */}
+              <circle cx="10" cy="9" r="1" fill="currentColor" />
+              <circle cx="14" cy="9" r="1" fill="currentColor" />
+              {/* Tentacle arms */}
+              <path d="M8 14C6 16 4 17 3 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M9 15C8 18 7 20 5 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M12 16C12 19 12 21 12 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M15 15C16 18 17 20 19 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M16 14C18 16 20 17 21 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M7 14C5 15 4 15 2 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M17 14C19 15 20 15 22 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M10 13C8 10 6 9 2 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
           </div>
-          <span className="font-semibold">Inventory Pro</span>
+          <span className="font-semibold">STOCKtopus</span>
         </div>
       </div>
       <nav className="flex-1 space-y-1 p-2">
