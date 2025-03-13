@@ -20,7 +20,7 @@ interface AddInventoryItemProps {
 
 export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { isManager } = useUserRoles();
+  const { isManager, role } = useUserRoles();
   const [formData, setFormData] = React.useState<InventoryItemFormData>({
     name: "",
     sku: "",
@@ -32,6 +32,9 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
     minStockCount: 5,
     lowStockThreshold: 10,
   });
+
+  console.log("Current role in AddInventoryItem:", role);
+  console.log("Is manager?", isManager());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
