@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { EditInventoryItem } from "./EditInventoryItem";
 import { TransferInventoryItem } from "./TransferInventoryItem";
 import { DeleteInventoryItem } from "./DeleteInventoryItem";
 import { ReorderInventoryItem } from "./ReorderInventoryItem";
+import { ReorderDialog } from "./ReorderDialog";
 import { ShoppingCart } from "lucide-react";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import {
@@ -23,7 +24,7 @@ interface InventoryItemCardProps {
   onTransfer: (item: InventoryItem, quantity: number, newLocation: string) => void;
   onDelete: (itemId: string) => void;
   onReorder?: (itemId: string, direction: 'up' | 'down') => void;
-  onReorderStock?: (item: InventoryItem) => void;
+  onReorderStock?: (item: InventoryItem, quantity: number) => void;
   isFirst?: boolean;
   isLast?: boolean;
 }
@@ -40,6 +41,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
 }) => {
   const isLowStock = item.stock <= item.lowStockThreshold;
   const { isReadOnly } = useUserRoles();
+  const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
@@ -113,7 +115,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
                       variant="outline" 
                       size="icon" 
                       className="h-8 w-8" 
-                      onClick={() => onReorderStock(item)}
+                      onClick={() => setReorderDialogOpen(true)}
                     >
                       <ShoppingCart className="h-4 w-4" />
                     </Button>
@@ -128,6 +130,15 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
             <TransferInventoryItem item={item} onTransfer={onTransfer} />
             <DeleteInventoryItem item={item} onDelete={onDelete} />
           </>
+        )}
+        
+        {onReorderStock && (
+          <ReorderDialog
+            item={item}
+            open={reorderDialogOpen}
+            onClose={() => setReorderDialogOpen(false)}
+            onReorder={onReorderStock}
+          />
         )}
       </CardFooter>
     </Card>

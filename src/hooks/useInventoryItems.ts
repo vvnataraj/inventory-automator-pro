@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { getInventoryItems, inventoryItems } from "@/data/inventoryData";
@@ -135,13 +136,13 @@ export function useInventoryItems(
     });
   }, []);
   
-  // Add stock reordering functionality
-  const reorderStock = useCallback((item: InventoryItem) => {
+  // Updated reorderStock functionality with quantity parameter
+  const reorderStock = useCallback((item: InventoryItem, quantity: number = 0) => {
     // In a real application, this would send an order to the supplier
     // For now, we'll simulate a reorder by updating the stock
     const reorderedItem = {
       ...item,
-      stock: item.stock + Math.max(item.minStockCount, item.lowStockThreshold * 2),
+      stock: item.stock + (quantity > 0 ? quantity : Math.max(item.minStockCount, item.lowStockThreshold * 2)),
       lastUpdated: new Date().toISOString()
     };
 

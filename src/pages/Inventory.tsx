@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { TransferInventoryItem } from "@/components/inventory/TransferInventoryI
 import { DeleteInventoryItem } from "@/components/inventory/DeleteInventoryItem";
 import { AddInventoryItem } from "@/components/inventory/AddInventoryItem";
 import { ReorderInventoryItem } from "@/components/inventory/ReorderInventoryItem";
+import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
   DropdownMenu,
@@ -34,6 +36,8 @@ export default function Inventory() {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   
   const { items, isLoading, totalItems, updateItem, addItem, deleteItem, reorderItem, reorderStock } = useInventoryItems(
     currentPage, 
@@ -115,12 +119,17 @@ export default function Inventory() {
     });
   };
 
-  const handleReorderStock = (item: InventoryItem) => {
-    const reorderedItem = reorderStock(item);
+  const handleOpenReorderDialog = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setReorderDialogOpen(true);
+  };
+
+  const handleReorderStock = (item: InventoryItem, quantity: number) => {
+    const reorderedItem = reorderStock(item, quantity);
     
     toast({
       title: "Stock reordered",
-      description: `Replenished ${item.name} inventory with additional units`,
+      description: `Ordered ${quantity} units of ${item.name} from ${item.supplier}`,
     });
   };
 
@@ -305,7 +314,7 @@ export default function Inventory() {
                                       variant="outline" 
                                       size="icon" 
                                       className="h-8 w-8" 
-                                      onClick={() => handleReorderStock(item)}
+                                      onClick={() => handleOpenReorderDialog(item)}
                                     >
                                       <ShoppingCart className="h-4 w-4" />
                                     </Button>
@@ -361,6 +370,15 @@ export default function Inventory() {
             </div>
           </div>
         </>
+      )}
+
+      {selectedItem && (
+        <ReorderDialog
+          item={selectedItem}
+          open={reorderDialogOpen}
+          onClose={() => setReorderDialogOpen(false)}
+          onReorder={handleReorderStock}
+        />
       )}
     </MainLayout>
   );
