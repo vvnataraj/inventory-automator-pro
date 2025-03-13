@@ -52,7 +52,7 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
 
   // Format user display info
   const displayEmail = user.email || "No email";
-  const displayUsername = user.username || "";
+  const displayUsername = user.username || "—";
   
   // Get the primary role (first in the array) or default to 'user'
   const primaryRole = user.roles.length > 0 ? user.roles[0] : 'user';
@@ -60,10 +60,10 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
   return (
     <TableRow>
       <TableCell>
-        <div className="flex flex-col">
-          <span className="font-medium">{displayEmail}</span>
-          {displayUsername && <span className="text-xs text-gray-500">@{displayUsername}</span>}
-        </div>
+        <span className="font-medium">{displayEmail}</span>
+      </TableCell>
+      <TableCell>
+        {displayUsername}
       </TableCell>
       <TableCell>
         <UserRoleBadge role={primaryRole} />

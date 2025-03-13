@@ -30,7 +30,8 @@ export default function UserTable({ users, loading, onUserUpdated }: UserTablePr
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>User</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Username</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Created</TableHead>
           <TableHead>Status</TableHead>
@@ -44,7 +45,7 @@ export default function UserTable({ users, loading, onUserUpdated }: UserTablePr
         
         {users.length === 0 && !loading && (
           <TableRow>
-            <TableCell colSpan={5} className="text-center py-4">
+            <TableCell colSpan={6} className="text-center py-4">
               No users found
             </TableCell>
           </TableRow>
