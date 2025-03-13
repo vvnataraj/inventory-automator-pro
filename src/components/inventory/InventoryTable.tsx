@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { InventoryItem, SortField } from "@/types/inventory";
 import { EditInventoryItem } from "./EditInventoryItem";
@@ -163,27 +162,24 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   </div>
                 </td>
                 <td className="py-3 px-4">
-                  <div className="flex">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant={item.isActive ? "outline" : "ghost"} 
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setDiscontinueItem(item)}
-                          >
-                            <CircleSlash className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{item.isActive ? "Discontinue" : "Reactivate"} item</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                  <div className="flex gap-2">
                     <EditInventoryItem item={item} onSave={onSaveItem} />
                     <TransferInventoryItem item={item} onTransfer={onTransferItem} />
-                    <DeleteInventoryItem item={item} onDelete={onDeleteItem} />
+                    
+                    <Button 
+                      variant={item.isActive ? "outline" : "ghost"} 
+                      size="sm"
+                      className={cn(
+                        "h-8 flex gap-1",
+                        item.isActive ? "text-amber-600 hover:bg-amber-100 hover:text-amber-700" : "text-green-600 hover:bg-green-100 hover:text-green-700"
+                      )}
+                      onClick={() => setDiscontinueItem(item)}
+                    >
+                      <CircleSlash className="h-4 w-4" />
+                      {item.isActive ? "Discontinue" : "Reactivate"}
+                    </Button>
+                    
+                    <DeleteInventoryItem item={item} onDelete={onDeleteItem} showLabel={true} />
                   </div>
                 </td>
               </tr>
