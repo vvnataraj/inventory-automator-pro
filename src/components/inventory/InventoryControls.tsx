@@ -56,7 +56,13 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
 }) => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryFilter || "");
   const { fetchFromSupabase } = useInventoryDatabase();
+  
+  // Update local state when prop changes
+  useEffect(() => {
+    setSelectedCategory(categoryFilter || "");
+  }, [categoryFilter]);
   
   useEffect(() => {
     const fetchCategories = async () => {
@@ -79,6 +85,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
             new Set(categoriesData.map(item => item.category).filter(Boolean) as string[])
           ).sort();
           
+          console.log("Fetched categories:", uniqueCategories);
           setCategories(uniqueCategories);
         } else {
           fallbackToLocalCategories();
@@ -114,6 +121,20 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 ml-1"><path d="M3 8L7 4M7 4L11 8M7 4V20"/><path d="M14 17L17 20M17 20L20 17M17 20V4"/></svg> : 
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 ml-1"><path d="M3 16L7 20M7 20L11 16M7 20V4"/><path d="M14 8L17 4M17 4L20 8M17 4V20"/></svg>;
     }
+  };
+
+  const handleCategoryChange = (value: string) => {
+    console.log("Category changed to:", value);
+    setSelectedCategory(value);
+    onCategoryFilterChange?.(value === "" ? undefined : value);
+    setFilterOpen(false);
+  };
+
+  const clearFilter = () => {
+    console.log("Clearing filter");
+    setSelectedCategory("");
+    onCategoryFilterChange?.(undefined);
+    setFilterOpen(false);
   };
 
   return (
@@ -162,7 +183,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 z-50 bg-background" align="end">
+        <PopoverContent className="w-80 p-4 z-50 bg-background" align="end">
           <div className="space-y-4">
             <h4 className="font-medium">Filter Inventory</h4>
             
@@ -171,17 +192,13 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
                 Category
               </label>
               <Select 
-                value={categoryFilter || ""}
-                onValueChange={(value) => {
-                  console.log("Select changed to:", value);
-                  onCategoryFilterChange?.(value === "" ? undefined : value);
-                  setFilterOpen(false);
-                }}
+                value={selectedCategory}
+                onValueChange={handleCategoryChange}
               >
-                <SelectTrigger id="category">
+                <SelectTrigger id="category" className="w-full">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent className="bg-background">
+                <SelectContent position="popper" className="bg-background">
                   <SelectItem value="">All Categories</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>
@@ -196,11 +213,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => {
-                  console.log("Clearing filter");
-                  onCategoryFilterChange?.(undefined);
-                  setFilterOpen(false);
-                }}
+                onClick={clearFilter}
                 disabled={!categoryFilter}
               >
                 <X className="h-4 w-4 mr-2" />
@@ -270,10 +283,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
               variant="ghost" 
               size="icon" 
               className="h-4 w-4 p-0 ml-1 rounded-full" 
-              onClick={() => {
-                console.log("Badge clear button clicked");
-                onCategoryFilterChange?.(undefined);
-              }}
+              onClick={() => onCategoryFilterChange?.(undefined)}
             >
               <X className="h-3 w-3" />
             </Button>

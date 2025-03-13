@@ -1,5 +1,4 @@
-
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { toast } from "sonner";
@@ -13,6 +12,10 @@ export function useInventoryPage() {
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryFilter, searchQuery]);
   
   const { 
     items, 
@@ -44,6 +47,11 @@ export function useInventoryPage() {
       setSortDirection('asc');
     }
   };
+
+  const handleCategoryFilterChange = useCallback((category: string | undefined) => {
+    console.log("Setting category filter to:", category);
+    setCategoryFilter(category);
+  }, []);
 
   const handleSaveItem = useCallback(async (updatedItem: InventoryItem) => {
     const success = await updateItem(updatedItem);
@@ -85,17 +93,14 @@ export function useInventoryPage() {
   const handleTransferItem = useCallback(async (item: InventoryItem, quantity: number, newLocation: string) => {
     console.log(`Transferring ${quantity} units of ${item.name} from ${item.location} to ${newLocation}`);
     
-    // Update source item (reduce stock)
     const sourceItem = { ...item, stock: item.stock - quantity };
     await updateItem(sourceItem);
     
-    // Find or create destination item
     const existingDestItem = items.find(i => 
       i.sku === item.sku && i.location === newLocation
     );
     
     if (existingDestItem) {
-      // Update destination item (increase stock)
       const destinationItem = { 
         ...existingDestItem, 
         stock: existingDestItem.stock + quantity 
@@ -103,10 +108,9 @@ export function useInventoryPage() {
       await updateItem(destinationItem);
       console.log(`Updated existing item at ${newLocation}, new stock: ${destinationItem.stock}`);
     } else {
-      // Create new item at destination
       const newDestinationItem = {
         ...item,
-        id: `${item.id}-${Date.now()}`, // Create a new unique ID
+        id: `${item.id}-${Date.now()}`,
         location: newLocation,
         stock: quantity
       };
@@ -114,7 +118,6 @@ export function useInventoryPage() {
       console.log(`Created new item at ${newLocation} with stock: ${quantity}`);
     }
     
-    // Refresh inventory to reflect changes
     refresh();
     
     toast.success(`Successfully transferred ${quantity} units of ${item.name} to ${newLocation}`);
@@ -154,6 +157,7 @@ export function useInventoryPage() {
       setReorderDialogOpen,
       setSelectedItem,
       setCategoryFilter,
+      handleCategoryFilterChange,
       handleSort,
       handleSaveItem,
       handleAddItem,
@@ -162,7 +166,7 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      fetchItems: refresh, // Use the optimized refresh function
+      fetchItems: refresh,
       handleReactivateAllItems
     }
   };

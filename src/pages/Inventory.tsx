@@ -22,7 +22,7 @@ export default function Inventory() {
     if (categoryParam && categoryParam !== state.categoryFilter) {
       actions.setCategoryFilter(categoryParam);
     }
-  }, [searchParams]); // Only depend on searchParams to prevent loops
+  }, [searchParams, actions.setCategoryFilter, state.categoryFilter]); 
   
   // Update URL when category filter changes
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function Inventory() {
     if (newParams.toString() !== searchParams.toString()) {
       setSearchParams(newParams);
     }
-  }, [state.categoryFilter, setSearchParams]);
+  }, [state.categoryFilter, setSearchParams, searchParams]);
 
   // Add specific effect to manually trigger data fetch when the page loads
   useEffect(() => {
@@ -74,13 +74,6 @@ export default function Inventory() {
     toast.success(`Successfully imported ${importedItems.length} items`);
   };
   
-  const handleCategoryFilterChange = (category: string | undefined) => {
-    console.log("Setting category filter to:", category);
-    actions.setCategoryFilter(category);
-    // Reset to first page when changing filters
-    actions.setCurrentPage(1);
-  };
-  
   return (
     <MainLayout>
       <div className="flex flex-col gap-6">
@@ -102,7 +95,7 @@ export default function Inventory() {
           onSort={actions.handleSort}
           onSortDirectionChange={actions.setSortDirection}
           categoryFilter={state.categoryFilter}
-          onCategoryFilterChange={handleCategoryFilterChange}
+          onCategoryFilterChange={actions.handleCategoryFilterChange}
         />
 
         {state.isLoading ? (
