@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Clock, Plus } from "lucide-react";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
+import { ProgressPdfExport } from "@/components/progress/ProgressPdfExport";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -81,13 +82,16 @@ export default function Progress() {
             Track and view progress updates
           </p>
         </div>
-        <Button 
-          onClick={() => setIsEntryDialogOpen(true)}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Log New Progress
-        </Button>
+        <div className="flex gap-2">
+          <ProgressPdfExport entries={entries} />
+          <Button 
+            onClick={() => setIsEntryDialogOpen(true)}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Log New Progress
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
