@@ -8,6 +8,13 @@ import { EditInventoryItem } from "./EditInventoryItem";
 import { TransferInventoryItem } from "./TransferInventoryItem";
 import { DeleteInventoryItem } from "./DeleteInventoryItem";
 import { ReorderInventoryItem } from "./ReorderInventoryItem";
+import { ShoppingCart } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface InventoryItemCardProps {
   item: InventoryItem;
@@ -15,6 +22,7 @@ interface InventoryItemCardProps {
   onTransfer: (item: InventoryItem, quantity: number, newLocation: string) => void;
   onDelete: (itemId: string) => void;
   onReorder?: (itemId: string, direction: 'up' | 'down') => void;
+  onReorderStock?: (item: InventoryItem) => void;
   isFirst?: boolean;
   isLast?: boolean;
 }
@@ -25,9 +33,12 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   onTransfer,
   onDelete,
   onReorder,
+  onReorderStock,
   isFirst = false,
   isLast = false
 }) => {
+  const isLowStock = item.stock <= item.lowStockThreshold;
+  
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
       <div className="relative pt-[100%] overflow-hidden bg-muted">
@@ -89,6 +100,25 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
             isLast={isLast}
             onReorder={onReorder}
           />
+        )}
+        {onReorderStock && isLowStock && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-8 w-8" 
+                  onClick={() => onReorderStock(item)}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reorder stock</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
         <EditInventoryItem item={item} onSave={onSave} />
         <TransferInventoryItem item={item} onTransfer={onTransfer} />

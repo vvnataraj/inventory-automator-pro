@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { getInventoryItems, inventoryItems } from "@/data/inventoryData";
@@ -136,6 +135,22 @@ export function useInventoryItems(
     });
   }, []);
   
+  // Add stock reordering functionality
+  const reorderStock = useCallback((item: InventoryItem) => {
+    // In a real application, this would send an order to the supplier
+    // For now, we'll simulate a reorder by updating the stock
+    const reorderedItem = {
+      ...item,
+      stock: item.stock + Math.max(item.minStockCount, item.lowStockThreshold * 2),
+      lastUpdated: new Date().toISOString()
+    };
+
+    // Update the item in our local state and global inventory
+    updateItem(reorderedItem);
+
+    return reorderedItem;
+  }, [updateItem]);
+  
   return { 
     items, 
     totalItems, 
@@ -145,6 +160,7 @@ export function useInventoryItems(
     addItem, 
     deleteItem,
     reorderItem,
+    reorderStock,
     fetchItems
   };
 }

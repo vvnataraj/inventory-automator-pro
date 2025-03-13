@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, Grid, Table, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownAz, ArrowUp10, ArrowDown10 } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Grid, Table, ChevronUp, ChevronDown, ArrowUpAZ, ArrowDownAz, ArrowUp10, ArrowDown10, ShoppingCart } from "lucide-react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItemCard } from "@/components/inventory/InventoryItemCard";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -21,6 +21,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,7 +35,7 @@ export default function Inventory() {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
-  const { items, isLoading, totalItems, updateItem, addItem, deleteItem, reorderItem } = useInventoryItems(
+  const { items, isLoading, totalItems, updateItem, addItem, deleteItem, reorderItem, reorderStock } = useInventoryItems(
     currentPage, 
     searchQuery,
     sortField,
@@ -106,6 +112,15 @@ export default function Inventory() {
     toast({
       title: `Item moved ${direction}`,
       description: `Successfully reordered inventory item`,
+    });
+  };
+
+  const handleReorderStock = (item: InventoryItem) => {
+    const reorderedItem = reorderStock(item);
+    
+    toast({
+      title: "Stock reordered",
+      description: `Replenished ${item.name} inventory with additional units`,
     });
   };
 
@@ -233,6 +248,7 @@ export default function Inventory() {
                   onSave={handleSaveItem}
                   onTransfer={handleTransferItem}
                   onDelete={handleDeleteItem}
+                  onReorderStock={handleReorderStock}
                 />
               ))}
             </div>
@@ -274,12 +290,33 @@ export default function Inventory() {
                         </td>
                         <td className="py-3 px-4">{item.location}</td>
                         <td className="py-3 px-4">
-                          <ReorderInventoryItem 
-                            item={item}
-                            isFirst={index === 0}
-                            isLast={index === items.length - 1}
-                            onReorder={handleReorderItem}
-                          />
+                          <div className="flex gap-1">
+                            <ReorderInventoryItem 
+                              item={item}
+                              isFirst={index === 0}
+                              isLast={index === items.length - 1}
+                              onReorder={handleReorderItem}
+                            />
+                            {item.stock <= item.lowStockThreshold && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="icon" 
+                                      className="h-8 w-8" 
+                                      onClick={() => handleReorderStock(item)}
+                                    >
+                                      <ShoppingCart className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Reorder stock</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex">
