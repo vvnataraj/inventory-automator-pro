@@ -34,18 +34,24 @@ export function useUserRoles() {
     try {
       setLoading(true);
       
+      console.log("Fetching roles for user ID:", user.id);
+      
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching user roles:", error);
+        throw error;
+      }
       
       const userRoles = data ? data.map(r => r.role as Role) : [];
+      console.log("Fetched roles:", userRoles);
       setRoles(userRoles);
     } catch (error) {
       console.error("Error fetching user roles:", error);
-      toast.error("Failed to load user permissions");
+      toast.error("Failed to load user permissions: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -65,7 +71,10 @@ export function useUserRoles() {
         .eq('user_id', user.id)
         .eq('role', role);
       
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error("Error checking existing role:", checkError);
+        throw checkError;
+      }
       
       // If role doesn't exist, add it
       if (!existingRole || existingRole.length === 0) {
@@ -73,7 +82,10 @@ export function useUserRoles() {
           .from('user_roles')
           .insert({ user_id: user.id, role });
         
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error adding role:", insertError);
+          throw insertError;
+        }
         
         await fetchRoles();
         return true;
@@ -82,7 +94,7 @@ export function useUserRoles() {
       return true;
     } catch (error) {
       console.error("Error adding role:", error);
-      toast.error("Failed to add role");
+      toast.error("Failed to add role: " + error.message);
       return false;
     } finally {
       setLoading(false);
@@ -102,13 +114,16 @@ export function useUserRoles() {
         .eq('user_id', user.id)
         .eq('role', role);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error removing role:", error);
+        throw error;
+      }
       
       await fetchRoles();
       return true;
     } catch (error) {
       console.error("Error removing role:", error);
-      toast.error("Failed to remove role");
+      toast.error("Failed to remove role: " + error.message);
       return false;
     } finally {
       setLoading(false);

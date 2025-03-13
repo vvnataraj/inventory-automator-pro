@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 export default function AssignAdminRole() {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { fetchRoles } = useUserRoles();
   
   const assignAdminRole = async () => {
     if (!user) {
@@ -18,10 +20,10 @@ export default function AssignAdminRole() {
     try {
       setLoading(true);
       
-      // Use the current user's ID directly instead of looking it up by email
+      // Use the current user's ID directly
       const userId = user.id;
       
-      console.log("Current user ID:", userId);
+      console.log("Assigning admin role to user ID:", userId);
       
       // Check if the admin role already exists for this user
       const { data: existingRole, error: checkError } = await supabase
@@ -30,7 +32,10 @@ export default function AssignAdminRole() {
         .eq('user_id', userId)
         .eq('role', 'admin');
       
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error("Error checking existing role:", checkError);
+        throw checkError;
+      }
       
       // If admin role doesn't exist, add it
       if (!existingRole || existingRole.length === 0) {
@@ -40,22 +45,30 @@ export default function AssignAdminRole() {
           .delete()
           .eq('user_id', userId);
           
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error("Error deleting existing roles:", deleteError);
+          throw deleteError;
+        }
         
         // Then add the admin role
         const { error: insertError } = await supabase
           .from('user_roles')
           .insert({ user_id: userId, role: 'admin' });
         
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error inserting admin role:", insertError);
+          throw insertError;
+        }
         
         toast.success('Admin role assigned successfully!');
+        // Refresh roles after assignment
+        await fetchRoles();
       } else {
         toast.info('You already have the admin role');
       }
     } catch (error) {
       console.error("Error assigning admin role:", error);
-      toast.error('Failed to assign admin role');
+      toast.error('Failed to assign admin role: ' + error.message);
     } finally {
       setLoading(false);
     }
