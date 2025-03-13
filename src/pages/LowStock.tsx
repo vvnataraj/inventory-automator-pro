@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { inventoryItems } from "@/data/inventoryData";
-import { InventoryItem } from "@/types/inventory";
+import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { InventoryGrid } from "@/components/inventory/InventoryGrid";
@@ -17,8 +17,8 @@ export default function LowStock() {
   const navigate = useNavigate();
   const [lowStockItems, setLowStockItems] = useState<InventoryItem[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
-  const [sortField, setSortField] = useState<"stock" | "name" | "category" | "sku" | "rrp" | "cost" | "lowStockThreshold">("stock");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortField, setSortField] = useState<SortField>("stock");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   useEffect(() => {
     // Find items with low stock

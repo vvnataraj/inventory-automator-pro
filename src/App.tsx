@@ -19,6 +19,7 @@ import Login from "@/pages/Login";
 import Support from "@/pages/Support";
 import Training from "@/pages/Training";
 import Documentation from "@/pages/Documentation";
+import LowStock from "@/pages/LowStock";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -51,6 +52,14 @@ const App = () => (
                 element={
                   <ProtectedRoute readOnly={false}>
                     <Inventory />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/low-stock" 
+                element={
+                  <ProtectedRoute readOnly={false}>
+                    <LowStock />
                   </ProtectedRoute>
                 } 
               />
