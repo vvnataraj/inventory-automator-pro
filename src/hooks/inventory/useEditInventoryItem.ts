@@ -93,11 +93,18 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
     
     // Update the item with the new data
     try {
-      updateItem(item.id, updatedFormData);
+      // Fix: Pass only one argument to updateItem since it expects an item object
+      updateItem({
+        ...item,
+        ...updatedFormData,
+        locations: updatedLocations,
+        lastUpdated: new Date().toISOString()
+      });
       
       // Also update reorder quantity if changed
       if (reorderQuantity !== item.reorderQuantity) {
-        reorderStock(item);
+        // Fix: Pass both item and a quantity to reorderStock
+        reorderStock(item, reorderQuantity - (item.reorderQuantity || 0));
       }
       
       toast({

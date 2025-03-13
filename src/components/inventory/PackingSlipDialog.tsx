@@ -34,8 +34,8 @@ export const PackingSlipDialog = ({ open, onClose, transferData }: PackingSlipDi
     documentTitle: `Packing_Slip_${transferData.referenceNumber}`,
     onPrintError: (error) => console.error('Print failed', error),
     pageStyle: "@page { size: auto; margin: 10mm; }",
-    removeAfterPrint: true,
-    // Use function in content to access the ref
+    onAfterPrint: () => console.log('Print completed'),
+    // Use function to return content
     content: () => printRef.current
   });
   
