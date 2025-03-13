@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload, Trash } from "lucide-react";
 import { ThemeSelector } from "@/components/theme/ThemeSelector";
 import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfileTab() {
   const { user } = useAuth();
@@ -18,14 +18,25 @@ export default function ProfileTab() {
   const [username, setUsername] = useState(user?.username || "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatar_url || null);
   const [uploading, setUploading] = useState(false);
+  const navigate = useNavigate();
   
   async function updateProfile() {
     try {
       setLoading(true);
       
-      if (!user) return;
+      if (!user) {
+        toast.error("You must be logged in to update your profile");
+        navigate("/login");
+        return;
+      }
       
-      // Update user metadata directly using the auth API
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Your session has expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+      
       const { error } = await supabase.auth.updateUser({
         data: {
           username,
@@ -34,10 +45,14 @@ export default function ProfileTab() {
       });
         
       if (error) {
+        if (error.message.includes("Auth session missing")) {
+          toast.error("Your session has expired. Please log in again.");
+          navigate("/login");
+          return;
+        }
         throw error;
       }
       
-      // Update local user state
       if (user) {
         user.username = username;
         user.avatar_url = avatarUrl;
@@ -60,19 +75,23 @@ export default function ProfileTab() {
         return;
       }
       
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Your session has expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+      
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
       
-      // Ensure we have a user ID
       if (!user?.id) {
         toast.error("You must be logged in to upload an avatar");
         return;
       }
       
-      // Create a unique file path with the user's ID as a folder
       const filePath = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
       
-      // Check if file is an image and is less than 2MB
       if (!file.type.match(/image\/.*/)) {
         toast.error("Please upload an image file");
         return;
@@ -83,7 +102,6 @@ export default function ProfileTab() {
         return;
       }
       
-      // Delete previous avatar if one exists
       if (avatarUrl) {
         const previousPath = avatarUrl.split('/').slice(-2).join('/');
         if (previousPath.startsWith(user.id)) {
@@ -93,12 +111,10 @@ export default function ProfileTab() {
             
           if (deleteError) {
             console.error("Error removing previous avatar:", deleteError);
-            // Continue with upload even if delete fails
           }
         }
       }
       
-      // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
@@ -107,22 +123,18 @@ export default function ProfileTab() {
         throw uploadError;
       }
       
-      // Get public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
         
-      // Update state with new avatar URL
       setAvatarUrl(publicUrl);
       
-      // Update user metadata directly
       await supabase.auth.updateUser({
         data: {
           avatar_url: publicUrl
         }
       });
       
-      // Update local user state
       if (user) {
         user.avatar_url = publicUrl;
       }
@@ -130,10 +142,16 @@ export default function ProfileTab() {
       toast.success("Avatar uploaded successfully");
     } catch (error) {
       console.error("Error uploading avatar:", error);
+      
+      if (error instanceof Error && error.message.includes("Auth session missing")) {
+        toast.error("Your session has expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+      
       toast.error("Failed to upload avatar");
     } finally {
       setUploading(false);
-      // Reset file input
       if (event.target) {
         event.target.value = '';
       }
@@ -146,10 +164,15 @@ export default function ProfileTab() {
       
       if (!user?.id || !avatarUrl) return;
       
-      // Extract file path from the URL
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Your session has expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+      
       const filePath = avatarUrl.split('/').slice(-2).join('/');
       
-      // Remove file from storage
       if (filePath.startsWith(user.id)) {
         const { error: deleteError } = await supabase.storage
           .from('avatars')
@@ -161,7 +184,6 @@ export default function ProfileTab() {
         }
       }
       
-      // Update user metadata directly
       const { error } = await supabase.auth.updateUser({
         data: {
           avatar_url: null
@@ -172,10 +194,8 @@ export default function ProfileTab() {
         throw error;
       }
       
-      // Update local state
       setAvatarUrl(null);
       
-      // Update local user state
       if (user) {
         user.avatar_url = null;
       }
@@ -183,10 +203,32 @@ export default function ProfileTab() {
       toast.success("Avatar removed successfully");
     } catch (error) {
       console.error("Error removing avatar:", error);
+      
+      if (error instanceof Error && error.message.includes("Auth session missing")) {
+        toast.error("Your session has expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+      
       toast.error("Failed to remove avatar");
     } finally {
       setLoading(false);
     }
+  }
+  
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-10">
+          <div className="text-center">
+            <p className="text-muted-foreground">You need to be logged in to view your profile</p>
+            <Button className="mt-4" onClick={() => navigate("/login")}>
+              Go to Login
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   
   return (

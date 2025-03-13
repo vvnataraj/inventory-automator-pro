@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -120,11 +121,32 @@ export const useAuthOperations = (
   const signOut = async () => {
     try {
       setLoading(true);
+      console.log("Attempting to sign out user");
+      
+      // First check if we have a session before trying to sign out
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session) {
+        console.log("No active session found, redirecting to login");
+        // No active session, just redirect to login
+        navigate("/login");
+        toast.info("You've been signed out");
+        return;
+      }
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        console.error("Error during sign out:", error);
         toast.error(error.message);
+        
+        // If we get a 401 or auth related error, the session is likely already invalid
+        // So we should still redirect to login
+        if (error.message.includes("Auth") || error.message.includes("session")) {
+          navigate("/login");
+          return;
+        }
+        
         return;
       }
       
@@ -134,6 +156,9 @@ export const useAuthOperations = (
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out. Please try again.");
+      
+      // Even if there's an error, redirect to login
+      navigate("/login");
     } finally {
       setLoading(false);
     }

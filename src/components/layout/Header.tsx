@@ -10,21 +10,33 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { toast } from "sonner";
 
 export function Header() {
   const { signOut, user } = useAuth();
   const { isAdmin } = useUserRoles();
   const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
   
   const handleLogout = async () => {
-    await signOut();
-    // We don't need to manually navigate here as the signOut function already handles it
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      // We don't need to manually navigate here as the signOut function already handles it
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast.error("There was a problem logging out. Redirecting to login page.");
+      navigate("/login");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
   
   const getUserInitials = () => {
@@ -148,9 +160,13 @@ export function Header() {
               
               <DropdownMenuSeparator />
               
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+              <DropdownMenuItem 
+                onClick={handleLogout} 
+                className="text-destructive focus:text-destructive"
+                disabled={isLoggingOut}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                {isLoggingOut ? 'Logging out...' : 'Logout'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
