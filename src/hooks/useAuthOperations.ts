@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -29,13 +28,45 @@ export const useAuthOperations = (
         avatar_url: user.avatar_url !== undefined ? user.avatar_url : "undefined"
       });
       
-      // The username should be in user_metadata
-      // Let's check if it's there and use it
-      if (user.user_metadata && user.user_metadata.username) {
+      // First, try to fetch the user profile data directly from the profiles view
+      // This will give us access to the username column from auth.users
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError) {
+        console.error("Error fetching profile data:", profileError);
+      } else if (profileData) {
+        console.log("Profile data fetched from database:", profileData);
+        
+        // Update the user object with the data from the profiles view
+        user.username = profileData.username;
+        user.avatar_url = profileData.avatar_url;
+        
+        console.log("User object updated with profile data:", {
+          id: user.id,
+          username: user.username,
+          avatar_url: user.avatar_url
+        });
+      } else {
+        console.log("No profile data found in database");
+      }
+      
+      // Fallback to user_metadata if we still don't have a username
+      // This ensures backward compatibility
+      if (!user.username && user.user_metadata && user.user_metadata.username) {
         console.log("Found username in user_metadata:", user.user_metadata.username);
         user.username = user.user_metadata.username;
       } else {
-        console.log("No username found in user_metadata:", user.user_metadata);
+        console.log("No username found in user_metadata or it's already set from profile data");
+      }
+      
+      // Same for avatar_url
+      if (!user.avatar_url && user.user_metadata && user.user_metadata.avatar_url) {
+        console.log("Found avatar_url in user_metadata:", user.user_metadata.avatar_url);
+        user.avatar_url = user.user_metadata.avatar_url;
       }
       
       // If for some reason they aren't populated, ensure they're at least null
@@ -47,12 +78,6 @@ export const useAuthOperations = (
       if (user.avatar_url === undefined) {
         console.log("Avatar URL was undefined, setting to null");
         user.avatar_url = null;
-        
-        // Check if avatar is in user_metadata
-        if (user.user_metadata && user.user_metadata.avatar_url) {
-          console.log("Found avatar_url in user_metadata:", user.user_metadata.avatar_url);
-          user.avatar_url = user.user_metadata.avatar_url;
-        }
       }
       
       console.log("Returning user object:", {

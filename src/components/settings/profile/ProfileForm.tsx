@@ -55,27 +55,43 @@ export function ProfileForm({
         avatar_url: avatarUrl,
       });
       
-      const { data, error } = await supabase.auth.updateUser({
+      // First update the user metadata (this affects auth.users)
+      const { data: authData, error: authError } = await supabase.auth.updateUser({
         data: {
           username,
           avatar_url: avatarUrl,
         }
       });
       
-      if (error) {
-        if (error.message.includes("Auth session missing")) {
+      if (authError) {
+        if (authError.message.includes("Auth session missing")) {
           toast.error("Your session has expired. Please log in again.");
           navigate("/login");
           return;
         }
-        throw error;
+        throw authError;
+      }
+      
+      // Now update the profiles table directly
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          username,
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString()
+        });
+      
+      if (profileError) {
+        console.error("Error updating profiles table:", profileError);
+        throw profileError;
       }
       
       // Log the response from Supabase
-      console.log("ProfileForm - After update - Supabase response:", data ? {
-        id: data.user.id,
-        username: data.user.user_metadata?.username,
-        raw_metadata: data.user.user_metadata
+      console.log("ProfileForm - After update - Supabase auth response:", authData ? {
+        id: authData.user.id,
+        username: authData.user.user_metadata?.username,
+        raw_metadata: authData.user.user_metadata
       } : "No data returned");
       
       if (user) {
