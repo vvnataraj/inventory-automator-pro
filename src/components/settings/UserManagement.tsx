@@ -21,6 +21,14 @@ type User = {
   is_disabled?: boolean;
 };
 
+// Define type for Supabase auth users response
+type AuthUser = {
+  id: string;
+  email?: string | null;
+  last_sign_in_at?: string | null;
+  created_at?: string;
+};
+
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
   const { isAdmin } = useUserRoles();
@@ -46,7 +54,7 @@ export default function UserManagement() {
       if (rolesError) throw rolesError;
       
       // Create a map to group roles by user_id
-      const userRolesMap = new Map();
+      const userRolesMap = new Map<string, User>();
       
       if (rolesData && rolesData.length > 0) {
         rolesData.forEach(role => {
@@ -62,7 +70,9 @@ export default function UserManagement() {
             });
           } else {
             const user = userRolesMap.get(role.user_id);
-            user.roles.push(role.role);
+            if (user) {
+              user.roles.push(role.role);
+            }
           }
         });
         
@@ -80,19 +90,26 @@ export default function UserManagement() {
           profiles.forEach(profile => {
             if (userRolesMap.has(profile.id)) {
               const user = userRolesMap.get(profile.id);
-              user.username = profile.username;
-              user.created_at = profile.created_at;
+              if (user) {
+                user.username = profile.username;
+                user.created_at = profile.created_at;
+              }
             }
           });
         }
         
         // Update user information with auth data
         if (authUsers?.users && !authError) {
-          authUsers.users.forEach(authUser => {
+          // Explicitly type the users array
+          const typedUsers = authUsers.users as AuthUser[];
+          
+          typedUsers.forEach(authUser => {
             if (userRolesMap.has(authUser.id)) {
               const user = userRolesMap.get(authUser.id);
-              user.email = authUser.email || "";
-              user.last_sign_in_at = authUser.last_sign_in_at;
+              if (user) {
+                user.email = authUser.email || "";
+                user.last_sign_in_at = authUser.last_sign_in_at || null;
+              }
             }
           });
         }
