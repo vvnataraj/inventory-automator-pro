@@ -58,7 +58,7 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
   // Format user display info
   const displayEmail = user.email || "No email";
   
-  // Only show username if it's the current user's profile or if the user is an admin
+  // Show username if it's the current user's profile or if the user is an admin
   const displayUsername = isOwnProfile || isAdmin() 
     ? (user.username || "—") 
     : "•••••••";

@@ -1,4 +1,3 @@
-
 import { useInventoryPage } from "@/hooks/useInventoryPage";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -37,10 +36,7 @@ export default function Inventory() {
     actions.fetchItems();
     
     // Show a success toast
-    toast({
-      title: "Import complete",
-      description: `Successfully imported ${importedItems.length} items`,
-    });
+    toast.success(`Successfully imported ${importedItems.length} items`);
   };
   
   return (
