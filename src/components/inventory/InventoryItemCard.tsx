@@ -43,6 +43,12 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   const { isReadOnly } = useUserRoles();
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   
+  const handleReorderStock = (item: InventoryItem, quantity: number) => {
+    if (onReorderStock) {
+      onReorderStock(item, quantity);
+    }
+  };
+  
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
       <div className="relative pt-[100%] overflow-hidden bg-muted">
@@ -131,16 +137,16 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
             <DeleteInventoryItem item={item} onDelete={onDelete} />
           </>
         )}
-        
-        {onReorderStock && (
-          <ReorderDialog
-            item={item}
-            open={reorderDialogOpen}
-            onClose={() => setReorderDialogOpen(false)}
-            onReorder={onReorderStock}
-          />
-        )}
       </CardFooter>
+      
+      {onReorderStock && (
+        <ReorderDialog
+          item={item}
+          open={reorderDialogOpen}
+          onClose={() => setReorderDialogOpen(false)}
+          onReorder={handleReorderStock}
+        />
+      )}
     </Card>
   );
 }

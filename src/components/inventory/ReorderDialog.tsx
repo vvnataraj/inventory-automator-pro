@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { InventoryItem } from "@/types/inventory";
 import {
   Dialog,
@@ -26,7 +26,14 @@ export const ReorderDialog: React.FC<ReorderDialogProps> = ({
   onClose,
   onReorder,
 }) => {
-  const [quantity, setQuantity] = useState(item.minStockCount);
+  const [quantity, setQuantity] = useState(item.minStockCount || Math.max(10, Math.ceil(item.lowStockThreshold * 2)));
+
+  // Reset quantity when the item changes
+  useEffect(() => {
+    if (open && item) {
+      setQuantity(item.minStockCount || Math.max(10, Math.ceil(item.lowStockThreshold * 2)));
+    }
+  }, [open, item]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
