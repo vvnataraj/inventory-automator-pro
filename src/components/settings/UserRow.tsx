@@ -59,7 +59,8 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
   const displayEmail = user.email || "No email";
   
   // Show username if it's the current user's profile or if the user is an admin
-  const displayUsername = isOwnProfile || isAdmin() 
+  // This is the key change - we now always show usernames to admins
+  const displayUsername = isAdmin() || isOwnProfile 
     ? (user.username || "—") 
     : "•••••••";
   
