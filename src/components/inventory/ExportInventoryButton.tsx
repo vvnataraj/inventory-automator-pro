@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, FileDown, Upload, X } from "lucide-react";
@@ -65,6 +66,9 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
       }
       
       const dbItems = data.map(item => {
+        let dimensionsData = typeof item.dimensions === 'object' ? item.dimensions : null;
+        let weightData = typeof item.weight === 'object' ? item.weight : null;
+        
         return {
           id: item.id,
           sku: item.sku,
@@ -83,8 +87,16 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
           dateAdded: item.date_added,
           lastUpdated: item.last_updated,
           imageUrl: item.image_url,
-          dimensions: item.dimensions,
-          weight: item.weight,
+          dimensions: dimensionsData ? {
+            length: dimensionsData.length || 0,
+            width: dimensionsData.width || 0,
+            height: dimensionsData.height || 0,
+            unit: dimensionsData.unit || 'cm'
+          } : undefined,
+          weight: weightData ? {
+            value: weightData.value || 0,
+            unit: weightData.unit || 'kg'
+          } : undefined,
           isActive: item.is_active,
           supplier: item.supplier || "",
           tags: item.tags || []
@@ -370,6 +382,7 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
         
         const item: Record<string, any> = {};
         headers.forEach((header, index) => {
+          const value = values[index];
           if (value === undefined) return;
           
           if (value === "true") item[header] = true;

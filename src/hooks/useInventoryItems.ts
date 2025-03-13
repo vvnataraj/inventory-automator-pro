@@ -29,8 +29,8 @@ export function useInventoryItems(
       
       // Apply search filter
       if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        query = query.or(`name.ilike.%${query}%`).or(`sku.ilike.%${query}%`).or(`category.ilike.%${query}%`);
+        const searchTerm = searchQuery.toLowerCase().trim();
+        query = query.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
       }
       
       // Apply category filter
@@ -62,6 +62,10 @@ export function useInventoryItems(
       if (data && data.length > 0) {
         // Transform Supabase data to match our InventoryItem type
         dbItems = data.map(item => {
+          // Parse dimensions and weight JSON to match our type structure
+          let dimensionsData = typeof item.dimensions === 'object' ? item.dimensions : null;
+          let weightData = typeof item.weight === 'object' ? item.weight : null;
+          
           return {
             id: item.id,
             sku: item.sku,
@@ -80,8 +84,16 @@ export function useInventoryItems(
             dateAdded: item.date_added,
             lastUpdated: item.last_updated,
             imageUrl: item.image_url,
-            dimensions: item.dimensions,
-            weight: item.weight,
+            dimensions: dimensionsData ? {
+              length: dimensionsData.length || 0,
+              width: dimensionsData.width || 0,
+              height: dimensionsData.height || 0,
+              unit: dimensionsData.unit || 'cm'
+            } : undefined,
+            weight: weightData ? {
+              value: weightData.value || 0,
+              unit: weightData.unit || 'kg'
+            } : undefined,
             isActive: item.is_active,
             supplier: item.supplier || "",
             tags: item.tags || []
