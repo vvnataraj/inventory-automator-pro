@@ -19,6 +19,7 @@ export interface LocationFormData {
   name: string;
   type: string;
   spaceUtilization: number;
+  phoneNumber?: string;
 }
 
 interface AddLocationModalProps {
@@ -31,6 +32,7 @@ export function AddLocationModal({ onLocationAdded }: AddLocationModalProps) {
     name: "",
     type: "Warehouse",
     spaceUtilization: 0,
+    phoneNumber: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,6 +55,7 @@ export function AddLocationModal({ onLocationAdded }: AddLocationModalProps) {
       name: "",
       type: "Warehouse",
       spaceUtilization: 0,
+      phoneNumber: "",
     });
     setOpen(false);
     
@@ -106,6 +109,19 @@ export function AddLocationModal({ onLocationAdded }: AddLocationModalProps) {
                   <SelectItem value="Storage">Storage Unit</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phoneNumber" className="text-right">
+                Phone Number
+              </Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                value={formData.phoneNumber || ""}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                className="col-span-3"
+                placeholder="e.g. +1 (555) 123-4567"
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="spaceUtilization" className="text-right">

@@ -11,10 +11,17 @@ interface Location {
   totalUnits: number;
   stockValue: number;
   spaceUtilization: number;
+  phoneNumber?: string;
 }
 
 export function useLocations() {
-  const [locations, setLocations] = useState<Location[]>(locationsData);
+  // Initialize locations with the data, ensuring each has a default phone number if not provided
+  const [locations, setLocations] = useState<Location[]>(
+    locationsData.map(location => ({
+      ...location,
+      phoneNumber: location.phoneNumber || ""
+    }))
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const addLocation = useCallback((locationData: LocationFormData) => {
@@ -26,6 +33,7 @@ export function useLocations() {
       totalUnits: 0,
       stockValue: 0,
       spaceUtilization: locationData.spaceUtilization,
+      phoneNumber: locationData.phoneNumber || "",
     };
     
     setLocations(prev => [...prev, newLocation]);
@@ -40,7 +48,8 @@ export function useLocations() {
               ...location, 
               name: locationData.name, 
               type: locationData.type, 
-              spaceUtilization: locationData.spaceUtilization 
+              spaceUtilization: locationData.spaceUtilization,
+              phoneNumber: locationData.phoneNumber || location.phoneNumber || "", 
             } 
           : location
       )

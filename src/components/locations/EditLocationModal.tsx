@@ -21,6 +21,7 @@ interface EditLocationModalProps {
     name: string;
     type: string;
     spaceUtilization: number;
+    phoneNumber?: string;
     [key: string]: any;
   } | null;
   open: boolean;
@@ -38,6 +39,7 @@ export function EditLocationModal({
     name: "",
     type: "Warehouse",
     spaceUtilization: 0,
+    phoneNumber: "",
   });
 
   // Update form when location changes
@@ -47,6 +49,7 @@ export function EditLocationModal({
         name: location.name,
         type: location.type,
         spaceUtilization: location.spaceUtilization,
+        phoneNumber: location.phoneNumber || "",
       });
     }
   }, [location]);
@@ -115,6 +118,19 @@ export function EditLocationModal({
                   <SelectItem value="Storage">Storage Unit</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phoneNumber" className="text-right">
+                Phone Number
+              </Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                value={formData.phoneNumber || ""}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                className="col-span-3"
+                placeholder="e.g. +1 (555) 123-4567"
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="spaceUtilization" className="text-right">

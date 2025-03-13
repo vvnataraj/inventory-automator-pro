@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Building2, ChevronUp, ChevronDown } from "lucide-react";
+import { Building2, ChevronUp, ChevronDown, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,6 +33,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { ListControls, ViewMode } from "@/components/common/ListControls";
+import { toast } from "@/components/ui/use-toast";
 
 type SortField = "name" | "type" | "itemCount" | "totalUnits" | "stockValue" | "spaceUtilization";
 type SortDirection = "asc" | "desc";
@@ -68,6 +70,28 @@ export default function Locations() {
       setLocationToDelete(null);
     }
     setDeleteConfirmOpen(false);
+  };
+
+  const handleCall = (phoneNumber: string) => {
+    if (!phoneNumber) {
+      toast({
+        title: "No phone number",
+        description: "This location doesn't have a phone number set.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Format the phone number for dialing
+    const formattedNumber = phoneNumber.replace(/[^\d+]/g, '');
+    
+    // Create a link to initiate a call
+    window.location.href = `tel:${formattedNumber}`;
+    
+    toast({
+      title: "Initiating call",
+      description: `Calling ${phoneNumber}`,
+    });
   };
 
   const handleSort = (field: string) => {
@@ -138,6 +162,22 @@ export default function Locations() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
+                  {location.phoneNumber && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Phone:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{location.phoneNumber}</span>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+                          onClick={() => handleCall(location.phoneNumber || "")}
+                        >
+                          <Phone className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Stock Items:</span>
                     <span className="font-medium">{location.itemCount}</span>
@@ -184,20 +224,13 @@ export default function Locations() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {sortOptions.map(option => (
-                    <TableHead 
-                      key={option.field}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort(option.field)}
-                    >
-                      <div className="flex items-center gap-1">
-                        {option.label}
-                        {sortField === option.field && (
-                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </TableHead>
-                  ))}
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Item Count</TableHead>
+                  <TableHead>Total Units</TableHead>
+                  <TableHead>Stock Value</TableHead>
+                  <TableHead>Space Utilization</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -206,6 +239,23 @@ export default function Locations() {
                   <TableRow key={location.id}>
                     <TableCell className="font-medium">{location.name}</TableCell>
                     <TableCell>{location.type}</TableCell>
+                    <TableCell>
+                      {location.phoneNumber ? (
+                        <div className="flex items-center gap-2">
+                          <span>{location.phoneNumber}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+                            onClick={() => handleCall(location.phoneNumber || "")}
+                          >
+                            <Phone className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground italic">None</span>
+                      )}
+                    </TableCell>
                     <TableCell>{location.itemCount}</TableCell>
                     <TableCell>{location.totalUnits}</TableCell>
                     <TableCell>${location.stockValue.toLocaleString()}</TableCell>
