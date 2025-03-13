@@ -51,7 +51,7 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
   };
 
   // Format user display info
-  const displayEmail = user.email || `User ${user.id.substring(0, 8)}...`;
+  const displayEmail = user.email || "No email";
   const displayUsername = user.username || "";
   
   // Get the primary role (first in the array) or default to 'user'
