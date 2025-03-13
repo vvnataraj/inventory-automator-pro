@@ -146,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         toast.error(error.message);
         return;
       }
+      // Always navigate to login page after successful signout
       navigate("/login");
       toast.success("Successfully signed out!");
     } catch (error) {

@@ -55,7 +55,7 @@ export function Header() {
   
   const handleLogout = async () => {
     await signOut();
-    toast.success("You have been logged out successfully");
+    // We don't need to manually navigate here as the signOut function already handles it
   };
   
   const getUserInitials = () => {
