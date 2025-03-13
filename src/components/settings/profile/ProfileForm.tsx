@@ -43,13 +43,25 @@ export function ProfileForm({
         return;
       }
       
-      const { error } = await supabase.auth.updateUser({
+      console.log("ProfileForm - Before update - Current username state:", username);
+      console.log("ProfileForm - Before update - User data:", {
+        id: user.id, 
+        username: user.username
+      });
+      
+      // Log what we're going to send to Supabase
+      console.log("ProfileForm - Updating profile with data:", {
+        username,
+        avatar_url: avatarUrl,
+      });
+      
+      const { data, error } = await supabase.auth.updateUser({
         data: {
           username,
           avatar_url: avatarUrl,
         }
       });
-        
+      
       if (error) {
         if (error.message.includes("Auth session missing")) {
           toast.error("Your session has expired. Please log in again.");
@@ -59,9 +71,20 @@ export function ProfileForm({
         throw error;
       }
       
+      // Log the response from Supabase
+      console.log("ProfileForm - After update - Supabase response:", data ? {
+        id: data.user.id,
+        username: data.user.user_metadata?.username,
+        raw_metadata: data.user.user_metadata
+      } : "No data returned");
+      
       if (user) {
         user.username = username;
         user.avatar_url = avatarUrl;
+        console.log("ProfileForm - After update - Updated user object:", {
+          id: user.id,
+          username: user.username
+        });
       }
       
       toast.success("Profile updated successfully");

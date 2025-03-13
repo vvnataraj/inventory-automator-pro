@@ -25,11 +25,18 @@ export const useAuthOperations = (
         id: user.id,
         email: user.email,
         username: user.username !== undefined ? user.username : "undefined",
+        user_metadata: user.user_metadata,
         avatar_url: user.avatar_url !== undefined ? user.avatar_url : "undefined"
       });
       
-      // The username and avatar_url should already be in the user object
-      // from the Supabase SDK since we're using the direct column
+      // The username should be in user_metadata
+      // Let's check if it's there and use it
+      if (user.user_metadata && user.user_metadata.username) {
+        console.log("Found username in user_metadata:", user.user_metadata.username);
+        user.username = user.user_metadata.username;
+      } else {
+        console.log("No username found in user_metadata:", user.user_metadata);
+      }
       
       // If for some reason they aren't populated, ensure they're at least null
       if (user.username === undefined) {
@@ -40,12 +47,19 @@ export const useAuthOperations = (
       if (user.avatar_url === undefined) {
         console.log("Avatar URL was undefined, setting to null");
         user.avatar_url = null;
+        
+        // Check if avatar is in user_metadata
+        if (user.user_metadata && user.user_metadata.avatar_url) {
+          console.log("Found avatar_url in user_metadata:", user.user_metadata.avatar_url);
+          user.avatar_url = user.user_metadata.avatar_url;
+        }
       }
       
       console.log("Returning user object:", {
         id: user.id,
         email: user.email,
         username: user.username,
+        user_metadata: user.user_metadata,
         avatar_url: user.avatar_url
       });
       

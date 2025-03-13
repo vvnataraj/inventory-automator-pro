@@ -24,6 +24,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
+        console.log("AuthContext - Initial session user data:", {
+          id: session.user.id,
+          email: session.user.email,
+          user_metadata: session.user.user_metadata,
+          app_metadata: session.user.app_metadata
+        });
+        
         // Fetch user data from the auth.users table to get the profile fields
         const fetchUserData = async () => {
           try {
@@ -32,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: updatedUser.id,
               email: updatedUser.email,
               username: updatedUser.username,
+              user_metadata: updatedUser.user_metadata,
               avatar_url: updatedUser.avatar_url
             });
             setUser(updatedUser);
@@ -55,12 +63,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         
         if (session?.user) {
+          console.log("AuthContext - Auth state change - Session user data:", {
+            id: session.user.id,
+            email: session.user.email,
+            user_metadata: session.user.user_metadata,
+            app_metadata: session.user.app_metadata
+          });
+          
           try {
             const updatedUser = await authOperations.fetchUserProfile(session.user);
             console.log("AuthContext - Auth state change:", {
               id: updatedUser.id,
               email: updatedUser.email,
               username: updatedUser.username,
+              user_metadata: updatedUser.user_metadata,
               avatar_url: updatedUser.avatar_url
             });
             setUser(updatedUser);
