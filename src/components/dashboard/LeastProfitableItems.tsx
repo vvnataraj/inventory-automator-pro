@@ -25,7 +25,7 @@ export const LeastProfitableItems = () => {
         };
       })
       .sort((a, b) => a.totalProfit - b.totalProfit) // Sort by total profit ascending
-      .slice(0, 10); // Get bottom 10
+      .slice(0, 3); // Get bottom 3 instead of 10
   }, []);
 
   const handleItemClick = (sku: string) => {
@@ -36,7 +36,7 @@ export const LeastProfitableItems = () => {
     <Card className="col-span-7">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-xl font-medium">
-          10 Least Profitable Items
+          3 Least Profitable Items
         </CardTitle>
         <TrendingDown className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
