@@ -20,7 +20,7 @@ interface AddInventoryItemProps {
 
 export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { role } = useUserRoles();
+  const { isManager } = useUserRoles();
   const [formData, setFormData] = React.useState<InventoryItemFormData>({
     name: "",
     sku: "",
@@ -36,12 +36,10 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Create a new item using our generator utility
     const newItem = generateInventoryItem(formData);
     
     onAdd(newItem);
     setIsOpen(false);
-    // Reset form
     setFormData({
       name: "",
       sku: "",
@@ -72,8 +70,7 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
     }));
   };
 
-  // Don't render the button for users with 'user' role
-  if (role === 'user') {
+  if (!isManager()) {
     return null;
   }
 

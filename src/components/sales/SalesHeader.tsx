@@ -9,13 +9,12 @@ interface SalesHeaderProps {
 }
 
 export const SalesHeader: React.FC<SalesHeaderProps> = ({ onCreateClick }) => {
-  const { isReadOnly, role } = useUserRoles();
-  const isBasicUser = role === 'user';
+  const { isReadOnly, isManager } = useUserRoles();
   
   return (
     <div className="flex items-center justify-between mb-6">
       <h1 className="text-3xl font-semibold tracking-tight">Sales</h1>
-      {(!isReadOnly() && !isBasicUser) && (
+      {(!isReadOnly() && isManager()) && (
         <div className="flex gap-2">
           <Button 
             onClick={onCreateClick}

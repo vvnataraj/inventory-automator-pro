@@ -24,8 +24,7 @@ type SortField = "orderNumber" | "customerName" | "createdAt" | "total" | "statu
 type SortDirection = "asc" | "desc";
 
 export default function Orders() {
-  const { role } = useUserRoles();
-  const isBasicUser = role === 'user';
+  const { isManager } = useUserRoles();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -136,7 +135,7 @@ export default function Orders() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Orders</h1>
         <div className="flex gap-2">
-          {!isBasicUser && (
+          {isManager() && (
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
               New Order

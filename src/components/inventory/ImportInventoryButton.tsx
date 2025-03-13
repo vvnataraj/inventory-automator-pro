@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileUp } from "lucide-react";
@@ -26,9 +27,9 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
   const [isImporting, setIsImporting] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { role } = useUserRoles();
+  const { isManager } = useUserRoles();
   
-  if (role === 'user') {
+  if (!isManager()) {
     return null;
   }
 

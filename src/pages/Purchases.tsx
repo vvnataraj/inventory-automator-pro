@@ -37,8 +37,7 @@ import { ListControls } from "@/components/common/ListControls";
 import { useUserRoles } from "@/hooks/useUserRoles";
 
 export default function Purchases() {
-  const { role } = useUserRoles();
-  const isBasicUser = role === 'user';
+  const { isManager } = useUserRoles();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,7 +124,7 @@ export default function Purchases() {
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Purchases</h1>
-        {!isBasicUser && <AddPurchaseModal onPurchaseAdded={addPurchase} />}
+        {isManager() && <AddPurchaseModal onPurchaseAdded={addPurchase} />}
       </div>
 
       <ListControls 
@@ -299,4 +298,3 @@ export default function Purchases() {
     </MainLayout>
   );
 }
-
