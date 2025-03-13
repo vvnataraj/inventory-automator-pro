@@ -34,8 +34,12 @@ import { AddPurchaseModal } from "@/components/purchases/AddPurchaseModal";
 import { EditPurchaseModal } from "@/components/purchases/EditPurchaseModal";
 import { Purchase, PurchaseStatus } from "@/types/purchase";
 import { ListControls } from "@/components/common/ListControls";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 export default function Purchases() {
+  const { role } = useUserRoles();
+  const isBasicUser = role === 'user';
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("poNumber");
@@ -121,7 +125,7 @@ export default function Purchases() {
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Purchases</h1>
-        <AddPurchaseModal onPurchaseAdded={addPurchase} />
+        {!isBasicUser && <AddPurchaseModal onPurchaseAdded={addPurchase} />}
       </div>
 
       <ListControls 
@@ -295,3 +299,4 @@ export default function Purchases() {
     </MainLayout>
   );
 }
+
