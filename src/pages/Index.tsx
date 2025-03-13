@@ -69,16 +69,15 @@ export default function Index() {
           <CategoryPieChart 
             data={categoryData} 
             onSliceClick={handlePieChartClick} 
+            className="h-full"
           />
         </div>
-        <div className="lg:col-span-2">
-          <RestockAlerts sales={sales} />
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <RestockAlerts sales={sales} className="flex-1" />
+          <TheftAlerts className="flex-1" />
         </div>
         <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 gap-6">
-            <TheftAlerts />
-            <RecentActivities />
-          </div>
+          <RecentActivities className="h-full" />
         </div>
       </div>
       

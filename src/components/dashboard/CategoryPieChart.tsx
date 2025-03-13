@@ -11,21 +11,26 @@ interface CategoryData {
 interface CategoryPieChartProps {
   data: CategoryData[];
   onSliceClick: (data: any, index: number) => void;
+  className?: string;
 }
 
-export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ data, onSliceClick }) => {
+export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ 
+  data, 
+  onSliceClick,
+  className 
+}) => {
   const COLORS = [
     '#0088FE', '#00C49F', '#FFBB28', '#FF8042', 
     '#8884d8', '#82ca9d', '#ffc658', '#ff7300'
   ];
 
   return (
-    <Card className="col-span-4">
+    <Card className={`${className || ''}`}>
       <CardHeader>
         <CardTitle>Inventory by Category</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
+      <CardContent className="h-[calc(100%-5rem)]">
+        <div className="h-full min-h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

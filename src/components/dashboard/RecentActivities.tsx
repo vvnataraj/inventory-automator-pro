@@ -2,9 +2,13 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const RecentActivities: React.FC = () => {
+interface RecentActivitiesProps {
+  className?: string;
+}
+
+export const RecentActivities: React.FC<RecentActivitiesProps> = ({ className }) => {
   return (
-    <Card className="col-span-3">
+    <Card className={`${className || ''}`}>
       <CardHeader>
         <CardTitle>Recent Activities</CardTitle>
       </CardHeader>
