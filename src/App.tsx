@@ -15,6 +15,9 @@ import Settings from "@/pages/Settings";
 import Progress from "@/pages/Progress";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
+import Support from "@/pages/Support";
+import Training from "@/pages/Training";
+import Documentation from "@/pages/Documentation";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
@@ -101,6 +104,32 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Help Section Routes */}
+            <Route 
+              path="/support" 
+              element={
+                <ProtectedRoute>
+                  <Support />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/training" 
+              element={
+                <ProtectedRoute>
+                  <Training />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/documentation" 
+              element={
+                <ProtectedRoute>
+                  <Documentation />
                 </ProtectedRoute>
               } 
             />
