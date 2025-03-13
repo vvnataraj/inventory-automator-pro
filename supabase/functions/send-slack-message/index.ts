@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // The Slack channel webhook URL
-const SLACK_WEBHOOK_URL = "https://join.slack.com/share/enQtODU3OTQ0OTUxNDAwNy04MmNhNTkyOTVmZjQ0ZmRlOGI3Yjg3NDQ5M2QxYzE5NWZmZTRkZmE4ZGQ5YTM5NGQ3ZWQ1NmFkZTgwMzdiNzQ2";
+const SLACK_WEBHOOK_URL = "https://join.slack.com/share/enQtODYxNjgwNzY3OTkzNi1kOGI1YzZhYjhiMmRmMWRmNGM1NzY3Y2FjOTVjNTU0MDQxYTUxZmQwNzFhZTRhNmIwZWZjMGIwNmVkMGUzN2Qw";
 
 serve(async (req) => {
   // Handle CORS preflight requests
