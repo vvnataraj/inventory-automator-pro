@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
@@ -60,8 +59,61 @@ export function useEditInventoryItem(item: InventoryItem) {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'stock' || name === 'cost' || name === 'rrp' || name === 'minStockCount' ? Number(value) : value
+      [name]: name === 'cost' || name === 'rrp' || name === 'minStockCount' ? Number(value) : value
     }));
+  };
+
+  const handleLocationStockChange = (location: string, newCount: number) => {
+    // Update the locationStocks array
+    const updatedLocationStocks = locationStocks.map(locStock => 
+      locStock.location === location 
+        ? { ...locStock, count: newCount } 
+        : locStock
+    );
+    
+    setLocationStocks(updatedLocationStocks);
+    
+    // Recalculate the total stock
+    const newTotal = updatedLocationStocks.reduce((sum, item) => sum + item.count, 0);
+    setTotalStock(newTotal);
+    
+    // Update the form data with the new total
+    setFormData(prev => ({
+      ...prev,
+      totalStock: newTotal,
+      // If this is the item's specific location, update its stock too
+      stock: prev.location === location ? newCount : prev.stock
+    }));
+  };
+
+  // Prepare the updated items for all locations when saving
+  const prepareItemsForSave = () => {
+    // Find all items with the same SKU
+    const sameSkuItems = inventoryItems.filter(
+      (inventoryItem) => inventoryItem.sku === item.sku
+    );
+    
+    // Create an array of updated items
+    return sameSkuItems.map(inventoryItem => {
+      // Find this item's location in our locationStocks
+      const locationData = locationStocks.find(
+        locStock => locStock.location === inventoryItem.location
+      );
+      
+      // If found, update the stock value, otherwise keep the original
+      return {
+        ...inventoryItem,
+        stock: locationData ? locationData.count : inventoryItem.stock,
+        // Copy other updated fields from the form
+        name: formData.name,
+        description: formData.description,
+        cost: formData.cost,
+        rrp: formData.rrp,
+        minStockCount: formData.minStockCount,
+        imageUrl: formData.imageUrl,
+        lastUpdated: new Date().toISOString()
+      };
+    });
   };
 
   return {
@@ -71,6 +123,8 @@ export function useEditInventoryItem(item: InventoryItem) {
     setIsOpen,
     locationStocks,
     totalStock,
-    handleChange
+    handleChange,
+    handleLocationStockChange,
+    prepareItemsForSave
   };
 }

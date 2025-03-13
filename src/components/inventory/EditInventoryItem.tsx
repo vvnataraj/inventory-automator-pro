@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { StockDistributionCard } from "./edit/StockDistributionCard";
 import { InventoryItemEditForm } from "./edit/InventoryItemForm";
 import { useEditInventoryItem } from "@/hooks/inventory/useEditInventoryItem";
+import { toast } from "sonner";
+import { useInventoryOperations } from "@/hooks/inventory/useInventoryOperations";
 
 interface EditInventoryItemProps {
   item: InventoryItem;
@@ -29,14 +31,37 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
     setIsOpen,
     locationStocks,
     totalStock,
-    handleChange
+    handleChange,
+    handleLocationStockChange,
+    prepareItemsForSave
   } = useEditInventoryItem(item);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { updateItem } = useInventoryOperations();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Save the individual item's stock, not the total
-    onSave(formData);
-    setIsOpen(false);
+    
+    try {
+      // Get all items that need to be updated (across all locations)
+      const itemsToUpdate = prepareItemsForSave();
+      
+      // Update each item
+      for (const itemToUpdate of itemsToUpdate) {
+        await updateItem(itemToUpdate);
+      }
+      
+      // Call the onSave callback with the current item's updated version
+      const currentItemUpdate = itemsToUpdate.find(i => i.id === item.id);
+      if (currentItemUpdate) {
+        onSave(currentItemUpdate);
+      }
+      
+      toast.success("Item updated successfully across all locations");
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error updating items:", error);
+      toast.error("Failed to update item");
+    }
   };
 
   return (
@@ -67,6 +92,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
                 formData={formData}
                 onChange={handleChange}
                 totalStock={totalStock}
+                readOnlyStock={true}
               />
               <div className="flex justify-end gap-3 mt-6">
                 <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
@@ -82,6 +108,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
             <StockDistributionCard
               locationStocks={locationStocks}
               totalStock={totalStock}
+              onLocationStockChange={handleLocationStockChange}
             />
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 interface LocationStock {
   location: string;
@@ -13,15 +14,24 @@ interface LocationStock {
 interface StockDistributionCardProps {
   locationStocks: LocationStock[];
   totalStock: number;
+  onLocationStockChange: (location: string, newCount: number) => void;
 }
 
 export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({ 
   locationStocks, 
-  totalStock 
+  totalStock,
+  onLocationStockChange
 }) => {
   // Calculate percentage for each location
   const getStockPercentage = (count: number) => {
     return totalStock > 0 ? (count / totalStock) * 100 : 0;
+  };
+
+  const handleStockChange = (location: string, value: string) => {
+    const newCount = parseInt(value, 10) || 0;
+    if (newCount >= 0) {
+      onLocationStockChange(location, newCount);
+    }
   };
 
   return (
@@ -39,9 +49,16 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
             <div key={index} className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="font-medium text-primary">{locationStock.location}</span>
-                <span className="font-semibold">
-                  {locationStock.count} units ({getStockPercentage(locationStock.count).toFixed(1)}%)
-                </span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min="0"
+                    value={locationStock.count}
+                    onChange={(e) => handleStockChange(locationStock.location, e.target.value)}
+                    className="w-20 h-7 text-right"
+                  />
+                  <span className="text-sm">units</span>
+                </div>
               </div>
               <Progress 
                 value={getStockPercentage(locationStock.count)} 

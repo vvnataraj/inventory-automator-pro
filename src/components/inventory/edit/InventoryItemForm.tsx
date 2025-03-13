@@ -11,12 +11,14 @@ interface InventoryItemFormProps {
   formData: InventoryItem;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   totalStock?: number;
+  readOnlyStock?: boolean;
 }
 
 export const InventoryItemEditForm: React.FC<InventoryItemFormProps> = ({ 
   formData, 
   onChange,
-  totalStock
+  totalStock,
+  readOnlyStock = false
 }) => {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -145,13 +147,15 @@ export const InventoryItemEditForm: React.FC<InventoryItemFormProps> = ({
             id="stock"
             name="stock"
             type="number"
-            value={formData.stock}
+            value={totalStock !== undefined ? totalStock : formData.stock}
+            readOnly={readOnlyStock}
+            disabled={readOnlyStock}
             onChange={onChange}
-            className="flex-1"
+            className={`flex-1 ${readOnlyStock ? "bg-muted" : ""}`}
           />
-          {totalStock !== undefined && (
+          {readOnlyStock && totalStock !== undefined && (
             <div className="text-sm text-muted-foreground">
-              (Total across all locations: {totalStock})
+              (Total across all locations)
             </div>
           )}
         </div>
@@ -175,6 +179,8 @@ export const InventoryItemEditForm: React.FC<InventoryItemFormProps> = ({
           value={formData.location}
           onChange={onChange}
           className="col-span-3"
+          readOnly={true}
+          disabled={true}
         />
       </div>
     </div>
