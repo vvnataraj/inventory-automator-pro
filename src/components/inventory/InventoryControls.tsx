@@ -4,8 +4,7 @@ import { SortField, SortDirection } from "@/types/inventory";
 import { SearchInput } from "./controls/SearchInput";
 import { ViewModeToggle } from "./controls/ViewModeToggle";
 import { SortControl } from "./controls/SortControl";
-import { LocationFilter } from "./controls/LocationFilter";
-import { CategoryFilter } from "./controls/CategoryFilter";
+import { InventoryFilter } from "./controls/InventoryFilter";
 
 interface InventoryControlsProps {
   searchQuery: string;
@@ -43,12 +42,9 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
         setSearchQuery={setSearchQuery} 
       />
       
-      <CategoryFilter
+      <InventoryFilter
         categoryFilter={categoryFilter}
         onCategoryFilterChange={onCategoryFilterChange}
-      />
-      
-      <LocationFilter
         locationFilter={locationFilter}
         onLocationFilterChange={onLocationFilterChange}
       />
