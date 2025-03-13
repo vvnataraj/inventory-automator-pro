@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Upload } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -20,6 +22,7 @@ export default function ProfileTab() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   
   useEffect(() => {
     if (user) {
@@ -86,6 +89,59 @@ export default function ProfileTab() {
     }
   }
   
+  async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
+    try {
+      setUploading(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+      
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
+      
+      // Check if file is an image and is less than 2MB
+      if (!file.type.match(/image\/.*/)) {
+        toast.error("Please upload an image file");
+        return;
+      }
+      
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("File size must be less than 2MB");
+        return;
+      }
+      
+      // Upload file to Supabase Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+        
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+        
+      // Update profile with new avatar URL
+      setAvatarUrl(publicUrl);
+      
+      toast.success("Avatar uploaded successfully");
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error("Failed to upload avatar");
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
+  }
+  
   return (
     <Card>
       <CardHeader>
@@ -94,7 +150,7 @@ export default function ProfileTab() {
           Manage your profile details and public information
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input id="email" value={user?.email} disabled />
@@ -113,25 +169,52 @@ export default function ProfileTab() {
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="avatar">Avatar URL</Label>
-          <Input 
-            id="avatar" 
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder="Enter avatar URL"
-          />
-          {avatarUrl && (
-            <div className="mt-2">
-              <p className="text-sm mb-1">Preview:</p>
-              <img 
+        <div className="space-y-4">
+          <Label>Avatar</Label>
+          <div className="flex items-center gap-4">
+            <Avatar className="h-20 w-20 border">
+              <AvatarImage 
                 src={avatarUrl} 
-                alt="Avatar preview" 
-                className="w-16 h-16 rounded-full object-cover border"
-                onError={(e) => {
-                  e.currentTarget.src = "https://avatar.vercel.sh/inventory";
-                }}
+                alt={username || user?.email || "User"} 
               />
+              <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                {username ? username.charAt(0).toUpperCase() : 
+                  user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex flex-col gap-2">
+              <Label 
+                htmlFor="avatar-upload" 
+                className="cursor-pointer bg-secondary hover:bg-secondary/80 text-secondary-foreground inline-flex items-center justify-center rounded-md font-medium transition-colors px-4 py-2 text-sm h-10"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Avatar
+              </Label>
+              <Input 
+                type="file"
+                id="avatar-upload"
+                accept="image/*"
+                onChange={uploadAvatar}
+                className="hidden"
+                disabled={uploading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Upload a profile picture (max 2MB)
+              </p>
+            </div>
+          </div>
+          
+          {avatarUrl && (
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                type="button" 
+                onClick={() => setAvatarUrl("")}
+              >
+                Remove Avatar
+              </Button>
             </div>
           )}
         </div>
@@ -139,7 +222,7 @@ export default function ProfileTab() {
       <CardFooter>
         <Button 
           onClick={updateProfile}
-          disabled={loading}
+          disabled={loading || uploading}
         >
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
