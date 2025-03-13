@@ -1,12 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import AddUserDialog from "./AddUserDialog";
 import UserTable from "./UserTable";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { ListControls } from "@/components/common/ListControls";
@@ -22,136 +18,26 @@ type User = {
 };
 
 type UserManagementProps = {
-  initialUsers?: User[];
-  loading?: boolean;
-  onRefresh?: () => void;
+  initialUsers: User[];
+  loading: boolean;
+  onRefresh: () => void;
 };
 
-// Define type for Supabase auth users response
-type AuthUser = {
-  id: string;
-  email?: string | null;
-  last_sign_in_at?: string | null;
-  created_at?: string;
-};
-
-export default function UserManagement({ initialUsers = [], loading = false, onRefresh }: UserManagementProps) {
-  const { user: currentUser } = useAuth();
+export default function UserManagement({ initialUsers, loading, onRefresh }: UserManagementProps) {
   const { isAdmin } = useUserRoles();
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [innerLoading, setInnerLoading] = useState(loading);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-
+  
+  // Update users when initialUsers prop changes
   useEffect(() => {
-    // Update users when initialUsers prop changes
-    if (initialUsers.length > 0) {
-      setUsers(initialUsers);
-    } else if (currentUser && users.length === 0) {
-      // If no initial users provided but we're logged in, fetch users
-      fetchUsers();
-    }
-  }, [currentUser, initialUsers]);
-
-  async function fetchUsers() {
-    if (onRefresh) {
-      onRefresh();
-      return;
-    }
-    
-    try {
-      setInnerLoading(true);
-      
-      console.log("Fetching users data as admin");
-      
-      // First fetch all user roles
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-      
-      if (rolesError) throw rolesError;
-      
-      // Create a map to group roles by user_id
-      const userRolesMap = new Map<string, string[]>();
-      
-      if (rolesData && rolesData.length > 0) {
-        rolesData.forEach(role => {
-          if (!userRolesMap.has(role.user_id)) {
-            userRolesMap.set(role.user_id, [role.role]);
-          } else {
-            const roles = userRolesMap.get(role.user_id);
-            if (roles) {
-              roles.push(role.role);
-            }
-          }
-        });
-      }
-        
-      // Get profile information including username and creation date
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, created_at');
-      
-      if (profilesError) throw profilesError;
-      
-      // For demonstration, try to get users directly from auth - requires service role
-      let authUsers: AuthUser[] = [];
-      try {
-        const { data, error } = await supabase.auth.admin.listUsers();
-        if (data?.users && !error) {
-          authUsers = data.users as AuthUser[];
-        } else {
-          console.warn("Could not fetch auth users with admin privileges:", error);
-        }
-      } catch (err) {
-        console.warn("Error accessing auth.admin.listUsers:", err);
-        // Fallback to just using profiles if we can't access auth directly
-      }
-        
-      // Combine data from profiles and roles
-      const combinedUsers: User[] = [];
-      
-      if (profiles) {
-        profiles.forEach(profile => {
-          // Find auth data for this user (if available)
-          const authUser = authUsers.find(u => u.id === profile.id);
-          
-          // Get roles for this user
-          const roles = userRolesMap.has(profile.id) ? 
-            userRolesMap.get(profile.id) || [] : 
-            ['user']; // Default role if no specific roles assigned
-          
-          combinedUsers.push({
-            id: profile.id,
-            email: authUser?.email || "Unknown email", // Use auth email if available
-            username: profile.username,
-            created_at: profile.created_at || authUser?.created_at || new Date().toISOString(),
-            last_sign_in_at: authUser?.last_sign_in_at || null,
-            roles: roles,
-            is_disabled: false // We may not have this info without auth.admin access
-          });
-        });
-      }
-      
-      console.log("Found users:", combinedUsers.length);
-      setUsers(combinedUsers);
-      
-      if (combinedUsers.length > 0) {
-        toast.success("Users loaded successfully");
-      } else {
-        toast.info("No users found in the system");
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Failed to load users");
-    } finally {
-      setInnerLoading(false);
-    }
-  }
-
+    setUsers(initialUsers);
+  }, [initialUsers]);
+  
   // Filter users based on search term
   const filteredUsers = users.filter(user => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
+    
     return (
       (user.email && user.email.toLowerCase().includes(searchLower)) ||
       (user.username && user.username.toLowerCase().includes(searchLower)) ||
@@ -181,13 +67,13 @@ export default function UserManagement({ initialUsers = [], loading = false, onR
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={onRefresh || fetchUsers}
-            disabled={innerLoading || loading}
+            onClick={onRefresh}
+            disabled={loading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${(innerLoading || loading) ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <AddUserDialog onUserAdded={onRefresh || fetchUsers} />
+          <AddUserDialog onUserAdded={onRefresh} />
         </div>
       </div>
       
@@ -198,13 +84,17 @@ export default function UserManagement({ initialUsers = [], loading = false, onR
         showFilter={false}
       />
       
-      {(innerLoading || loading) ? (
+      {loading ? (
         <div className="py-8 text-center">
           <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
           <p>Loading users...</p>
         </div>
       ) : (
-        <UserTable users={filteredUsers} loading={innerLoading || loading} onUserUpdated={onRefresh || fetchUsers} />
+        <UserTable 
+          users={filteredUsers} 
+          loading={loading} 
+          onUserUpdated={onRefresh} 
+        />
       )}
     </div>
   );

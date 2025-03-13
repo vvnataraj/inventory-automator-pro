@@ -1,29 +1,29 @@
 
+import { useState, useEffect } from "react";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import UserManagement from "@/components/settings/UserManagement";
-import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw } from "lucide-react";
 
 export default function UsersTab() {
   const { isAdmin, loading: rolesLoading } = useUserRoles();
-  const [loadingUsers, setLoadingUsers] = useState(false);
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   // Fetch all users when the component mounts (only for admins)
   useEffect(() => {
     if (!rolesLoading && isAdmin()) {
-      fetchAllUsers();
+      fetchUsers();
     }
   }, [rolesLoading, isAdmin]);
   
   // Function to fetch all users from the database
-  const fetchAllUsers = async () => {
+  const fetchUsers = async () => {
     try {
-      setLoadingUsers(true);
+      setLoading(true);
       
       // Get all profiles
       const { data: profiles, error } = await supabase
@@ -33,7 +33,7 @@ export default function UsersTab() {
       if (error) throw error;
       
       // Get all user roles
-      const { data: roles, error: rolesError } = await supabase
+      const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('*');
       
@@ -41,15 +41,18 @@ export default function UsersTab() {
       
       // Map roles to profiles
       const usersWithRoles = profiles.map(profile => {
-        const userRoles = roles.filter(role => role.user_id === profile.id);
+        const roles = userRoles
+          .filter(role => role.user_id === profile.id)
+          .map(role => role.role);
+        
         return {
           id: profile.id,
-          email: profile.username || 'Unknown email',
+          email: profile.username || 'No email',
           username: profile.username,
           created_at: profile.created_at,
-          last_sign_in_at: null, // We don't have this info with regular access
-          roles: userRoles.length > 0 ? userRoles.map(r => r.role) : ['user'],
-          is_disabled: false // We don't have this info with regular access
+          last_sign_in_at: null, // Not available with current permissions
+          roles: roles.length > 0 ? roles : ['user'], // Default to user if no roles
+          is_disabled: false // Not available with current permissions
         };
       });
       
@@ -59,16 +62,27 @@ export default function UsersTab() {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
     } finally {
-      setLoadingUsers(false);
+      setLoading(false);
     }
   };
   
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        {!rolesLoading && isAdmin() ? (
-          <UserManagement initialUsers={users} loading={loadingUsers} onRefresh={fetchAllUsers} />
-        ) : (
+  // Render the component
+  if (rolesLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-center py-8">
+            <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (!isAdmin()) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
           <div className="py-6 text-center space-y-3">
             <h3 className="text-lg font-medium">User Management</h3>
             <p className="text-muted-foreground">You need admin privileges to access this section.</p>
@@ -79,7 +93,19 @@ export default function UsersTab() {
               Request Admin Access
             </Button>
           </div>
-        )}
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <UserManagement 
+          initialUsers={users} 
+          loading={loading} 
+          onRefresh={fetchUsers} 
+        />
       </CardContent>
     </Card>
   );
