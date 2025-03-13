@@ -38,18 +38,25 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
     
     try {
       setIsSaving(true);
+      console.log("Submitting form with data:", formData);
+      console.log("Current stock value:", formData.stock);
       
       // Get all items that need to be updated (across all locations)
       const itemsToUpdate = prepareItemsForSave();
       console.log("Items to update:", itemsToUpdate);
       
       // Update each item
-      const updatePromises = itemsToUpdate.map(itemToUpdate => updateItem(itemToUpdate));
+      const updatePromises = itemsToUpdate.map(itemToUpdate => {
+        console.log(`Updating item ${itemToUpdate.id} with stock: ${itemToUpdate.stock}`);
+        return updateItem(itemToUpdate);
+      });
+      
       await Promise.all(updatePromises);
       
       // Call the onSave callback with the current item's updated version
       const currentItemUpdate = itemsToUpdate.find(i => i.id === item.id);
       if (currentItemUpdate) {
+        console.log("Calling onSave with updated item:", currentItemUpdate);
         onSave(currentItemUpdate);
       }
       

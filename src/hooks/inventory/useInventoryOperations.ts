@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
@@ -11,6 +12,8 @@ export function useInventoryOperations() {
 
   const updateItem = useCallback(async (updatedItem: InventoryItem) => {
     try {
+      console.log("Updating inventory item:", updatedItem);
+      
       // Ensure lastUpdated is set to current time
       const itemToUpdate = {
         ...updatedItem,
@@ -41,6 +44,8 @@ export function useInventoryOperations() {
       const supabaseItem = mapInventoryItemToSupabaseItem(itemToUpdate);
       
       console.log("Updating item in Supabase:", supabaseItem);
+      console.log("Stock value being set:", supabaseItem.stock);
+      
       const { error, data } = await supabase
         .from('inventory_items')
         .update(supabaseItem)
@@ -58,7 +63,7 @@ export function useInventoryOperations() {
       const itemIndex = inventoryItems.findIndex(item => item.id === itemToUpdate.id);
       if (itemIndex !== -1) {
         inventoryItems[itemIndex] = itemToUpdate;
-        console.log("Also updated item in local array for consistency");
+        console.log("Also updated item in local array for consistency, stock now:", itemToUpdate.stock);
       } else {
         // Item not found in local array, add it
         inventoryItems.push(itemToUpdate);
@@ -77,7 +82,7 @@ export function useInventoryOperations() {
           ...updatedItem,
           lastUpdated: new Date().toISOString()
         };
-        console.log("Updated local inventory as fallback");
+        console.log("Updated local inventory as fallback, stock:", updatedItem.stock);
         return true; // Return true even if Supabase fails but local update succeeds
       }
       

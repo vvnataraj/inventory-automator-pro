@@ -32,8 +32,10 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
   };
 
   const handleStockChange = (location: string, value: string) => {
+    console.log(`Stock change input: location=${location}, value=${value}`);
     const newCount = parseInt(value, 10) || 0;
     if (newCount >= 0) {
+      console.log(`Updating stock count for ${location}: ${newCount}`);
       onLocationStockChange(location, newCount);
     }
   };
@@ -77,6 +79,9 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
                       "w-20 h-7 text-right",
                       locationStock.count <= 5 ? "text-red-600 font-semibold" : ""
                     )}
+                    onBlur={(e) => {
+                      console.log(`Stock input blur: ${locationStock.location} = ${e.target.value}`);
+                    }}
                   />
                   <span className="text-sm">units</span>
                 </div>

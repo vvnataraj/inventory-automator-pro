@@ -133,6 +133,7 @@ export function useInventoryDatabase() {
       category: item.category || "",
       subcategory: item.subcategory || "",
       brand: item.brand || "",
+      price: typeof item.price === 'number' ? item.price : 0, // Fix: Ensure price field is included
       rrp: typeof item.price === 'number' ? item.price : 0,
       cost: typeof item.cost === 'number' ? item.cost : 0,
       stock: typeof item.stock === 'number' ? item.stock : 0,
@@ -168,7 +169,7 @@ export function useInventoryDatabase() {
       category: item.category,
       subcategory: item.subcategory,
       brand: item.brand,
-      price: item.rrp,
+      price: item.rrp, // Map rrp to price
       cost: item.cost,
       stock: item.stock,
       low_stock_threshold: item.lowStockThreshold,

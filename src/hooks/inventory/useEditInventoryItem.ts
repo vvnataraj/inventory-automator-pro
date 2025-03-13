@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
@@ -9,13 +10,15 @@ export interface LocationStock {
 }
 
 export function useEditInventoryItem(item: InventoryItem) {
-  const [formData, setFormData] = useState(item);
+  const [formData, setFormData] = useState<InventoryItem>(item);
   const [isOpen, setIsOpen] = useState(false);
   const [locationStocks, setLocationStocks] = useState<LocationStock[]>([]);
   const [totalStock, setTotalStock] = useState(0);
 
+  // Update the form data when the dialog opens or when the item changes
   useEffect(() => {
     if (isOpen) {
+      console.log("Dialog opened, setting form data with item:", item);
       setFormData({...item});
       
       try {
@@ -45,6 +48,9 @@ export function useEditInventoryItem(item: InventoryItem) {
           ...prev,
           totalStock: total
         }));
+        
+        console.log("Set location stocks:", locationStocksArray);
+        console.log("Set total stock:", total);
       } catch (error) {
         console.error("Error loading location stock data:", error);
         toast.error("Failed to load stock distribution data");
@@ -54,13 +60,35 @@ export function useEditInventoryItem(item: InventoryItem) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    console.log(`Form field changed: ${name} = ${value}`);
+    
+    // Convert numeric fields
+    let updatedValue = value;
+    if (name === 'cost' || name === 'rrp' || name === 'minStockCount' || name === 'stock') {
+      updatedValue = Number(value);
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'cost' || name === 'rrp' || name === 'minStockCount' ? Number(value) : value
+      [name]: updatedValue
     }));
+    
+    // If stock is manually updated (bypassing location stocks)
+    if (name === 'stock') {
+      const stockValue = Number(value);
+      console.log(`Stock directly changed to: ${stockValue}`);
+      
+      // Update the location stock for this item's location
+      if (locationStocks.length > 0) {
+        const currentLocation = formData.location;
+        handleLocationStockChange(currentLocation, stockValue);
+      }
+    }
   };
 
   const handleLocationStockChange = (location: string, newCount: number) => {
+    console.log(`Location stock change: ${location} = ${newCount}`);
+    
     const updatedLocationStocks = locationStocks.map(locStock => 
       locStock.location === location 
         ? { ...locStock, count: newCount } 
@@ -72,11 +100,16 @@ export function useEditInventoryItem(item: InventoryItem) {
     const newTotal = updatedLocationStocks.reduce((sum, item) => sum + item.count, 0);
     setTotalStock(newTotal);
     
+    // Update the form data stock if this is the current item's location
     setFormData(prev => ({
       ...prev,
       totalStock: newTotal,
       stock: prev.location === location ? newCount : prev.stock
     }));
+    
+    console.log("Updated location stocks:", updatedLocationStocks);
+    console.log("New total stock:", newTotal);
+    console.log("Updated form data:", formData);
   };
 
   const prepareItemsForSave = () => {
@@ -84,14 +117,18 @@ export function useEditInventoryItem(item: InventoryItem) {
       (inventoryItem) => inventoryItem.sku === item.sku
     );
     
-    return sameSkuItems.map(inventoryItem => {
+    // Create updated versions of all items with the same SKU
+    const updatedItems = sameSkuItems.map(inventoryItem => {
       const locationData = locationStocks.find(
         locStock => locStock.location === inventoryItem.location
       );
       
+      const updatedStock = locationData ? locationData.count : inventoryItem.stock;
+      console.log(`Preparing item ${inventoryItem.id} with stock: ${updatedStock}`);
+      
       return {
         ...inventoryItem,
-        stock: locationData ? locationData.count : inventoryItem.stock,
+        stock: updatedStock,
         name: formData.name,
         description: formData.description,
         cost: formData.cost,
@@ -101,6 +138,9 @@ export function useEditInventoryItem(item: InventoryItem) {
         lastUpdated: new Date().toISOString()
       };
     });
+    
+    console.log("Prepared items for save:", updatedItems);
+    return updatedItems;
   };
 
   return {
