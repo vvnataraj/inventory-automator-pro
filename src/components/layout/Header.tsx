@@ -1,4 +1,3 @@
-
 import { Bell, LogOut, Menu, Clock, Search, UserCog, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +14,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export function Header() {
   const { signOut, user } = useAuth();
@@ -26,6 +26,19 @@ export function Header() {
     toast.success("You have been logged out successfully");
   };
   
+  const getUserInitials = () => {
+    if (!user?.email) return '?';
+    
+    const namePart = user.email.split('@')[0];
+    
+    if (namePart.includes('.') || namePart.includes('_')) {
+      const parts = namePart.split(/[._]/);
+      return parts.map(part => part.charAt(0).toUpperCase()).join('');
+    }
+    
+    return namePart.substring(0, Math.min(2, namePart.length)).toUpperCase();
+  };
+  
   return (
     <header className="border-b bg-white w-full">
       <div className="flex h-16 items-center px-4 gap-4">
@@ -33,7 +46,6 @@ export function Header() {
           <Menu className="h-5 w-5" />
         </Button>
         
-        {/* Logo and brand name */}
         <div className="flex items-center gap-2">
           <div className="h-10 w-10 rounded flex-shrink-0 flex items-center justify-center">
             <img 
@@ -42,7 +54,6 @@ export function Header() {
               className="h-10 w-10 object-contain"
               style={{ mixBlendMode: 'multiply' }}
               onError={(e) => {
-                // Fallback to SVG logo if image fails to load
                 e.currentTarget.style.display = 'none';
                 const parent = e.currentTarget.parentElement;
                 if (parent) {
@@ -107,23 +118,19 @@ export function Header() {
             <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
           </Button>
           
-          {/* User profile dropdown - replacing the previous logout button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                <img
-                  alt="Avatar"
-                  className="rounded-full"
-                  src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png"
-                  style={{ aspectRatio: "32/32", objectFit: "cover", mixBlendMode: 'multiply' }}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const parent = e.currentTarget.parentElement;
-                    if (parent) {
-                      parent.innerHTML = `<div class="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center"><User className="h-5 w-5 text-primary" /></div>`;
-                    }
-                  }}
-                />
+              <Button variant="ghost" className="relative h-9 w-9 p-0 rounded-full">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage
+                    src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png"
+                    alt="User avatar"
+                    style={{ mixBlendMode: 'multiply' }}
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-white">
