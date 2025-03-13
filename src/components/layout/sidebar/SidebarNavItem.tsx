@@ -18,8 +18,8 @@ export function SidebarNavItem({ name, href, icon: Icon, active, collapsed }: Si
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
         active
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          ? "bg-primary/10 text-primary dark:bg-primary/20"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-gray-800"
       )}
       title={collapsed ? name : undefined}
     >

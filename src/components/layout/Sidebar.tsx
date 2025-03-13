@@ -43,7 +43,8 @@ export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
 
   return (
     <div className={cn(
-      "flex h-full flex-col bg-white border-r transition-all duration-300",
+      "flex h-full flex-col border-r transition-all duration-300",
+      "bg-white dark:bg-gray-900 dark:border-gray-800",
       collapsed ? "w-[70px]" : "w-64"
     )}>
       <div className="flex items-center px-4 py-2 justify-end">
