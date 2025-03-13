@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileUp } from "lucide-react";
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
 
 interface ImportInventoryButtonProps {
   onImport?: (items: InventoryItem[]) => void;
@@ -93,10 +93,37 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({ on
         if (onImport && importedItems.length > 0) {
           const importPromises = importedItems.map(async (item) => {
             try {
+              const itemId = uuidv4();
+              
+              const formattedItem = {
+                id: item.id || itemId,
+                sku: item.sku || `SKU-${Date.now()}`,
+                name: item.name || "Unnamed Item",
+                description: item.description || "",
+                category: item.category || "Uncategorized",
+                subcategory: item.subcategory || "",
+                brand: item.brand || "",
+                price: typeof item.rrp === 'number' ? item.rrp : 0,
+                cost: typeof item.cost === 'number' ? item.cost : 0,
+                stock: typeof item.stock === 'number' ? item.stock : 0,
+                low_stock_threshold: typeof item.lowStockThreshold === 'number' ? item.lowStockThreshold : 5,
+                min_stock_count: typeof item.minStockCount === 'number' ? item.minStockCount : 10,
+                location: item.location || "Main Warehouse",
+                barcode: item.barcode || "",
+                date_added: new Date().toISOString(),
+                last_updated: new Date().toISOString(),
+                image_url: item.imageUrl || null,
+                dimensions: item.dimensions || null,
+                weight: item.weight || null,
+                is_active: item.isActive === false ? false : true,
+                supplier: item.supplier || "Default Supplier",
+                tags: item.tags || []
+              };
+              
               const { data: existingItems, error: checkError } = await supabase
                 .from('inventory_items')
                 .select('id')
-                .eq('sku', item.sku);
+                .eq('sku', formattedItem.sku);
               
               if (checkError) {
                 console.error("Error checking existing item:", checkError);
@@ -107,25 +134,25 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({ on
                 const { error: updateError } = await supabase
                   .from('inventory_items')
                   .update({
-                    name: item.name,
-                    description: item.description,
-                    category: item.category,
-                    subcategory: item.subcategory,
-                    brand: item.brand,
-                    price: item.rrp,
-                    cost: item.cost,
-                    stock: item.stock,
-                    low_stock_threshold: item.lowStockThreshold,
-                    min_stock_count: item.minStockCount,
-                    location: item.location,
-                    barcode: item.barcode,
-                    last_updated: new Date().toISOString(),
-                    image_url: item.imageUrl,
-                    dimensions: item.dimensions,
-                    weight: item.weight,
-                    is_active: item.isActive,
-                    supplier: item.supplier,
-                    tags: item.tags
+                    name: formattedItem.name,
+                    description: formattedItem.description,
+                    category: formattedItem.category,
+                    subcategory: formattedItem.subcategory,
+                    brand: formattedItem.brand,
+                    price: formattedItem.price,
+                    cost: formattedItem.cost,
+                    stock: formattedItem.stock,
+                    low_stock_threshold: formattedItem.low_stock_threshold,
+                    min_stock_count: formattedItem.min_stock_count,
+                    location: formattedItem.location,
+                    barcode: formattedItem.barcode,
+                    last_updated: formattedItem.last_updated,
+                    image_url: formattedItem.image_url,
+                    dimensions: formattedItem.dimensions,
+                    weight: formattedItem.weight,
+                    is_active: formattedItem.is_active,
+                    supplier: formattedItem.supplier,
+                    tags: formattedItem.tags
                   })
                   .eq('id', existingItems[0].id);
                 
@@ -134,33 +161,33 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({ on
                   return null;
                 }
                 
-                return { ...item, id: existingItems[0].id };
+                return { ...formattedItem, id: existingItems[0].id };
               } else {
                 const { error: insertError } = await supabase
                   .from('inventory_items')
                   .insert({
-                    id: item.id || undefined,
-                    sku: item.sku,
-                    name: item.name,
-                    description: item.description,
-                    category: item.category,
-                    subcategory: item.subcategory,
-                    brand: item.brand,
-                    price: item.rrp,
-                    cost: item.cost,
-                    stock: item.stock,
-                    low_stock_threshold: item.lowStockThreshold,
-                    min_stock_count: item.minStockCount,
-                    location: item.location,
-                    barcode: item.barcode,
-                    date_added: item.dateAdded || new Date().toISOString(),
-                    last_updated: item.lastUpdated || new Date().toISOString(),
-                    image_url: item.imageUrl,
-                    dimensions: item.dimensions,
-                    weight: item.weight,
-                    is_active: item.isActive,
-                    supplier: item.supplier,
-                    tags: item.tags
+                    id: formattedItem.id,
+                    sku: formattedItem.sku,
+                    name: formattedItem.name,
+                    description: formattedItem.description,
+                    category: formattedItem.category,
+                    subcategory: formattedItem.subcategory,
+                    brand: formattedItem.brand,
+                    price: formattedItem.price,
+                    cost: formattedItem.cost,
+                    stock: formattedItem.stock,
+                    low_stock_threshold: formattedItem.low_stock_threshold,
+                    min_stock_count: formattedItem.min_stock_count,
+                    location: formattedItem.location,
+                    barcode: formattedItem.barcode,
+                    date_added: formattedItem.date_added,
+                    last_updated: formattedItem.last_updated,
+                    image_url: formattedItem.image_url,
+                    dimensions: formattedItem.dimensions,
+                    weight: formattedItem.weight,
+                    is_active: formattedItem.is_active,
+                    supplier: formattedItem.supplier,
+                    tags: formattedItem.tags
                   });
                 
                 if (insertError) {
@@ -168,7 +195,7 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({ on
                   return null;
                 }
                 
-                return item;
+                return formattedItem;
               }
             } catch (error) {
               console.error("Error importing item:", error);
