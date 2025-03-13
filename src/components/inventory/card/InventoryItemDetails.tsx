@@ -2,10 +2,10 @@
 import React from "react";
 import { InventoryItem } from "@/types/inventory";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
 import { CircleDollarSign, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { inventoryItems } from "@/data/inventoryData";
 
 interface InventoryItemDetailsProps {
   item: InventoryItem;
@@ -14,6 +14,14 @@ interface InventoryItemDetailsProps {
 export const InventoryItemDetails: React.FC<InventoryItemDetailsProps> = ({ item }) => {
   // Calculate profit margin if RRP exists
   const profitMargin = item.rrp ? ((item.rrp - item.cost) / item.rrp * 100).toFixed(0) : null;
+  
+  // Calculate total stock across all locations with the same SKU
+  const totalStock = React.useMemo(() => {
+    const sameSkuItems = inventoryItems.filter(
+      (inventoryItem) => inventoryItem.sku === item.sku
+    );
+    return sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
+  }, [item.sku]);
   
   return (
     <>
@@ -62,13 +70,13 @@ export const InventoryItemDetails: React.FC<InventoryItemDetailsProps> = ({ item
           <p className="font-medium text-sm">
             <span className={cn(
               "px-1.5 py-0.5 rounded-md text-xs inline-flex items-center justify-center",
-              item.stock <= item.lowStockThreshold
+              totalStock <= item.lowStockThreshold
                 ? "bg-red-100 text-red-800"
-                : item.stock <= item.lowStockThreshold * 2
+                : totalStock <= item.lowStockThreshold * 2
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-green-100 text-green-800"
             )}>
-              {item.stock}
+              {totalStock}
             </span>
           </p>
         </div>

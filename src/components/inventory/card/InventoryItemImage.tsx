@@ -3,6 +3,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { InventoryItem } from "@/types/inventory";
 import { EditInventoryItem } from "../EditInventoryItem";
+import { inventoryItems } from "@/data/inventoryData";
 
 interface InventoryItemImageProps {
   item: InventoryItem;
@@ -10,6 +11,25 @@ interface InventoryItemImageProps {
 }
 
 export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item, onSave }) => {
+  // Calculate total stock across all locations with the same SKU
+  const totalStock = React.useMemo(() => {
+    const sameSkuItems = inventoryItems.filter(
+      (inventoryItem) => inventoryItem.sku === item.sku
+    );
+    return sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
+  }, [item.sku]);
+  
+  // Determine stock level for badge color
+  const stockLevel = React.useMemo(() => {
+    if (totalStock <= item.lowStockThreshold) {
+      return "bg-red-500";
+    } else if (totalStock <= item.lowStockThreshold * 2) {
+      return "bg-yellow-500";
+    } else {
+      return "bg-green-500";
+    }
+  }, [totalStock, item.lowStockThreshold]);
+
   return (
     <div className="relative pt-[100%] overflow-hidden bg-muted">
       <div className="absolute inset-0 flex items-center justify-center">
@@ -33,15 +53,9 @@ export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item, on
       )}
       
       <Badge 
-        className={`absolute top-2 right-2 ${
-          item.stock <= item.lowStockThreshold
-            ? "bg-red-500"
-            : item.stock <= item.lowStockThreshold * 2
-            ? "bg-yellow-500"
-            : "bg-green-500"
-        }`}
+        className={`absolute top-2 right-2 ${stockLevel}`}
       >
-        {item.stock}
+        {totalStock}
       </Badge>
       {!item.isActive && (
         <Badge variant="destructive" className="absolute bottom-2 right-2">

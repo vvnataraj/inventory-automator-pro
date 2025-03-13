@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface LocationStock {
   location: string;
@@ -44,9 +45,11 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
               </div>
               <Progress 
                 value={getStockPercentage(locationStock.count)} 
-                className="h-2" 
-                indicatorClassName={locationStock.count <= 5 ? "bg-destructive" : ""}
+                className={cn("h-2", locationStock.count <= 5 ? "bg-red-100" : "")}
               />
+              {locationStock.count <= 5 && (
+                <p className="text-xs text-destructive">Low stock warning</p>
+              )}
             </div>
           ))}
           {locationStocks.length === 0 && (
