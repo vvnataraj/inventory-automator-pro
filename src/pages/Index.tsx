@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Box, DollarSign, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -20,7 +21,8 @@ const getInitialStats = () => [
     value: "Loading...",
     change: "+4.75%",
     icon: Box,
-    link: "/inventory"
+    link: "/inventory",
+    subValue: null
   },
   {
     name: "Low Stock Items",
@@ -53,19 +55,31 @@ export default function Index() {
 
   useEffect(() => {
     const calculateTotalInventoryValue = () => {
-      const totalValue = inventoryItems.reduce((sum, item) => {
-        const itemValue = (item.rrp || item.price || 0) * item.stock;
-        return sum + itemValue;
+      // Calculate total cost value (cost * stock)
+      const totalCostValue = inventoryItems.reduce((sum, item) => {
+        const itemCostValue = (item.cost || 0) * item.stock;
+        return sum + itemCostValue;
       }, 0);
       
-      const formattedValue = `$${totalValue.toLocaleString('en-US', { 
+      // Calculate total RRP value (rrp * stock)
+      const totalRrpValue = inventoryItems.reduce((sum, item) => {
+        const itemRrpValue = (item.rrp || item.price || 0) * item.stock;
+        return sum + itemRrpValue;
+      }, 0);
+      
+      const formattedCostValue = `$${totalCostValue.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+      })}`;
+      
+      const formattedRrpValue = `$${totalRrpValue.toLocaleString('en-US', { 
         minimumFractionDigits: 2,
         maximumFractionDigits: 2 
       })}`;
       
       setStats(prevStats => prevStats.map(stat => 
         stat.name === "Total Inventory" 
-          ? { ...stat, value: formattedValue } 
+          ? { ...stat, value: formattedCostValue, subValue: formattedRrpValue } 
           : stat
       ));
     };
@@ -173,6 +187,42 @@ export default function Index() {
                 </TooltipContent>
               </UITooltip>
             </TooltipProvider>
+          ) : stat.name === "Total Inventory" ? (
+            <Card 
+              key={stat.name} 
+              className={`animate-fade-in ${stat.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+              onClick={() => handleCardClick(stat.link)}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {stat.name}
+                </CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-muted-foreground">
+                    <span
+                      className={
+                        stat.change.startsWith("+")
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }
+                    >
+                      {stat.change}
+                    </span>{" "}
+                    from last month
+                  </p>
+                  {stat.subValue && (
+                    <div className="text-xs font-medium">
+                      <span className="text-muted-foreground">RRP: </span>
+                      <span className="text-green-600">{stat.subValue}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             <Card 
               key={stat.name} 
@@ -204,6 +254,7 @@ export default function Index() {
           )
         ))}
       </div>
+      
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mt-6">
         <Card className="col-span-4">
           <CardHeader>
