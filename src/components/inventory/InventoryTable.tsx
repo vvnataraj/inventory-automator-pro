@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface SortHeaderProps {
   field: SortField;
@@ -207,7 +208,9 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDiscontinue}
-              variant={discontinueItem?.isActive ? "destructive" : "default"}
+              className={cn(
+                discontinueItem?.isActive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""
+              )}
             >
               {discontinueItem?.isActive ? "Discontinue" : "Reactivate"}
             </AlertDialogAction>

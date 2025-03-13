@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface InventoryItemCardProps {
   item: InventoryItem;
@@ -62,7 +63,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   const handleDiscontinue = () => {
     const discontinuedItem = {
       ...item,
-      isActive: false,
+      isActive: !item.isActive,
       lastUpdated: new Date().toISOString()
     };
     onSave(discontinuedItem);
@@ -206,7 +207,9 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDiscontinue}
-              variant={item.isActive ? "destructive" : "default"}
+              className={cn(
+                item.isActive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""
+              )}
             >
               {item.isActive ? "Discontinue" : "Reactivate"}
             </AlertDialogAction>
