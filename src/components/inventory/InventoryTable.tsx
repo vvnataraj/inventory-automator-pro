@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { InventoryItem, SortField } from "@/types/inventory";
 import { EditInventoryItem } from "./EditInventoryItem";
@@ -147,11 +148,12 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         <TooltipTrigger asChild>
                           <Button 
                             variant="outline" 
-                            size="icon" 
-                            className="h-8 w-8" 
+                            size="sm" 
+                            className="h-8 flex gap-1" 
                             onClick={() => onOpenReorderDialog(item)}
                           >
                             <ShoppingCart className="h-4 w-4" />
+                            Restock
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -163,8 +165,8 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex gap-2">
-                    <EditInventoryItem item={item} onSave={onSaveItem} />
-                    <TransferInventoryItem item={item} onTransfer={onTransferItem} />
+                    <EditInventoryItem item={item} onSave={onSaveItem} showLabel={true} />
+                    <TransferInventoryItem item={item} onTransfer={onTransferItem} showLabel={true} />
                     
                     <Button 
                       variant={item.isActive ? "outline" : "ghost"} 

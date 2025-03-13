@@ -8,7 +8,7 @@ import { TransferInventoryItem } from "./TransferInventoryItem";
 import { DeleteInventoryItem } from "./DeleteInventoryItem";
 import { ReorderInventoryItem } from "./ReorderInventoryItem";
 import { ReorderDialog } from "./ReorderDialog";
-import { ShoppingCart, CircleSlash, Trash2 } from "lucide-react";
+import { ShoppingCart, CircleSlash, Trash2, ArrowRightLeft, Pencil } from "lucide-react";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import {
   Tooltip,
@@ -136,6 +136,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
                 isFirst={isFirst}
                 isLast={isLast}
                 onReorder={onReorder}
+                showLabel={true}
               />
             )}
             {onReorderStock && (
@@ -144,11 +145,12 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
                   <TooltipTrigger asChild>
                     <Button 
                       variant="outline" 
-                      size="icon" 
-                      className="h-8 w-8" 
+                      size="sm" 
+                      className="h-8 flex gap-1" 
                       onClick={() => setReorderDialogOpen(true)}
                     >
                       <ShoppingCart className="h-4 w-4" />
+                      Restock
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -157,8 +159,9 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
                 </Tooltip>
               </TooltipProvider>
             )}
-            <EditInventoryItem item={item} onSave={onSave} />
-            <TransferInventoryItem item={item} onTransfer={onTransfer} />
+            
+            <TransferInventoryItem item={item} onTransfer={onTransfer} showLabel={true} />
+            <EditInventoryItem item={item} onSave={onSave} showLabel={true} />
             
             <Button 
               variant={item.isActive ? "outline" : "ghost"} 

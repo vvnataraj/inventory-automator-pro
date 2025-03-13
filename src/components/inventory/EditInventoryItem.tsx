@@ -17,9 +17,10 @@ import { InventoryItem } from "@/types/inventory";
 interface EditInventoryItemProps {
   item: InventoryItem;
   onSave: (updatedItem: InventoryItem) => void;
+  showLabel?: boolean;
 }
 
-export const EditInventoryItem = ({ item, onSave }: EditInventoryItemProps) => {
+export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInventoryItemProps) => {
   const [formData, setFormData] = React.useState(item);
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -40,8 +41,13 @@ export const EditInventoryItem = ({ item, onSave }: EditInventoryItemProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button 
+          variant="ghost" 
+          size={showLabel ? "sm" : "icon"}
+          className={showLabel ? "h-8 flex gap-1" : ""}
+        >
           <Pencil className="h-4 w-4" />
+          {showLabel && "Edit"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

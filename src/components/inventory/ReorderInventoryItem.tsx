@@ -15,14 +15,44 @@ interface ReorderInventoryItemProps {
   isFirst: boolean;
   isLast: boolean;
   onReorder: (itemId: string, direction: 'up' | 'down') => void;
+  showLabel?: boolean;
 }
 
 export const ReorderInventoryItem: React.FC<ReorderInventoryItemProps> = ({
   item,
   isFirst,
   isLast,
-  onReorder
+  onReorder,
+  showLabel = false
 }) => {
+  if (showLabel) {
+    return (
+      <div className="flex gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onReorder(item.id, 'up')}
+          disabled={isFirst}
+          className="h-8 flex gap-1"
+        >
+          <ArrowUp className="h-4 w-4" />
+          Move Up
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onReorder(item.id, 'down')}
+          disabled={isLast}
+          className="h-8 flex gap-1"
+        >
+          <ArrowDown className="h-4 w-4" />
+          Move Down
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-1">
       <TooltipProvider>
