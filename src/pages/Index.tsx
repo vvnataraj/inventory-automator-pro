@@ -7,6 +7,12 @@ import { inventoryItems } from "@/data/inventoryData";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { TopProfitableItems } from "@/components/dashboard/TopProfitableItems";
 import { LeastProfitableItems } from "@/components/dashboard/LeastProfitableItems";
+import { 
+  Tooltip as UITooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 const getInitialStats = () => [
   {
@@ -131,33 +137,71 @@ export default function Index() {
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
         {stats.map((stat) => (
-          <Card 
-            key={stat.name} 
-            className={`animate-fade-in ${stat.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-            onClick={() => handleCardClick(stat.link)}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {stat.name}
-              </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">
-                <span
-                  className={
-                    stat.change.startsWith("+")
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }
-                >
-                  {stat.change}
-                </span>{" "}
-                from last month
-              </p>
-            </CardContent>
-          </Card>
+          stat.name === "Low Stock Items" ? (
+            <TooltipProvider key={stat.name}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <Card 
+                    className={`animate-fade-in ${stat.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+                    onClick={() => handleCardClick(stat.link)}
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        {stat.name}
+                      </CardTitle>
+                      <stat.icon className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stat.value}</div>
+                      <p className="text-xs text-muted-foreground">
+                        <span
+                          className={
+                            stat.change.startsWith("+")
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {stat.change}
+                        </span>{" "}
+                        from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TooltipTrigger>
+                <TooltipContent className="bg-slate-950 text-white dark:bg-slate-50 dark:text-slate-950">
+                  <p>Consider reordering these items to maintain optimal stock levels</p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
+          ) : (
+            <Card 
+              key={stat.name} 
+              className={`animate-fade-in ${stat.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+              onClick={() => handleCardClick(stat.link)}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {stat.name}
+                </CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span
+                    className={
+                      stat.change.startsWith("+")
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    {stat.change}
+                  </span>{" "}
+                  from last month
+                </p>
+              </CardContent>
+            </Card>
+          )
         ))}
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mt-6">
