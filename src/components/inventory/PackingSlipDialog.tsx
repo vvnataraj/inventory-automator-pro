@@ -79,6 +79,13 @@ export const PackingSlipDialog = ({ open, onClose, transferData }: PackingSlipDi
     doc.save(`Packing_Slip_${transferData.referenceNumber}.pdf`);
   };
   
+  // Create a wrapper function to handle the print button click
+  const onPrintButtonClick = () => {
+    if (handlePrint) {
+      handlePrint();
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[650px]">
@@ -160,7 +167,7 @@ export const PackingSlipDialog = ({ open, onClose, transferData }: PackingSlipDi
             Close
           </Button>
           <Button 
-            onClick={handlePrint} 
+            onClick={onPrintButtonClick} 
             className="gap-2"
           >
             <Printer className="h-4 w-4" />

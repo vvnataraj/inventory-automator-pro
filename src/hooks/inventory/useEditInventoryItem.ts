@@ -93,7 +93,7 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
     
     // Update the item with the new data
     try {
-      // Fix: Pass the item object as a single argument to updateItem
+      // Fix: Pass one argument (the updated item) to updateItem
       updateItem({
         ...item,
         ...updatedFormData,
@@ -103,7 +103,7 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
       
       // Also update reorder quantity if changed
       if (reorderQuantity !== item.reorderQuantity) {
-        // Fix: Pass only one argument (the updated item with quantity) to reorderStock
+        // Fix: Pass the updated item with the reorder quantity to reorderStock
         reorderStock({
           ...item,
           reorderQuantity: reorderQuantity
