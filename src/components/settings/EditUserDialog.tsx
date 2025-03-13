@@ -55,28 +55,34 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
     try {
       setLoading(true);
       
-      // Update username in profiles table
-      const { error: usernameError } = await supabase
-        .from('profiles')
-        .update({ username })
-        .eq('id', user.id);
+      // Update username in profiles table only
+      if (username !== user.username) {
+        const { error: usernameError } = await supabase
+          .from('profiles')
+          .update({ username })
+          .eq('id', user.id);
+          
+        if (usernameError) throw usernameError;
+      }
+      
+      // Only update roles if they've changed
+      const currentRole = user.roles[0] || 'user';
+      if (editUserRole !== currentRole) {
+        // Delete all existing roles for this user
+        const { error: deleteError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', user.id);
+          
+        if (deleteError) throw deleteError;
         
-      if (usernameError) throw usernameError;
-      
-      // Delete all existing roles for this user
-      const { error: deleteError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', user.id);
+        // Add the new role
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role: editUserRole });
         
-      if (deleteError) throw deleteError;
-      
-      // Add the new role
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: user.id, role: editUserRole });
-      
-      if (insertError) throw insertError;
+        if (insertError) throw insertError;
+      }
       
       toast.success("User updated successfully");
       onUserUpdated();
