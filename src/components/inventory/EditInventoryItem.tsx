@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
 import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface EditInventoryItemProps {
   item: InventoryItem;
@@ -26,6 +28,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
   const [formData, setFormData] = useState(item);
   const [isOpen, setIsOpen] = useState(false);
   const [locationStocks, setLocationStocks] = useState<{ location: string; count: number }[]>([]);
+  const [totalStock, setTotalStock] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,9 +50,13 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
       const locationStocksArray = Object.entries(stockByLocation).map(([location, count]) => ({
         location,
         count,
-      }));
+      })).sort((a, b) => b.count - a.count); // Sort by count descending
       
       setLocationStocks(locationStocksArray);
+      
+      // Calculate total stock across all locations
+      const total = locationStocksArray.reduce((sum, item) => sum + item.count, 0);
+      setTotalStock(total);
     }
   }, [isOpen, item.sku]);
 
@@ -67,8 +74,10 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
     }));
   };
 
-  // Calculate total stock across all locations
-  const totalStock = locationStocks.reduce((sum, item) => sum + item.count, 0);
+  // Calculate percentage for each location
+  const getStockPercentage = (count: number) => {
+    return totalStock > 0 ? (count / totalStock) * 100 : 0;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -82,13 +91,37 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
           {showLabel && "Edit"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Item</DialogTitle>
           <DialogDescription>
             Make changes to the inventory item here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
+
+        {locationStocks.length > 1 && (
+          <div className="mb-4">
+            <h4 className="font-medium text-sm mb-2">Stock Distribution by Location</h4>
+            <Card className="p-4">
+              <div className="text-sm font-medium flex justify-between mb-2">
+                <span>Total Stock: {totalStock} units</span>
+              </div>
+              <div className="space-y-3">
+                {locationStocks.map((locationStock, index) => (
+                  <div key={index} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">{locationStock.location}</span>
+                      <span>{locationStock.count} units ({getStockPercentage(locationStock.count).toFixed(1)}%)</span>
+                    </div>
+                    <Progress value={getStockPercentage(locationStock.count)} className="h-2" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+            <Separator className="my-4" />
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -155,26 +188,6 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
                 className="col-span-3"
               />
             </div>
-            
-            {locationStocks.length > 1 && (
-              <div className="col-span-4 mt-4">
-                <Separator className="my-2" />
-                <h4 className="font-medium text-sm mb-2">Stock by Location</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto rounded-md border p-2">
-                  {locationStocks.map((locationStock, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span>{locationStock.location}</span>
-                      <span className="font-semibold">{locationStock.count} units</span>
-                    </div>
-                  ))}
-                  <Separator className="my-1" />
-                  <div className="flex justify-between text-sm font-bold">
-                    <span>Total</span>
-                    <span>{totalStock} units</span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
