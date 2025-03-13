@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   BarChart, 
@@ -79,31 +79,6 @@ const anomalyData = [
   },
 ];
 
-// Time-based anomaly data
-const timeBasedAnomalyData = [
-  { time: "8 AM", anomalies: 0 },
-  { time: "9 AM", anomalies: 1 },
-  { time: "10 AM", anomalies: 2 },
-  { time: "11 AM", anomalies: 1 },
-  { time: "12 PM", anomalies: 0 },
-  { time: "1 PM", anomalies: 0 },
-  { time: "2 PM", anomalies: 4 },
-  { time: "3 PM", anomalies: 5 },
-  { time: "4 PM", anomalies: 3 },
-  { time: "5 PM", anomalies: 2 },
-  { time: "6 PM", anomalies: 1 },
-  { time: "7 PM", anomalies: 0 },
-];
-
-// Location-based anomaly data
-const locationBasedAnomalyData = [
-  { location: "Warehouse A", anomalies: 12 },
-  { location: "Warehouse B", anomalies: 8 },
-  { location: "Retail Floor", anomalies: 15 },
-  { location: "Receiving Dock", anomalies: 5 },
-  { location: "Shipping Area", anomalies: 3 },
-];
-
 const getConfidenceColor = (confidence: string) => {
   switch(confidence) {
     case "high": return "text-red-500";
@@ -124,8 +99,68 @@ interface TheftDetectionProps {
 }
 
 export const TheftDetection: React.FC<TheftDetectionProps> = ({ className }) => {
-  const totalDetectedValue = anomalyData.reduce((sum, item) => sum + item.value, 0);
-  const totalDetectedItems = anomalyData.reduce((sum, item) => sum + item.difference, 0);
+  // Calculate metrics based on anomaly data
+  const metrics = useMemo(() => {
+    const totalDetectedValue = anomalyData.reduce((sum, item) => sum + item.value, 0);
+    const totalDetectedItems = anomalyData.reduce((sum, item) => sum + item.difference, 0);
+    
+    // Create time-based anomaly data
+    const timeMap = new Map<string, number>();
+    anomalyData.forEach(anomaly => {
+      const date = new Date(anomaly.timestamp);
+      const hour = date.getHours();
+      let timeSlot = "";
+      
+      if (hour < 9) timeSlot = "8 AM";
+      else if (hour < 10) timeSlot = "9 AM";
+      else if (hour < 11) timeSlot = "10 AM";
+      else if (hour < 12) timeSlot = "11 AM";
+      else if (hour < 13) timeSlot = "12 PM";
+      else if (hour < 14) timeSlot = "1 PM";
+      else if (hour < 15) timeSlot = "2 PM";
+      else if (hour < 16) timeSlot = "3 PM";
+      else if (hour < 17) timeSlot = "4 PM";
+      else if (hour < 18) timeSlot = "5 PM";
+      else if (hour < 19) timeSlot = "6 PM";
+      else timeSlot = "7 PM";
+      
+      timeMap.set(timeSlot, (timeMap.get(timeSlot) || 0) + 1);
+    });
+    
+    const timeBasedData = [
+      { time: "8 AM", anomalies: timeMap.get("8 AM") || 0 },
+      { time: "9 AM", anomalies: timeMap.get("9 AM") || 0 },
+      { time: "10 AM", anomalies: timeMap.get("10 AM") || 0 },
+      { time: "11 AM", anomalies: timeMap.get("11 AM") || 0 },
+      { time: "12 PM", anomalies: timeMap.get("12 PM") || 0 },
+      { time: "1 PM", anomalies: timeMap.get("1 PM") || 0 },
+      { time: "2 PM", anomalies: timeMap.get("2 PM") || 0 },
+      { time: "3 PM", anomalies: timeMap.get("3 PM") || 0 },
+      { time: "4 PM", anomalies: timeMap.get("4 PM") || 0 },
+      { time: "5 PM", anomalies: timeMap.get("5 PM") || 0 },
+      { time: "6 PM", anomalies: timeMap.get("6 PM") || 0 },
+      { time: "7 PM", anomalies: timeMap.get("7 PM") || 0 },
+    ];
+    
+    // Create location-based anomaly data
+    const locationMap = new Map<string, number>();
+    anomalyData.forEach(anomaly => {
+      locationMap.set(anomaly.location, (locationMap.get(anomaly.location) || 0) + 1);
+    });
+    
+    const locationBasedData = Array.from(locationMap.entries()).map(([location, count]) => ({
+      location,
+      anomalies: count
+    }));
+    
+    return {
+      totalIncidents: anomalyData.length,
+      totalDetectedValue,
+      totalDetectedItems,
+      timeBasedData,
+      locationBasedData
+    };
+  }, []);
   
   return (
     <div className={`space-y-6 ${className}`}>
@@ -136,7 +171,7 @@ export const TheftDetection: React.FC<TheftDetectionProps> = ({ className }) => 
             <AlertOctagon className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{anomalyData.length}</div>
+            <div className="text-2xl font-bold">{metrics.totalIncidents}</div>
             <p className="text-xs text-muted-foreground">In the last 7 days</p>
           </CardContent>
         </Card>
@@ -147,7 +182,7 @@ export const TheftDetection: React.FC<TheftDetectionProps> = ({ className }) => 
             <Search className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalDetectedValue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${metrics.totalDetectedValue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Estimated retail value</p>
           </CardContent>
         </Card>
@@ -158,7 +193,7 @@ export const TheftDetection: React.FC<TheftDetectionProps> = ({ className }) => 
             <Calendar className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalDetectedItems}</div>
+            <div className="text-2xl font-bold">{metrics.totalDetectedItems}</div>
             <p className="text-xs text-muted-foreground">Units unaccounted for</p>
           </CardContent>
         </Card>
@@ -172,7 +207,7 @@ export const TheftDetection: React.FC<TheftDetectionProps> = ({ className }) => 
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={timeBasedAnomalyData}
+                data={metrics.timeBasedData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -185,7 +220,7 @@ export const TheftDetection: React.FC<TheftDetectionProps> = ({ className }) => 
                 />
                 <ReferenceLine y={3} stroke="#ff0000" strokeDasharray="3 3" />
                 <Bar dataKey="anomalies" name="Anomalies">
-                  {timeBasedAnomalyData.map((entry, index) => (
+                  {metrics.timeBasedData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={getBarColor(entry.anomalies)} />
                   ))}
                 </Bar>
@@ -201,7 +236,7 @@ export const TheftDetection: React.FC<TheftDetectionProps> = ({ className }) => 
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={locationBasedAnomalyData}
+                data={metrics.locationBasedData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 layout="vertical"
               >
@@ -214,7 +249,7 @@ export const TheftDetection: React.FC<TheftDetectionProps> = ({ className }) => 
                   }}
                 />
                 <Bar dataKey="anomalies" name="Anomalies" fill="#8884d8">
-                  {locationBasedAnomalyData.map((entry, index) => (
+                  {metrics.locationBasedData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={getBarColor(entry.anomalies)} />
                   ))}
                 </Bar>
