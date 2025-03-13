@@ -1,5 +1,5 @@
 
-import { Bell, LogOut, Menu, MessageSquare, Search, UserCog } from "lucide-react";
+import { Bell, LogOut, Menu, Clock, Search, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,11 +11,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useState } from "react";
-import { SlackMessageDialog } from "@/components/slack/SlackMessageDialog";
+import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 
 export function Header() {
   const { signOut } = useAuth();
-  const [isSlackDialogOpen, setIsSlackDialogOpen] = useState(false);
+  const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
   
   const handleLogout = async () => {
     await signOut();
@@ -45,10 +45,10 @@ export function Header() {
             variant="outline" 
             size="sm" 
             className="gap-2"
-            onClick={() => setIsSlackDialogOpen(true)}
+            onClick={() => setIsProgressDialogOpen(true)}
           >
-            <MessageSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">Message Slack</span>
+            <Clock className="h-4 w-4" />
+            <span className="hidden sm:inline">Log Progress</span>
           </Button>
           
           <Button variant="ghost" size="icon" className="relative">
@@ -93,9 +93,9 @@ export function Header() {
         </div>
       </div>
       
-      <SlackMessageDialog 
-        isOpen={isSlackDialogOpen}
-        onClose={() => setIsSlackDialogOpen(false)}
+      <ProgressEntryDialog 
+        isOpen={isProgressDialogOpen}
+        onClose={() => setIsProgressDialogOpen(false)}
       />
     </header>
   );

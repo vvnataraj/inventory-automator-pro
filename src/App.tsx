@@ -12,6 +12,7 @@ import Locations from "@/pages/Locations";
 import Sales from "@/pages/Sales";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
+import Progress from "@/pages/Progress";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -60,6 +61,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Purchases />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/progress" 
+              element={
+                <ProtectedRoute>
+                  <Progress />
                 </ProtectedRoute>
               } 
             />
