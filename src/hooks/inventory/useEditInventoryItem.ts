@@ -43,6 +43,12 @@ export function useEditInventoryItem(item: InventoryItem) {
         // Calculate total stock across all locations
         const total = locationStocksArray.reduce((sum, item) => sum + item.count, 0);
         setTotalStock(total);
+        
+        // Update the form data with the total stock
+        setFormData(prev => ({
+          ...prev,
+          totalStock: total
+        }));
       } catch (error) {
         console.error("Error loading location stock data:", error);
         toast.error("Failed to load stock distribution data");

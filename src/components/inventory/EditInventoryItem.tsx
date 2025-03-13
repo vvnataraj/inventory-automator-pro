@@ -34,6 +34,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Save the individual item's stock, not the total
     onSave(formData);
     setIsOpen(false);
   };
@@ -65,6 +66,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
               <InventoryItemEditForm 
                 formData={formData}
                 onChange={handleChange}
+                totalStock={totalStock}
               />
               <div className="flex justify-end gap-3 mt-6">
                 <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>

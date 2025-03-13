@@ -10,11 +10,13 @@ import { Upload } from "lucide-react";
 interface InventoryItemFormProps {
   formData: InventoryItem;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  totalStock?: number;
 }
 
 export const InventoryItemEditForm: React.FC<InventoryItemFormProps> = ({ 
   formData, 
-  onChange 
+  onChange,
+  totalStock
 }) => {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -138,14 +140,21 @@ export const InventoryItemEditForm: React.FC<InventoryItemFormProps> = ({
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="stock" className="text-right">Stock</Label>
-        <Input
-          id="stock"
-          name="stock"
-          type="number"
-          value={formData.stock}
-          onChange={onChange}
-          className="col-span-3"
-        />
+        <div className="col-span-3 flex items-center gap-2">
+          <Input
+            id="stock"
+            name="stock"
+            type="number"
+            value={formData.stock}
+            onChange={onChange}
+            className="flex-1"
+          />
+          {totalStock !== undefined && (
+            <div className="text-sm text-muted-foreground">
+              (Total across all locations: {totalStock})
+            </div>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="minStockCount" className="text-right">Min Stock</Label>
