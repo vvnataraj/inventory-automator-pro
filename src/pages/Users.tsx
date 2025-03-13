@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,12 +19,11 @@ export default function Users() {
     try {
       setLoading(true);
       
-      // Get all users using the auth.users view (via profiles)
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url, created_at, updated_at');
+      // Get all users using our secure function
+      const { data: authUsers, error: authError } = await supabase
+        .rpc('get_users');
       
-      if (profilesError) throw profilesError;
+      if (authError) throw authError;
       
       // Get all user roles
       const { data: userRoles, error: rolesError } = await supabase
@@ -34,20 +32,20 @@ export default function Users() {
       
       if (rolesError) throw rolesError;
       
-      // Map roles to profiles
-      const usersWithRoles = profilesData.map(profile => {
+      // Map roles to users
+      const usersWithRoles = authUsers.map(user => {
         const roles = userRoles
-          .filter(role => role.user_id === profile.id)
+          .filter(role => role.user_id === user.id)
           .map(role => role.role);
         
         return {
-          id: profile.id,
-          email: profile.username || 'No email', // Use username as email for now
-          username: profile.username,
-          created_at: profile.created_at,
-          last_sign_in_at: null, // Not available with current permissions
+          id: user.id,
+          email: user.email || 'No email', // Now using actual email from auth.users
+          username: user.username || user.email?.split('@')[0] || 'No username',
+          created_at: user.created_at,
+          last_sign_in_at: user.last_sign_in_at, // Now available from auth.users
           roles: roles.length > 0 ? roles : ['user'], // Default to user if no roles
-          is_disabled: false // Not available with current permissions
+          is_disabled: false // Not implemented yet
         };
       });
       

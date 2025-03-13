@@ -578,6 +578,17 @@ export type Database = {
       }
     }
     Functions: {
+      get_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          last_sign_in_at: string
+          created_at: string
+          updated_at: string
+          username: string
+        }[]
+      }
       has_role: {
         Args: {
           user_id: string
