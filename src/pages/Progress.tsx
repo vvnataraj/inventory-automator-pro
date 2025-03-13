@@ -34,7 +34,8 @@ export default function Progress() {
       
       if (error) throw error;
       
-      setEntries(data || []);
+      // Type assertion to ensure data matches ProgressEntry type
+      setEntries(data as ProgressEntry[]);
     } catch (error) {
       console.error("Error fetching progress entries:", error);
       toast.error("Failed to load progress entries");
