@@ -49,9 +49,12 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
     }
   };
 
+  // Display the email if available, otherwise show a placeholder with the user ID
+  const displayEmail = user.email || `User ${user.id.substring(0, 8)}...`;
+
   return (
     <TableRow>
-      <TableCell>{user.email}</TableCell>
+      <TableCell>{displayEmail}</TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
           {user.roles.length > 0 ? (
@@ -78,7 +81,7 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
         {isAdmin() && (
           <div className="flex justify-end gap-2">
             <EditUserDialog user={user} onUserUpdated={onUserUpdated} />
-            <DeleteUserDialog userId={user.id} userEmail={user.email} onUserDeleted={onUserUpdated} />
+            <DeleteUserDialog userId={user.id} userEmail={displayEmail} onUserDeleted={onUserUpdated} />
           </div>
         )}
       </TableCell>

@@ -35,24 +35,24 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Get all user roles - this will be our primary source of users
+      // First fetch all user roles
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
       
       if (rolesError) throw rolesError;
       
+      // Create a map to group roles by user_id
+      const userRolesMap = new Map();
+      
       if (rolesData && rolesData.length > 0) {
-        // Create a map to group roles by user_id
-        const userRolesMap = new Map();
-        
         rolesData.forEach(role => {
           if (!userRolesMap.has(role.user_id)) {
             userRolesMap.set(role.user_id, {
               id: role.user_id,
-              email: `User ${role.user_id.substring(0, 8)}...`, // Placeholder email
+              email: "", // Will be populated later
               roles: [role.role],
-              created_at: new Date().toISOString(), // Default value
+              created_at: new Date().toISOString(),
               last_sign_in_at: null,
               is_disabled: false
             });
@@ -62,17 +62,17 @@ export default function UserManagement() {
           }
         });
         
-        // Try to get profile information if available
+        // Get profile information including email/username
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, created_at');
         
-        // Update user information with profile data if available
+        // Update user information with profile data
         if (profiles && !profilesError) {
           profiles.forEach(profile => {
             if (userRolesMap.has(profile.id)) {
               const user = userRolesMap.get(profile.id);
-              user.email = profile.username || `User ${profile.id.substring(0, 8)}...`;
+              user.email = profile.username || "";
               user.created_at = profile.created_at;
             }
           });
