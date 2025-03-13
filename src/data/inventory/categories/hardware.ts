@@ -1,4 +1,3 @@
-
 import { InventoryItem } from "@/types/inventory";
 
 // Hardware category items (locks, tapes, glue, etc.)
@@ -134,5 +133,335 @@ export const hardwareItems: InventoryItem[] = [
     isActive: true,
     supplier: "Surface Finishing Co.",
     tags: ["sandpaper", "abrasives", "finishing"]
+  },
+  {
+    id: "item-48",
+    sku: "HW-LOCK-002",
+    name: "Entry Door Handleset, Bronze",
+    description: "Complete entry door handleset with deadbolt, oil-rubbed bronze finish",
+    category: "Hardware",
+    subcategory: "Door Hardware",
+    brand: "SecureLock",
+    price: 89.99,
+    rrp: 109.99,
+    cost: 52.75,
+    stock: 18,
+    lowStockThreshold: 4,
+    minStockCount: 2,
+    location: "Storefront",
+    barcode: "8899001122334",
+    dateAdded: "2023-11-20T10:35:00Z",
+    lastUpdated: "2024-01-15T13:20:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Door+Handleset",
+    dimensions: {
+      length: 30,
+      width: 15,
+      height: 8,
+      unit: 'cm'
+    },
+    weight: {
+      value: 1.8,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Security Hardware Inc.",
+    tags: ["door handle", "handleset", "entry", "door hardware"]
+  },
+  {
+    id: "item-49",
+    sku: "HW-HINGM-001",
+    name: "Door Hinges 3.5\" Satin Nickel (3-Pack)",
+    description: "Pack of 3 standard 3.5-inch door hinges in satin nickel finish",
+    category: "Hardware",
+    subcategory: "Door Hardware",
+    brand: "SecureLock",
+    price: 12.99,
+    rrp: 15.99,
+    cost: 6.75,
+    stock: 45,
+    lowStockThreshold: 10,
+    minStockCount: 5,
+    location: "Storefront",
+    barcode: "9900112233445",
+    dateAdded: "2023-12-05T13:45:00Z",
+    lastUpdated: "2024-02-10T11:20:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Door+Hinges",
+    dimensions: {
+      length: 12,
+      width: 8,
+      height: 3,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.45,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Security Hardware Inc.",
+    tags: ["hinges", "door hardware", "satin nickel", "hardware"]
+  },
+  {
+    id: "item-50",
+    sku: "HW-KNOB-001",
+    name: "Interior Door Knob, Satin Nickel",
+    description: "Interior passage door knob in satin nickel finish, easy installation",
+    category: "Hardware",
+    subcategory: "Door Hardware",
+    brand: "SecureLock",
+    price: 19.99,
+    rrp: 24.99,
+    cost: 9.75,
+    stock: 32,
+    lowStockThreshold: 8,
+    minStockCount: 4,
+    location: "Storefront",
+    barcode: "0011223344556",
+    dateAdded: "2023-11-10T11:30:00Z",
+    lastUpdated: "2024-01-25T14:15:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Door+Knob",
+    dimensions: {
+      length: 15,
+      width: 10,
+      height: 8,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.65,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Security Hardware Inc.",
+    tags: ["door knob", "interior", "passage", "door hardware"]
+  },
+  {
+    id: "item-51",
+    sku: "HW-TAPE-002",
+    name: "Electrical Tape (10-Pack)",
+    description: "Pack of 10 rolls of black electrical tape, 3/4-inch by 60-foot",
+    category: "Hardware",
+    subcategory: "Tapes & Adhesives",
+    brand: "StickFast",
+    price: 9.99,
+    rrp: 12.99,
+    cost: 4.85,
+    stock: 65,
+    lowStockThreshold: 12,
+    minStockCount: 6,
+    location: "Warehouse A",
+    barcode: "1122334455667",
+    dateAdded: "2023-10-15T09:40:00Z",
+    lastUpdated: "2024-02-20T15:30:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Electrical+Tape",
+    dimensions: {
+      length: 20,
+      width: 15,
+      height: 10,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.5,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Adhesive Products Ltd.",
+    tags: ["tape", "electrical tape", "adhesive", "electrical"]
+  },
+  {
+    id: "item-52",
+    sku: "HW-MSTAPE-001",
+    name: "Masking Tape 2-inch",
+    description: "2-inch wide general purpose masking tape, 60-yard roll",
+    category: "Hardware",
+    subcategory: "Tapes & Adhesives",
+    brand: "StickFast",
+    price: 6.99,
+    rrp: 8.99,
+    cost: 3.50,
+    stock: 48,
+    lowStockThreshold: 10,
+    minStockCount: 5,
+    location: "Warehouse A",
+    barcode: "2233445566778",
+    dateAdded: "2023-11-25T14:15:00Z",
+    lastUpdated: "2024-01-15T09:45:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Masking+Tape",
+    dimensions: {
+      length: 12,
+      width: 12,
+      height: 5,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.35,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Adhesive Products Ltd.",
+    tags: ["tape", "masking tape", "adhesive", "painting"]
+  },
+  {
+    id: "item-53",
+    sku: "HW-PVCPT-001",
+    name: "PVC Pipe Cement 8oz",
+    description: "8oz can of PVC pipe cement for joining PVC pipes and fittings",
+    category: "Hardware",
+    subcategory: "Tapes & Adhesives",
+    brand: "PlumbRight",
+    price: 11.99,
+    rrp: 14.99,
+    cost: 6.25,
+    stock: 35,
+    lowStockThreshold: 8,
+    minStockCount: 4,
+    location: "Warehouse A",
+    barcode: "3344556677889",
+    dateAdded: "2023-12-10T10:30:00Z",
+    lastUpdated: "2024-02-05T13:15:00Z",
+    imageUrl: "https://placehold.co/400x400?text=PVC+Cement",
+    dimensions: {
+      length: 10,
+      width: 10,
+      height: 12,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.3,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Plumbing Supply Co.",
+    tags: ["PVC", "cement", "adhesive", "plumbing"]
+  },
+  {
+    id: "item-54",
+    sku: "HW-CAULK-001",
+    name: "Silicone Caulk, White",
+    description: "10.1oz tube of white 100% silicone caulk for bathrooms and kitchens",
+    category: "Hardware",
+    subcategory: "Tapes & Adhesives",
+    brand: "SealTight",
+    price: 8.99,
+    rrp: 10.99,
+    cost: 4.50,
+    stock: 60,
+    lowStockThreshold: 12,
+    minStockCount: 6,
+    location: "Warehouse A",
+    barcode: "4455667788990",
+    dateAdded: "2023-11-15T13:20:00Z",
+    lastUpdated: "2024-01-30T11:45:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Silicone+Caulk",
+    dimensions: {
+      length: 25,
+      width: 5,
+      height: 5,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.35,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Adhesive Products Ltd.",
+    tags: ["caulk", "silicone", "sealant", "bathroom"]
+  },
+  {
+    id: "item-55",
+    sku: "HW-PADLCK-001",
+    name: "Heavy-Duty Padlock",
+    description: "Heavy-duty keyed padlock with hardened steel shackle",
+    category: "Hardware",
+    subcategory: "Security",
+    brand: "SecureLock",
+    price: 14.99,
+    rrp: 18.99,
+    cost: 7.75,
+    stock: 42,
+    lowStockThreshold: 10,
+    minStockCount: 5,
+    location: "Storefront",
+    barcode: "5566778899001",
+    dateAdded: "2023-10-30T09:15:00Z",
+    lastUpdated: "2024-02-15T10:30:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Padlock",
+    dimensions: {
+      length: 8,
+      width: 5,
+      height: 3,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.25,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Security Hardware Inc.",
+    tags: ["padlock", "lock", "security", "hardware"]
+  },
+  {
+    id: "item-56",
+    sku: "HW-MSURET-001",
+    name: "25-Foot Tape Measure",
+    description: "Professional 25-foot retractable tape measure with magnetic hook",
+    category: "Hardware",
+    subcategory: "Measuring Tools",
+    brand: "ProTools",
+    price: 16.99,
+    rrp: 19.99,
+    cost: 8.75,
+    stock: 35,
+    lowStockThreshold: 8,
+    minStockCount: 4,
+    location: "Storefront",
+    barcode: "6677889900112",
+    dateAdded: "2023-11-05T14:30:00Z",
+    lastUpdated: "2024-01-20T09:15:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Tape+Measure",
+    dimensions: {
+      length: 10,
+      width: 8,
+      height: 5,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.4,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Quality Tool Co.",
+    tags: ["tape measure", "measuring tool", "construction", "hardware"]
+  },
+  {
+    id: "item-57",
+    sku: "HW-FILEES-001",
+    name: "Metal File Set (5-Piece)",
+    description: "Set of 5 metal files in different shapes for woodworking and metalwork",
+    category: "Hardware",
+    subcategory: "Hand Tools",
+    brand: "ToughTools",
+    price: 19.99,
+    rrp: 24.99,
+    cost: 9.75,
+    stock: 28,
+    lowStockThreshold: 6,
+    minStockCount: 3,
+    location: "Warehouse A",
+    barcode: "7788990011223",
+    dateAdded: "2023-12-15T15:20:00Z",
+    lastUpdated: "2024-02-10T14:15:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Metal+Files",
+    dimensions: {
+      length: 30,
+      width: 15,
+      height: 5,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.8,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Quality Tool Co.",
+    tags: ["files", "metal files", "hand tools", "hardware"]
   }
 ];

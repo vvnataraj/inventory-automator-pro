@@ -1,4 +1,3 @@
-
 import { InventoryItem } from "@/types/inventory";
 
 // Electrical category items
@@ -35,5 +34,335 @@ export const electricalItems: InventoryItem[] = [
     isActive: true,
     supplier: "Electrical Supply Co.",
     tags: ["lighting", "LED", "bulbs", "electrical"]
+  },
+  {
+    id: "item-70",
+    sku: "HW-LSWIT-001",
+    name: "Light Switch, Single-Pole",
+    description: "Standard single-pole light switch, white, residential grade",
+    category: "Electrical",
+    subcategory: "Switches",
+    brand: "PowerPro",
+    price: 3.99,
+    rrp: 4.99,
+    cost: 1.85,
+    stock: 85,
+    lowStockThreshold: 20,
+    minStockCount: 10,
+    location: "Storefront",
+    barcode: "0011223344556",
+    dateAdded: "2023-11-15T09:20:00Z",
+    lastUpdated: "2024-01-20T13:45:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Light+Switch",
+    dimensions: {
+      length: 10,
+      width: 5,
+      height: 3,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.1,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["switch", "light switch", "electrical", "single-pole"]
+  },
+  {
+    id: "item-71",
+    sku: "HW-OUTLE-001",
+    name: "Electrical Outlet, Duplex",
+    description: "Standard duplex electrical outlet, 15A, white, residential grade",
+    category: "Electrical",
+    subcategory: "Outlets",
+    brand: "PowerPro",
+    price: 3.49,
+    rrp: 4.49,
+    cost: 1.65,
+    stock: 95,
+    lowStockThreshold: 20,
+    minStockCount: 10,
+    location: "Storefront",
+    barcode: "1122334455667",
+    dateAdded: "2023-10-30T13:15:00Z",
+    lastUpdated: "2024-01-15T09:30:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Electrical+Outlet",
+    dimensions: {
+      length: 10,
+      width: 5,
+      height: 3,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.1,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["outlet", "electrical outlet", "electrical", "receptacle"]
+  },
+  {
+    id: "item-72",
+    sku: "HW-WIRE-001",
+    name: "Electrical Wire 12/2 NM-B 100ft",
+    description: "100ft roll of 12/2 non-metallic sheathed electrical cable",
+    category: "Electrical",
+    subcategory: "Wiring",
+    brand: "PowerPro",
+    price: 49.99,
+    rrp: 59.99,
+    cost: 28.75,
+    stock: 32,
+    lowStockThreshold: 8,
+    minStockCount: 4,
+    location: "Warehouse A",
+    barcode: "2233445566778",
+    dateAdded: "2023-11-20T11:30:00Z",
+    lastUpdated: "2024-02-10T14:45:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Electrical+Wire",
+    dimensions: {
+      length: 35,
+      width: 35,
+      height: 10,
+      unit: 'cm'
+    },
+    weight: {
+      value: 5.8,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["wire", "electrical wire", "cable", "NM-B"]
+  },
+  {
+    id: "item-73",
+    sku: "HW-PANEL-002",
+    name: "Electrical Panel, 100-Amp",
+    description: "Main electrical service panel, 100-amp, 20-space",
+    category: "Electrical",
+    subcategory: "Service Panels",
+    brand: "PowerPro",
+    price: 119.99,
+    rrp: 149.99,
+    cost: 68.50,
+    stock: 12,
+    lowStockThreshold: 3,
+    minStockCount: 2,
+    location: "Warehouse A",
+    barcode: "3344556677889",
+    dateAdded: "2023-12-05T14:20:00Z",
+    lastUpdated: "2024-01-25T10:35:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Electrical+Panel",
+    dimensions: {
+      length: 45,
+      width: 30,
+      height: 15,
+      unit: 'cm'
+    },
+    weight: {
+      value: 8.2,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["panel", "electrical panel", "service panel", "breaker box"]
+  },
+  {
+    id: "item-74",
+    sku: "HW-BREAK-001",
+    name: "Circuit Breaker, 15-Amp",
+    description: "Single-pole 15-amp circuit breaker for residential use",
+    category: "Electrical",
+    subcategory: "Circuit Breakers",
+    brand: "PowerPro",
+    price: 8.99,
+    rrp: 10.99,
+    cost: 4.50,
+    stock: 55,
+    lowStockThreshold: 12,
+    minStockCount: 6,
+    location: "Warehouse A",
+    barcode: "4455667788990",
+    dateAdded: "2023-11-10T10:15:00Z",
+    lastUpdated: "2024-02-05T09:30:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Circuit+Breaker",
+    dimensions: {
+      length: 8,
+      width: 3,
+      height: 5,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.15,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["breaker", "circuit breaker", "electrical", "15-amp"]
+  },
+  {
+    id: "item-75",
+    sku: "HW-GFCI-001",
+    name: "GFCI Outlet",
+    description: "Ground fault circuit interrupter outlet, 15A, white, tamper-resistant",
+    category: "Electrical",
+    subcategory: "Outlets",
+    brand: "PowerPro",
+    price: 14.99,
+    rrp: 17.99,
+    cost: 8.25,
+    stock: 40,
+    lowStockThreshold: 8,
+    minStockCount: 4,
+    location: "Storefront",
+    barcode: "5566778899001",
+    dateAdded: "2023-12-15T13:10:00Z",
+    lastUpdated: "2024-01-30T15:45:00Z",
+    imageUrl: "https://placehold.co/400x400?text=GFCI+Outlet",
+    dimensions: {
+      length: 10,
+      width: 5,
+      height: 3,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.15,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["GFCI", "outlet", "electrical", "ground fault"]
+  },
+  {
+    id: "item-76",
+    sku: "HW-DIMR-001",
+    name: "Dimmer Switch",
+    description: "Single-pole dimmer switch for incandescent and LED lights, white",
+    category: "Electrical",
+    subcategory: "Switches",
+    brand: "PowerPro",
+    price: 15.99,
+    rrp: 19.99,
+    cost: 8.75,
+    stock: 32,
+    lowStockThreshold: 8,
+    minStockCount: 4,
+    location: "Storefront",
+    barcode: "6677889900112",
+    dateAdded: "2023-11-25T09:45:00Z",
+    lastUpdated: "2024-02-15T11:20:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Dimmer+Switch",
+    dimensions: {
+      length: 10,
+      width: 5,
+      height: 3,
+      unit: 'cm'
+    },
+    weight: {
+      value: 0.12,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["dimmer", "switch", "electrical", "lighting"]
+  },
+  {
+    id: "item-77",
+    sku: "HW-LGHT-002",
+    name: "Flush Mount Ceiling Light",
+    description: "11-inch flush mount LED ceiling light fixture, white, 1500 lumens",
+    category: "Electrical",
+    subcategory: "Lighting",
+    brand: "BrightLife",
+    price: 39.99,
+    rrp: 49.99,
+    cost: 21.50,
+    stock: 18,
+    lowStockThreshold: 4,
+    minStockCount: 2,
+    location: "Warehouse A",
+    barcode: "7788990011223",
+    dateAdded: "2023-10-20T14:30:00Z",
+    lastUpdated: "2024-01-15T10:45:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Ceiling+Light",
+    dimensions: {
+      length: 30,
+      width: 30,
+      height: 10,
+      unit: 'cm'
+    },
+    weight: {
+      value: 1.2,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["light fixture", "ceiling light", "LED", "lighting"]
+  },
+  {
+    id: "item-78",
+    sku: "HW-FANHW-001",
+    name: "Ceiling Fan with Light Kit",
+    description: "52-inch ceiling fan with 3-light kit, brushed nickel finish, remote control",
+    category: "Electrical",
+    subcategory: "Fans",
+    brand: "BrightLife",
+    price: 129.99,
+    rrp: 159.99,
+    cost: 75.50,
+    stock: 10,
+    lowStockThreshold: 3,
+    minStockCount: 2,
+    location: "Warehouse A",
+    barcode: "8899001122334",
+    dateAdded: "2023-11-15T11:45:00Z",
+    lastUpdated: "2024-02-10T09:30:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Ceiling+Fan",
+    dimensions: {
+      length: 55,
+      width: 55,
+      height: 30,
+      unit: 'cm'
+    },
+    weight: {
+      value: 8.5,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["ceiling fan", "fan", "light kit", "lighting"]
+  },
+  {
+    id: "item-79",
+    sku: "HW-EXTEN-001",
+    name: "Extension Cord, 25-foot",
+    description: "25-foot indoor/outdoor extension cord, 16 gauge, 3-prong",
+    category: "Electrical",
+    subcategory: "Cords",
+    brand: "PowerPro",
+    price: 18.99,
+    rrp: 22.99,
+    cost: 9.75,
+    stock: 45,
+    lowStockThreshold: 10,
+    minStockCount: 5,
+    location: "Storefront",
+    barcode: "9900112233445",
+    dateAdded: "2023-12-10T10:30:00Z",
+    lastUpdated: "2024-01-25T14:15:00Z",
+    imageUrl: "https://placehold.co/400x400?text=Extension+Cord",
+    dimensions: {
+      length: 30,
+      width: 30,
+      height: 10,
+      unit: 'cm'
+    },
+    weight: {
+      value: 1.1,
+      unit: 'kg'
+    },
+    isActive: true,
+    supplier: "Electrical Supply Co.",
+    tags: ["extension cord", "cord", "electrical", "power"]
   }
 ];
