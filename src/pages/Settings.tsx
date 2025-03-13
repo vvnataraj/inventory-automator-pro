@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import UserManagement from "@/components/settings/UserManagement";
 import RolesManagement from "@/components/settings/RolesManagement";
+import AssignAdminRole from "@/components/settings/AssignAdminRole";
 
 interface UserProfile {
   id: string;
@@ -199,6 +199,22 @@ export default function Settings() {
         </TabsContent>
         
         <TabsContent value="roles">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Quick Admin Assignment</CardTitle>
+              <CardDescription>
+                Assign admin role to a specific user
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  This will assign the admin role to macpherson.lucym@gmail.com, giving them full access to all functionality.
+                </p>
+                <AssignAdminRole />
+              </div>
+            </CardContent>
+          </Card>
           <RolesManagement />
         </TabsContent>
         
