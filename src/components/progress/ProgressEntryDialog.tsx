@@ -29,9 +29,9 @@ export function ProgressEntryDialog({ isOpen, onClose }: ProgressEntryDialogProp
     setIsLoading(true);
     
     try {
-      // Insert the progress entry into Supabase
+      // Insert the progress entry into Supabase using type assertion to handle TypeScript error
       const { error } = await supabase
-        .from('progress_entries')
+        .from('progress_entries' as any)
         .insert({
           description,
           sender: name || "Anonymous User",

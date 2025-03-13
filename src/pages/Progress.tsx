@@ -27,6 +27,7 @@ export default function Progress() {
     try {
       setIsLoading(true);
       
+      // Use 'from' with a type assertion to handle the TypeScript error
       const { data, error } = await supabase
         .from('progress_entries')
         .select('*')
@@ -34,8 +35,9 @@ export default function Progress() {
       
       if (error) throw error;
       
-      // Type assertion to ensure data matches ProgressEntry type
-      setEntries(data as ProgressEntry[]);
+      // Use explicit type assertion
+      const typedData = data as unknown as ProgressEntry[];
+      setEntries(typedData);
     } catch (error) {
       console.error("Error fetching progress entries:", error);
       toast.error("Failed to load progress entries");
