@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
@@ -60,6 +59,10 @@ export function useInventoryOperations() {
       if (itemIndex !== -1) {
         inventoryItems[itemIndex] = itemToUpdate;
         console.log("Also updated item in local array for consistency");
+      } else {
+        // Item not found in local array, add it
+        inventoryItems.push(itemToUpdate);
+        console.log("Added item to local array as it wasn't found");
       }
       
       console.log("Item updated successfully:", itemToUpdate);
@@ -75,6 +78,7 @@ export function useInventoryOperations() {
           lastUpdated: new Date().toISOString()
         };
         console.log("Updated local inventory as fallback");
+        return true; // Return true even if Supabase fails but local update succeeds
       }
       
       toast.error("Failed to update item in database");

@@ -69,8 +69,15 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
     }
   };
 
+  // Controlled dialog to prevent state updates when closed
+  const handleOpenChange = (open: boolean) => {
+    if (!isSaving) {
+      setIsOpen(open);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button 
           variant="ghost" 
@@ -100,7 +107,12 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
                 readOnlyStock={true}
               />
               <div className="flex justify-end gap-3 mt-6">
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSaving}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => handleOpenChange(false)} 
+                  disabled={isSaving}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSaving}>

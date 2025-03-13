@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
 import { toast } from "sonner";
@@ -20,12 +21,20 @@ export function useInventoryItems(
   const [error, setError] = useState<Error | null>(null);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   
+  // Add a ref to track if we're currently fetching to prevent duplicate requests
+  const isFetchingRef = useRef(false);
+  
   const { fetchFromSupabase, fetchFromLocal } = useInventoryDatabase();
   const { updateItem, addItem, deleteItem } = useInventoryOperations();
   const { reorderItem: reorderItemBase, reorderStock: reorderStockBase, reactivateAllItems: reactivateAllItemsBase } = useInventorySpecialOps();
   
   const fetchItems = useCallback(async (forceRefresh = false) => {
+    // Prevent duplicate fetches
+    if (isFetchingRef.current && !forceRefresh) return;
+    
+    isFetchingRef.current = true;
     setIsLoading(true);
+    
     try {
       console.log("Fetching items with params:", {
         page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
@@ -57,7 +66,6 @@ export function useInventoryItems(
       }
       
       setError(null);
-      setLastRefresh(Date.now());
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to fetch inventory items"));
       console.error("Failed to fetch inventory items:", err);
@@ -73,15 +81,24 @@ export function useInventoryItems(
       toast.error("Failed to fetch items from database, using local data");
     } finally {
       setIsLoading(false);
+      isFetchingRef.current = false;
     }
   }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchFromSupabase, fetchFromLocal]);
   
+  // Modified dependency array to prevent continuous refresh
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchItems();
     }, 300);
     return () => clearTimeout(timeoutId);
-  }, [fetchItems, lastRefresh]);
+  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);
+  
+  // Removed lastRefresh from the dependency array above
+  // and created a separate method to explicitly trigger refresh
+  const refreshData = useCallback(() => {
+    setLastRefresh(Date.now());
+    fetchItems(true);
+  }, [fetchItems]);
   
   const reorderItemWrapper = useCallback((itemId: string, direction: 'up' | 'down') => {
     reorderItemBase(items, setItems, itemId, direction);
@@ -110,7 +127,7 @@ export function useInventoryItems(
         }
       });
       
-      await fetchItems();
+      await fetchItems(true);
       
       return true;
     } catch (error) {
@@ -135,8 +152,6 @@ export function useInventoryItems(
           )
         );
         
-        // Trigger a refresh to ensure we have the latest data
-        await fetchItems(true);
         return true;
       }
       return false;
@@ -146,19 +161,16 @@ export function useInventoryItems(
     } finally {
       setIsLoading(false);
     }
-  }, [updateItem, fetchItems]);
+  }, [updateItem]);
 
   const addItemWrapper = useCallback(async (newItem: InventoryItem) => {
     const success = await addItem(newItem);
     if (success) {
-      const pageSize = 20;
-      const start = (page - 1) * pageSize;
-      const paginatedItems = inventoryItems.slice(start, start + pageSize);
-      
-      setItems(paginatedItems);
-      setTotalItems(prev => prev + 1);
+      refreshData(); // Use the new refresh method
+      return true;
     }
-  }, [addItem, page]);
+    return false;
+  }, [addItem, refreshData]);
 
   const deleteItemWrapper = useCallback(async (itemId: string) => {
     const success = await deleteItem(itemId);
@@ -167,7 +179,9 @@ export function useInventoryItems(
         currentItems.filter(item => item.id !== itemId)
       );
       setTotalItems(prev => prev - 1);
+      return true;
     }
+    return false;
   }, [deleteItem]);
   
   return { 
@@ -182,6 +196,6 @@ export function useInventoryItems(
     reorderStock: reorderStockWrapper,
     fetchItems,
     reactivateAllItems: reactivateAllItemsWrapper,
-    refresh: () => setLastRefresh(Date.now())
+    refresh: refreshData  // Use the new refresh method
   };
 }
