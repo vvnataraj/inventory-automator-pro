@@ -44,6 +44,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
     try {
       // Get all items that need to be updated (across all locations)
       const itemsToUpdate = prepareItemsForSave();
+      console.log("Items to update:", itemsToUpdate);
       
       // Update each item
       for (const itemToUpdate of itemsToUpdate) {

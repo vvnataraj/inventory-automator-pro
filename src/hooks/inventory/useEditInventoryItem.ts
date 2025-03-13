@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
@@ -14,8 +15,12 @@ export function useEditInventoryItem(item: InventoryItem) {
   const [locationStocks, setLocationStocks] = useState<LocationStock[]>([]);
   const [totalStock, setTotalStock] = useState(0);
 
+  // Re-initialize the form data when the item changes or dialog opens
   useEffect(() => {
     if (isOpen) {
+      // Update form data with the latest item data
+      setFormData({...item});
+      
       try {
         // Find all items with the same SKU across different locations
         const sameSkuItems = inventoryItems.filter(
@@ -53,7 +58,7 @@ export function useEditInventoryItem(item: InventoryItem) {
         toast.error("Failed to load stock distribution data");
       }
     }
-  }, [isOpen, item.sku]);
+  }, [isOpen, item]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
