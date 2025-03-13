@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Box, DollarSign, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { useNavigate } from "react-router-dom";
 
 const stats = [
   {
@@ -9,28 +10,40 @@ const stats = [
     value: "12,345",
     change: "+4.75%",
     icon: Box,
+    link: "/inventory"
   },
   {
     name: "Low Stock Items",
     value: "23",
     change: "-12%",
     icon: TrendingUp,
+    link: null
   },
   {
     name: "Monthly Revenue",
     value: "$45,231",
     change: "+20.1%",
     icon: DollarSign,
+    link: null
   },
   {
     name: "Active Orders",
     value: "56",
     change: "+8%",
     icon: BarChart3,
+    link: null
   },
 ];
 
 export default function Index() {
+  const navigate = useNavigate();
+
+  const handleCardClick = (link: string | null) => {
+    if (link) {
+      navigate(link);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between">
@@ -38,7 +51,11 @@ export default function Index() {
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
         {stats.map((stat) => (
-          <Card key={stat.name} className="animate-fade-in">
+          <Card 
+            key={stat.name} 
+            className={`animate-fade-in ${stat.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+            onClick={() => handleCardClick(stat.link)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {stat.name}
