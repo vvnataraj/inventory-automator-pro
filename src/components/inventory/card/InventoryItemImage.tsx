@@ -3,8 +3,6 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { InventoryItem } from "@/types/inventory";
 import { EditInventoryItem } from "../EditInventoryItem";
-import { Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface InventoryItemImageProps {
   item: InventoryItem;
@@ -46,7 +44,7 @@ export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item, on
         {item.stock}
       </Badge>
       {!item.isActive && (
-        <Badge variant="destructive" className="absolute top-2 left-2">
+        <Badge variant="destructive" className="absolute bottom-2 right-2">
           Discontinued
         </Badge>
       )}
