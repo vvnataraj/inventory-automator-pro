@@ -10,6 +10,7 @@ import { EditInventoryItem } from "@/components/inventory/EditInventoryItem";
 import { TransferInventoryItem } from "@/components/inventory/TransferInventoryItem";
 import { DeleteInventoryItem } from "@/components/inventory/DeleteInventoryItem";
 import { AddInventoryItem } from "@/components/inventory/AddInventoryItem";
+import { ReorderInventoryItem } from "@/components/inventory/ReorderInventoryItem";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
   DropdownMenu,
@@ -28,7 +29,7 @@ export default function Inventory() {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
-  const { items, isLoading, totalItems, updateItem, addItem, deleteItem } = useInventoryItems(
+  const { items, isLoading, totalItems, updateItem, addItem, deleteItem, reorderItem } = useInventoryItems(
     currentPage, 
     searchQuery,
     sortField,
@@ -96,6 +97,15 @@ export default function Inventory() {
       title: "Item deleted",
       description: `Successfully deleted ${itemName} from inventory`,
       variant: "destructive"
+    });
+  };
+
+  const handleReorderItem = (itemId: string, direction: 'up' | 'down') => {
+    reorderItem(itemId, direction);
+    
+    toast({
+      title: `Item moved ${direction}`,
+      description: `Successfully reordered inventory item`,
     });
   };
 
@@ -239,11 +249,12 @@ export default function Inventory() {
                       <SortHeader field="rrp" label="RRP" />
                       <SortHeader field="stock" label="Stock" />
                       <SortHeader field="location" label="Location" />
+                      <th className="py-3 px-4 text-left font-medium text-muted-foreground">Reorder</th>
                       <th className="py-3 px-4 text-left font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item) => (
+                    {items.map((item, index) => (
                       <tr key={item.id} className="border-b hover:bg-muted/50">
                         <td className="py-3 px-4">{item.sku}</td>
                         <td className="py-3 px-4 font-medium break-words max-w-[200px]">{item.name}</td>
@@ -262,6 +273,14 @@ export default function Inventory() {
                           </span>
                         </td>
                         <td className="py-3 px-4">{item.location}</td>
+                        <td className="py-3 px-4">
+                          <ReorderInventoryItem 
+                            item={item}
+                            isFirst={index === 0}
+                            isLast={index === items.length - 1}
+                            onReorder={handleReorderItem}
+                          />
+                        </td>
                         <td className="py-3 px-4">
                           <div className="flex">
                             <EditInventoryItem item={item} onSave={handleSaveItem} />

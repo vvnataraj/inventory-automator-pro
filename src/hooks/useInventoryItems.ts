@@ -114,6 +114,28 @@ export function useInventoryItems(
     setTotalItems(prev => prev - 1);
   }, []);
   
+  // Add reordering functionality
+  const reorderItem = useCallback((itemId: string, direction: 'up' | 'down') => {
+    setItems(currentItems => {
+      const itemIndex = currentItems.findIndex(item => item.id === itemId);
+      if (itemIndex === -1) return currentItems;
+      
+      // Can't move first item up or last item down
+      if ((direction === 'up' && itemIndex === 0) || 
+          (direction === 'down' && itemIndex === currentItems.length - 1)) {
+        return currentItems;
+      }
+      
+      const newItems = [...currentItems];
+      const swapIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1;
+      
+      // Swap the items
+      [newItems[itemIndex], newItems[swapIndex]] = [newItems[swapIndex], newItems[itemIndex]];
+      
+      return newItems;
+    });
+  }, []);
+  
   return { 
     items, 
     totalItems, 
@@ -122,6 +144,7 @@ export function useInventoryItems(
     updateItem, 
     addItem, 
     deleteItem,
+    reorderItem,
     fetchItems
   };
 }

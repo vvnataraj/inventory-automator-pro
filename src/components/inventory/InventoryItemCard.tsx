@@ -7,19 +7,26 @@ import { Button } from "@/components/ui/button";
 import { EditInventoryItem } from "./EditInventoryItem";
 import { TransferInventoryItem } from "./TransferInventoryItem";
 import { DeleteInventoryItem } from "./DeleteInventoryItem";
+import { ReorderInventoryItem } from "./ReorderInventoryItem";
 
 interface InventoryItemCardProps {
   item: InventoryItem;
   onSave: (updatedItem: InventoryItem) => void;
   onTransfer: (item: InventoryItem, quantity: number, newLocation: string) => void;
   onDelete: (itemId: string) => void;
+  onReorder?: (itemId: string, direction: 'up' | 'down') => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ 
   item, 
   onSave,
   onTransfer,
-  onDelete
+  onDelete,
+  onReorder,
+  isFirst = false,
+  isLast = false
 }) => {
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
@@ -74,11 +81,19 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
         </div>
       </CardContent>
       
-      <CardFooter className="pt-0 flex gap-2">
+      <CardFooter className="pt-0 flex gap-2 flex-wrap">
+        {onReorder && (
+          <ReorderInventoryItem
+            item={item}
+            isFirst={isFirst}
+            isLast={isLast}
+            onReorder={onReorder}
+          />
+        )}
         <EditInventoryItem item={item} onSave={onSave} />
         <TransferInventoryItem item={item} onTransfer={onTransfer} />
         <DeleteInventoryItem item={item} onDelete={onDelete} />
       </CardFooter>
     </Card>
   );
-};
+}
