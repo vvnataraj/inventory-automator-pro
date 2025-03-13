@@ -12,6 +12,7 @@ export const generateInventoryItem = (formData: InventoryItemFormData): Inventor
     category: formData.category || faker.commerce.department(),
     subcategory: faker.commerce.productAdjective(),
     brand: faker.company.name(),
+    price: formData.rrp || 0,
     rrp: formData.rrp,
     cost: formData.cost,
     stock: formData.stock,
