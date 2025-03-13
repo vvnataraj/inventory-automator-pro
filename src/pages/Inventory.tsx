@@ -10,15 +10,25 @@ import { InventoryPagination } from "@/components/inventory/InventoryPagination"
 import { InventoryItem } from "@/types/inventory";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
+  const [searchParams] = useSearchParams();
   
   // Add specific effect to manually trigger data fetch when the page loads
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
+    
+    // Check if category parameter exists in URL and set it
+    const categoryFromUrl = searchParams.get("category");
+    if (categoryFromUrl) {
+      console.log(`Setting category filter from URL: ${categoryFromUrl}`);
+      actions.setCategoryFilter(categoryFromUrl);
+    }
+    
     actions.fetchItems();
-  }, []); 
+  }, [searchParams]); 
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
     // Process each imported item
