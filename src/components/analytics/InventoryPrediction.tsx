@@ -17,9 +17,10 @@ import { Badge } from "@/components/ui/badge";
 
 interface InventoryPredictionProps {
   sales: Sale[];
+  className?: string;
 }
 
-export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales }) => {
+export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales, className }) => {
   const stockPredictionData = useMemo(() => {
     // Count sales by product to determine popular items
     const productSales: Record<string, { name: string; count: number; itemId: string }> = {};
@@ -72,7 +73,7 @@ export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales 
   };
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Inventory Restock Prediction</span>

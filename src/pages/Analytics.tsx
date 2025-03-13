@@ -35,7 +35,7 @@ export default function Analytics() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <DemandForecast sales={sales} />
-              <InventoryPrediction sales={sales} />
+              <InventoryPrediction sales={sales} className="lg:col-span-2" />
             </div>
             
             <SeasonalTrends sales={sales} />

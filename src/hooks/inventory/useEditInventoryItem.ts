@@ -1,158 +1,90 @@
 
-import { useState, useEffect } from "react";
-import { InventoryItem } from "@/types/inventory";
-import { inventoryItems } from "@/data/inventoryData";
-import { toast } from "sonner";
+import { useState } from "react";
+import { useInventoryOperations } from "./useInventoryOperations";
+import { useInventoryReordering } from "./useInventoryReordering";
+import { InventoryItem, EditInventoryItemFormData } from "@/types/inventory";
+import { useToast } from "@/hooks/use-toast";
+import { useLocations } from "@/hooks/useLocations";
 
-export interface LocationStock {
-  location: string;
-  count: number;
-}
-
-export function useEditInventoryItem(item: InventoryItem) {
-  const [formData, setFormData] = useState<InventoryItem>(item);
-  const [isOpen, setIsOpen] = useState(false);
-  const [locationStocks, setLocationStocks] = useState<LocationStock[]>([]);
-  const [totalStock, setTotalStock] = useState(0);
-
-  // Update the form data when the dialog opens or when the item changes
-  useEffect(() => {
-    if (isOpen) {
-      console.log("Dialog opened, setting form data with item:", item);
-      setFormData({...item});
-      
-      try {
-        const sameSkuItems = inventoryItems.filter(
-          (inventoryItem) => inventoryItem.sku === item.sku
-        );
-        
-        const stockByLocation = sameSkuItems.reduce<{ [key: string]: number }>((acc, curr) => {
-          if (!acc[curr.location]) {
-            acc[curr.location] = 0;
-          }
-          acc[curr.location] += curr.stock;
-          return acc;
-        }, {});
-        
-        const locationStocksArray = Object.entries(stockByLocation).map(([location, count]) => ({
-          location,
-          count,
-        })).sort((a, b) => b.count - a.count);
-        
-        setLocationStocks(locationStocksArray);
-        
-        const total = locationStocksArray.reduce((sum, item) => sum + item.count, 0);
-        setTotalStock(total);
-        
-        // Fix: Convert totalStock to the correct type to match the InventoryItem type
-        setFormData(prev => ({
-          ...prev,
-          totalStock: total.toString() // Convert number to string to match expected type
-        }));
-        
-        console.log("Set location stocks:", locationStocksArray);
-        console.log("Set total stock:", total);
-      } catch (error) {
-        console.error("Error loading location stock data:", error);
-        toast.error("Failed to load stock distribution data");
-      }
-    }
-  }, [isOpen, item]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    console.log(`Form field changed: ${name} = ${value}`);
-    
-    // Convert numeric fields
-    let updatedValue = value;
-    if (name === 'cost' || name === 'rrp' || name === 'minStockCount' || name === 'stock') {
-      updatedValue = Number(value);
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: updatedValue
-    }));
-    
-    // If stock is manually updated (bypassing location stocks)
-    if (name === 'stock') {
-      const stockValue = Number(value);
-      console.log(`Stock directly changed to: ${stockValue}`);
-      
-      // Update the location stock for this item's location
-      if (locationStocks.length > 0) {
-        const currentLocation = formData.location;
-        handleLocationStockChange(currentLocation, stockValue);
-      }
-    }
-  };
-
+export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => void) => {
+  const { updateItem } = useInventoryOperations();
+  const { updateReorderQuantity } = useInventoryReordering();
+  const { locations } = useLocations();
+  const { toast } = useToast();
+  
+  const [locationStocks, setLocationStocks] = useState<{ location: string; count: number }[]>(
+    item?.locations?.map(loc => ({ 
+      location: loc.name, 
+      count: loc.stock 
+    })) || 
+    locations.map(loc => ({ 
+      location: loc.name, 
+      count: 0 
+    }))
+  );
+  
+  const [reorderQuantity, setReorderQuantity] = useState<number>(
+    item?.reorderQuantity || 0
+  );
+  
   const handleLocationStockChange = (location: string, newCount: number) => {
-    console.log(`Location stock change: ${location} = ${newCount}`);
-    
-    const updatedLocationStocks = locationStocks.map(locStock => 
-      locStock.location === location 
-        ? { ...locStock, count: newCount } 
-        : locStock
+    setLocationStocks(prev => 
+      prev.map(loc => 
+        loc.location === location ? { ...loc, count: newCount } : loc
+      )
     );
+  };
+  
+  const handleSubmit = (formData: EditInventoryItemFormData) => {
+    if (!item) return;
     
-    setLocationStocks(updatedLocationStocks);
+    // Calculate total stock from all locations
+    const totalStock = locationStocks.reduce((sum, loc) => sum + loc.count, 0);
     
-    const newTotal = updatedLocationStocks.reduce((sum, item) => sum + item.count, 0);
-    setTotalStock(newTotal);
-    
-    // Fix: Convert totalStock to string to match InventoryItem type
-    setFormData(prev => ({
-      ...prev,
-      totalStock: newTotal.toString(), // Convert to string
-      stock: prev.location === location ? newCount : prev.stock
+    // Map location stocks back to the format expected by the API
+    const updatedLocations = locationStocks.map(loc => ({
+      name: loc.location,
+      stock: loc.count
     }));
     
-    console.log("Updated location stocks:", updatedLocationStocks);
-    console.log("New total stock:", newTotal);
-    console.log("Updated form data:", formData);
-  };
-
-  const prepareItemsForSave = () => {
-    const sameSkuItems = inventoryItems.filter(
-      (inventoryItem) => inventoryItem.sku === item.sku
-    );
+    // Add totalStock to formData
+    const updatedFormData = {
+      ...formData,
+      stock: totalStock,
+      // Convert to string to fix the TypeScript error
+      totalStock: totalStock.toString()
+    };
     
-    // Create updated versions of all items with the same SKU
-    const updatedItems = sameSkuItems.map(inventoryItem => {
-      const locationData = locationStocks.find(
-        locStock => locStock.location === inventoryItem.location
-      );
+    // Update the item with the new data
+    try {
+      updateItem(item.id, updatedFormData, updatedLocations);
       
-      const updatedStock = locationData ? locationData.count : inventoryItem.stock;
-      console.log(`Preparing item ${inventoryItem.id} with stock: ${updatedStock}`);
+      // Also update reorder quantity if changed
+      if (reorderQuantity !== item.reorderQuantity) {
+        updateReorderQuantity(item.id, reorderQuantity);
+      }
       
-      return {
-        ...inventoryItem,
-        stock: updatedStock,
-        name: formData.name,
-        description: formData.description,
-        cost: formData.cost,
-        rrp: formData.rrp,
-        minStockCount: formData.minStockCount,
-        imageUrl: formData.imageUrl,
-        lastUpdated: new Date().toISOString()
-      };
-    });
-    
-    console.log("Prepared items for save:", updatedItems);
-    return updatedItems;
+      toast({
+        title: "Inventory Item Updated",
+        description: `${formData.name} has been successfully updated.`
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error("Error updating inventory item:", error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the inventory item.",
+        variant: "destructive"
+      });
+    }
   };
-
+  
   return {
-    formData,
-    setFormData,
-    isOpen,
-    setIsOpen,
     locationStocks,
-    totalStock,
-    handleChange,
+    reorderQuantity,
+    setReorderQuantity,
     handleLocationStockChange,
-    prepareItemsForSave
+    handleSubmit,
   };
-}
+};
