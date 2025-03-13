@@ -27,13 +27,13 @@ const navigation = [
   { name: "Inventory", href: "/inventory", icon: Box },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Purchases", href: "/purchases", icon: Truck },
-  { name: "Progress", href: "/progress", icon: Clock },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Sales", href: "/sales", icon: CircleDollarSign },
 ];
 
 // Admin section items
 const adminItems = [
+  { name: "Progress", href: "/progress", icon: Clock },
   { name: "Locations", href: "/locations", icon: Building2 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
