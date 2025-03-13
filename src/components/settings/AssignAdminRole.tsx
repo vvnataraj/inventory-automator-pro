@@ -3,31 +3,25 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AssignAdminRole() {
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
   
   const assignAdminRole = async () => {
+    if (!user) {
+      toast.error("You need to be logged in");
+      return;
+    }
+    
     try {
       setLoading(true);
       
-      // First we need to get the user ID from the email
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', 'macpherson.lucym@gmail.com')
-        .single();
+      // Use the current user's ID directly instead of looking it up by email
+      const userId = user.id;
       
-      if (userError) {
-        if (userError.code === 'PGRST116') {
-          toast.error('User not found with this email');
-        } else {
-          throw userError;
-        }
-        return;
-      }
-      
-      const userId = userData.id;
+      console.log("Current user ID:", userId);
       
       // Check if the admin role already exists for this user
       const { data: existingRole, error: checkError } = await supabase
@@ -57,7 +51,7 @@ export default function AssignAdminRole() {
         
         toast.success('Admin role assigned successfully!');
       } else {
-        toast.info('User already has admin role');
+        toast.info('You already have the admin role');
       }
     } catch (error) {
       console.error("Error assigning admin role:", error);
@@ -73,7 +67,7 @@ export default function AssignAdminRole() {
       disabled={loading}
       variant="destructive"
     >
-      {loading ? 'Assigning...' : 'Assign Admin Role to macpherson.lucym@gmail.com'}
+      {loading ? 'Assigning...' : 'Make Yourself Admin'}
     </Button>
   );
 }
