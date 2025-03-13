@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// The Slack channel webhook URL would typically be stored as a secret
-const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/YOUR_WEBHOOK_PATH";
+// The Slack channel webhook URL
+const SLACK_WEBHOOK_URL = "https://join.slack.com/share/enQtODU3OTQ0OTUxNDAwNy04MmNhNTkyOTVmZjQ0ZmRlOGI3Yjg3NDQ5M2QxYzE5NWZmZTRkZmE4ZGQ5YTM5NGQ3ZWQ1NmFkZTgwMzdiNzQ2";
 
 serve(async (req) => {
   // Handle CORS preflight requests
