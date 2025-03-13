@@ -6,11 +6,14 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { CategoryPieChart } from "@/components/dashboard/CategoryPieChart";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
 import { LeastProfitableItems } from "@/components/dashboard/LeastProfitableItems";
+import { RestockAlerts } from "@/components/dashboard/RestockAlerts"; 
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useSales } from "@/hooks/useSales";
 
 export default function Index() {
   const navigate = useNavigate();
   const { stats, categoryData } = useDashboardData();
+  const { sales } = useSales();
 
   const handleCardClick = (link: string | null) => {
     if (link) {
@@ -64,8 +67,13 @@ export default function Index() {
         <CategoryPieChart 
           data={categoryData} 
           onSliceClick={handlePieChartClick} 
+          className="lg:col-span-3"
         />
-        <RecentActivities />
+        <RestockAlerts 
+          sales={sales} 
+          className="lg:col-span-2" 
+        />
+        <RecentActivities className="lg:col-span-2" />
       </div>
       
       <div className="mt-6">
