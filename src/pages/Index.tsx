@@ -41,7 +41,7 @@ const getInitialStats = () => [
     value: "56",
     change: "+8%",
     icon: BarChart3,
-    link: null
+    link: "/orders"
   },
 ];
 
