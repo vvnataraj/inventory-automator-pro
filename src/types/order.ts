@@ -48,3 +48,45 @@ export interface Order {
   shippedAt?: string;
   deliveredAt?: string;
 }
+
+// Database specific type used when dealing with Supabase
+export interface OrderItemDB {
+  id: string;
+  orderid: string;
+  productid: string;
+  productname: string;
+  productsku: string;
+  productcost: number;
+  productimageurl?: string | null;
+  quantity: number;
+  price: number;
+  subtotal: number;
+  created_at: string;
+}
+
+// Database specific type used when dealing with Supabase
+export interface OrderDB {
+  id: string;
+  ordernumber: string;
+  customerid: string;
+  status: string;
+  total: number;
+  tax: number;
+  shipping: number;
+  discount?: number | null;
+  grandtotal: number;
+  paymentmethod: string;
+  shippingaddressline1: string;
+  shippingaddressline2?: string | null;
+  shippingaddresscity: string;
+  shippingaddressstate: string;
+  shippingaddresspostalcode: string;
+  shippingaddresscountry: string;
+  notes?: string | null;
+  createdat: string;
+  updatedat: string;
+  shippedat?: string | null;
+  deliveredat?: string | null;
+  created_at: string;
+  items?: OrderItemDB[];
+}

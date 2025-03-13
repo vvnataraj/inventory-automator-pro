@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { Sale, SaleItem, SaleStatus } from "@/types/sale";
+import { Sale, SaleDB, SaleItem, SaleItemDB, SaleStatus } from "@/types/sale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
 
-export function useSalesWithDB() {
+export function useSalesWithDB(page = 1, pageSize = 10, searchQuery = "") {
   const [sales, setSales] = useState<Sale[]>([]);
   const [totalSales, setTotalSales] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -16,28 +16,36 @@ export function useSalesWithDB() {
     try {
       setLoading(true);
       
-      const { data: salesData, error: salesError, count } = await supabase
+      let query = supabase
         .from('sales')
         .select(`
           *,
           items:sale_items(*)
-        `)
-        .order('date', { ascending: false });
+        `, { count: 'exact' })
+        .order('date', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+
+      if (searchQuery) {
+        query = query.or(`salenumber.ilike.%${searchQuery}%,customername.ilike.%${searchQuery}%`);
+      }
+      
+      const { data: salesData, error: salesError, count } = await query;
       
       if (salesError) {
         throw salesError;
       }
       
       if (!salesData) {
+        setSales([]);
+        setTotalSales(0);
         return;
       }
       
       // Transform data to match our Sale type
-      const transformedSales: Sale[] = salesData.map(sale => {
+      const transformedSales: Sale[] = salesData.map((saleDB: SaleDB) => {
         // Extract items from the joined data
-        const items = Array.isArray(sale.items) ? sale.items.map(item => ({
-          id: item.id,
-          inventoryItemId: item.inventoryItemId,
+        const items = Array.isArray(saleDB.items) ? saleDB.items.map((item: SaleItemDB) => ({
+          inventoryItemId: item.inventoryitemid,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
@@ -45,15 +53,15 @@ export function useSalesWithDB() {
         })) : [];
         
         return {
-          id: sale.id,
-          saleNumber: sale.saleNumber,
-          customerName: sale.customerName,
+          id: saleDB.id,
+          saleNumber: saleDB.salenumber,
+          customerName: saleDB.customername,
           items: items,
-          total: sale.total,
-          date: sale.date,
-          status: sale.status as SaleStatus,
-          paymentMethod: sale.paymentMethod,
-          notes: sale.notes || ''
+          total: saleDB.total,
+          date: saleDB.date,
+          status: saleDB.status as SaleStatus,
+          paymentMethod: saleDB.paymentmethod,
+          notes: saleDB.notes || ''
         };
       });
       
@@ -67,7 +75,7 @@ export function useSalesWithDB() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, pageSize, searchQuery]);
 
   useEffect(() => {
     fetchSales();
@@ -84,12 +92,12 @@ export function useSalesWithDB() {
         .from('sales')
         .insert({
           id: saleId,
-          saleNumber: newSale.saleNumber,
-          customerName: newSale.customerName,
+          salenumber: newSale.saleNumber,
+          customername: newSale.customerName,
           total: newSale.total,
           date: newSale.date,
           status: newSale.status,
-          paymentMethod: newSale.paymentMethod,
+          paymentmethod: newSale.paymentMethod,
           notes: newSale.notes
         });
       
@@ -98,8 +106,8 @@ export function useSalesWithDB() {
       // Insert all the sale items
       if (newSale.items && newSale.items.length > 0) {
         const saleItems = newSale.items.map(item => ({
-          saleId,
-          inventoryItemId: item.inventoryItemId,
+          saleid: saleId,
+          inventoryitemid: item.inventoryItemId,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
@@ -131,12 +139,12 @@ export function useSalesWithDB() {
       const { error: saleError } = await supabase
         .from('sales')
         .update({
-          saleNumber: updatedSale.saleNumber,
-          customerName: updatedSale.customerName,
+          salenumber: updatedSale.saleNumber,
+          customername: updatedSale.customerName,
           total: updatedSale.total,
           date: updatedSale.date,
           status: updatedSale.status,
-          paymentMethod: updatedSale.paymentMethod,
+          paymentmethod: updatedSale.paymentMethod,
           notes: updatedSale.notes
         })
         .eq('id', updatedSale.id);
@@ -147,15 +155,15 @@ export function useSalesWithDB() {
       const { error: deleteItemsError } = await supabase
         .from('sale_items')
         .delete()
-        .eq('saleId', updatedSale.id);
+        .eq('saleid', updatedSale.id);
       
       if (deleteItemsError) throw deleteItemsError;
       
       // Insert updated items
       if (updatedSale.items && updatedSale.items.length > 0) {
         const saleItems = updatedSale.items.map(item => ({
-          saleId: updatedSale.id,
-          inventoryItemId: item.inventoryItemId,
+          saleid: updatedSale.id,
+          inventoryitemid: item.inventoryItemId,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
@@ -222,6 +230,16 @@ export function useSalesWithDB() {
     totalSales,
     loading,
     error,
+    page,
+    setPage: (newPage: number) => {
+      if (newPage > 0) setLoading(true);
+      setPage(newPage);
+    },
+    pageSize,
+    setPageSize: (newPageSize: number) => {
+      setLoading(true);
+      setPageSize(newPageSize);
+    },
     fetchSales,
     addSale,
     updateSale,

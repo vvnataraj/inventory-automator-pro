@@ -1,61 +1,70 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { Purchase, PurchaseItem, PurchaseStatus } from "@/types/purchase";
+import { Purchase, PurchaseDB, PurchaseItem, PurchaseItemDB, PurchaseStatus } from "@/types/purchase";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
 
-export function usePurchasesWithDB() {
+export function usePurchasesWithDB(page = 1, searchQuery = "") {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [totalPurchases, setTotalPurchases] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const pageSize = 12; // Fixed page size for purchases
 
   // Fetch purchases from the database
   const fetchPurchases = useCallback(async () => {
     try {
       setLoading(true);
       
-      const { data: purchasesData, error: purchasesError, count } = await supabase
+      let query = supabase
         .from('purchases')
         .select(`
           *,
           items:purchase_items(*)
-        `)
-        .order('orderDate', { ascending: false });
+        `, { count: 'exact' })
+        .order('orderdate', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+
+      if (searchQuery) {
+        query = query.or(`ponumber.ilike.%${searchQuery}%,supplier.ilike.%${searchQuery}%`);
+      }
+      
+      const { data: purchasesData, error: purchasesError, count } = await query;
       
       if (purchasesError) {
         throw purchasesError;
       }
       
       if (!purchasesData) {
+        setPurchases([]);
+        setTotalPurchases(0);
         return;
       }
       
       // Transform data to match our Purchase type
-      const transformedPurchases: Purchase[] = purchasesData.map(purchase => {
+      const transformedPurchases: Purchase[] = purchasesData.map((purchaseDB: PurchaseDB) => {
         // Extract items from the joined data
-        const items = Array.isArray(purchase.items) ? purchase.items.map(item => ({
-          id: item.id,
-          itemId: item.itemId,
+        const items = Array.isArray(purchaseDB.items) ? purchaseDB.items.map((item: PurchaseItemDB) => ({
+          itemId: item.itemid,
           name: item.name,
           sku: item.sku,
           quantity: item.quantity,
-          unitCost: item.unitCost,
-          totalCost: item.totalCost
+          unitCost: item.unitcost,
+          totalCost: item.totalcost
         })) : [];
         
         return {
-          id: purchase.id,
-          poNumber: purchase.poNumber,
-          supplier: purchase.supplier,
+          id: purchaseDB.id,
+          poNumber: purchaseDB.ponumber,
+          supplier: purchaseDB.supplier,
           items: items,
-          status: purchase.status as PurchaseStatus,
-          totalCost: purchase.totalCost,
-          orderDate: purchase.orderDate,
-          expectedDeliveryDate: purchase.expectedDeliveryDate,
-          receivedDate: purchase.receivedDate,
-          notes: purchase.notes || ''
+          status: purchaseDB.status as PurchaseStatus,
+          totalCost: purchaseDB.totalcost,
+          orderDate: purchaseDB.orderdate,
+          expectedDeliveryDate: purchaseDB.expecteddeliverydate,
+          receivedDate: purchaseDB.receiveddate,
+          notes: purchaseDB.notes || ''
         };
       });
       
@@ -69,7 +78,7 @@ export function usePurchasesWithDB() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, searchQuery, pageSize]);
 
   useEffect(() => {
     fetchPurchases();
@@ -86,13 +95,13 @@ export function usePurchasesWithDB() {
         .from('purchases')
         .insert({
           id: purchaseId,
-          poNumber: newPurchase.poNumber,
+          ponumber: newPurchase.poNumber,
           supplier: newPurchase.supplier,
           status: newPurchase.status,
-          totalCost: newPurchase.totalCost,
-          orderDate: newPurchase.orderDate,
-          expectedDeliveryDate: newPurchase.expectedDeliveryDate,
-          receivedDate: newPurchase.receivedDate,
+          totalcost: newPurchase.totalCost,
+          orderdate: newPurchase.orderDate,
+          expecteddeliverydate: newPurchase.expectedDeliveryDate,
+          receiveddate: newPurchase.receivedDate,
           notes: newPurchase.notes
         });
       
@@ -101,13 +110,13 @@ export function usePurchasesWithDB() {
       // Insert all the purchase items
       if (newPurchase.items && newPurchase.items.length > 0) {
         const purchaseItems = newPurchase.items.map(item => ({
-          purchaseId,
-          itemId: item.itemId,
+          purchaseid: purchaseId,
+          itemid: item.itemId,
           name: item.name,
           sku: item.sku,
           quantity: item.quantity,
-          unitCost: item.unitCost,
-          totalCost: item.totalCost
+          unitcost: item.unitCost,
+          totalcost: item.totalCost
         }));
         
         const { error: itemsError } = await supabase
@@ -135,13 +144,13 @@ export function usePurchasesWithDB() {
       const { error: purchaseError } = await supabase
         .from('purchases')
         .update({
-          poNumber: updatedPurchase.poNumber,
+          ponumber: updatedPurchase.poNumber,
           supplier: updatedPurchase.supplier,
           status: updatedPurchase.status,
-          totalCost: updatedPurchase.totalCost,
-          orderDate: updatedPurchase.orderDate,
-          expectedDeliveryDate: updatedPurchase.expectedDeliveryDate,
-          receivedDate: updatedPurchase.receivedDate,
+          totalcost: updatedPurchase.totalCost,
+          orderdate: updatedPurchase.orderDate,
+          expecteddeliverydate: updatedPurchase.expectedDeliveryDate,
+          receiveddate: updatedPurchase.receivedDate,
           notes: updatedPurchase.notes
         })
         .eq('id', updatedPurchase.id);
@@ -152,20 +161,20 @@ export function usePurchasesWithDB() {
       const { error: deleteItemsError } = await supabase
         .from('purchase_items')
         .delete()
-        .eq('purchaseId', updatedPurchase.id);
+        .eq('purchaseid', updatedPurchase.id);
       
       if (deleteItemsError) throw deleteItemsError;
       
       // Insert updated items
       if (updatedPurchase.items && updatedPurchase.items.length > 0) {
         const purchaseItems = updatedPurchase.items.map(item => ({
-          purchaseId: updatedPurchase.id,
-          itemId: item.itemId,
+          purchaseid: updatedPurchase.id,
+          itemid: item.itemId,
           name: item.name,
           sku: item.sku,
           quantity: item.quantity,
-          unitCost: item.unitCost,
-          totalCost: item.totalCost
+          unitcost: item.unitCost,
+          totalcost: item.totalCost
         }));
         
         const { error: insertItemsError } = await supabase
@@ -210,14 +219,60 @@ export function usePurchasesWithDB() {
     }
   }, []);
 
+  // Update the status of a purchase
+  const updatePurchaseStatus = useCallback(async (purchaseId: string, status: PurchaseStatus) => {
+    try {
+      const updateData: Partial<PurchaseDB> = { status };
+      
+      // Add received date when status is "delivered"
+      if (status === 'delivered') {
+        updateData.receiveddate = new Date().toISOString();
+      }
+      
+      const { error } = await supabase
+        .from('purchases')
+        .update(updateData)
+        .eq('id', purchaseId);
+      
+      if (error) throw error;
+      
+      // Update the local state
+      setPurchases(prevPurchases => 
+        prevPurchases.map(purchase => {
+          if (purchase.id === purchaseId) {
+            return {
+              ...purchase,
+              status,
+              receivedDate: status === 'delivered' ? new Date().toISOString() : purchase.receivedDate
+            };
+          }
+          return purchase;
+        })
+      );
+      
+      toast.success(`Purchase order marked as ${status}`);
+      return true;
+    } catch (error) {
+      console.error("Error updating purchase status:", error);
+      toast.error("Failed to update purchase status");
+      return false;
+    }
+  }, []);
+
   return {
     purchases,
     totalPurchases,
     loading,
     error,
+    page,
+    setPage: (newPage: number) => {
+      if (newPage > 0) setLoading(true);
+      setPage(newPage);
+    },
     fetchPurchases,
     addPurchase,
     updatePurchase,
-    deletePurchase
+    deletePurchase,
+    updatePurchaseStatus
   };
 }
