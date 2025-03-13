@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Sale, SaleItem } from "@/types/sale";
 import { InventoryItem } from "@/types/inventory";
-import { CheckCircle, MinusCircle, PlusCircle, Search } from "lucide-react";
+import { CheckCircle } from "lucide-react";
+import { InventoryItemSelector } from "./InventoryItemSelector";
+import { SelectedItemsList } from "./SelectedItemsList";
 
 interface CreateSaleModalProps {
   isOpen: boolean;
@@ -121,100 +123,18 @@ export const CreateSaleModal: React.FC<CreateSaleModalProps> = ({
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label>Add Items</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search inventory items..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
+          <InventoryItemSelector 
+            inventoryItems={inventoryItems}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onAddItem={handleAddItem}
+          />
 
-          {inventoryItems.length > 0 && (
-            <div className="border rounded-md p-2 max-h-[200px] overflow-y-auto">
-              <h3 className="font-medium mb-2">Inventory Items</h3>
-              <div className="grid gap-2">
-                {inventoryItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between border-b pb-2 hover:bg-muted p-2 rounded-sm"
-                  >
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        ${item.cost.toFixed(2)} - Stock: {item.stock}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleAddItem(item)}
-                      disabled={item.stock <= 0}
-                    >
-                      <PlusCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {selectedItems.length > 0 && (
-            <div className="border rounded-md p-2">
-              <h3 className="font-medium mb-2">Selected Items</h3>
-              <div className="grid gap-2">
-                {selectedItems.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between border-b pb-2"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        ${item.price.toFixed(2)} x {item.quantity} = ${item.subtotal.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleQuantityChange(index, item.quantity - 1)}
-                      >
-                        <MinusCircle className="h-4 w-4" />
-                      </Button>
-                      <span>{item.quantity}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleQuantityChange(index, item.quantity + 1)}
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveItem(index)}
-                      >
-                        <MinusCircle className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                <div className="flex justify-between pt-2 font-bold">
-                  <span>Total:</span>
-                  <span>
-                    ${selectedItems
-                      .reduce((sum, item) => sum + item.subtotal, 0)
-                      .toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
+          <SelectedItemsList 
+            selectedItems={selectedItems}
+            onQuantityChange={handleQuantityChange}
+            onRemoveItem={handleRemoveItem}
+          />
         </div>
 
         <DialogFooter>
