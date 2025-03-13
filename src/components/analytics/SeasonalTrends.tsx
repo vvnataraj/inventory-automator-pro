@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AreaChart,
@@ -13,118 +13,22 @@ import {
   ReferenceLine
 } from "recharts";
 import { Sale } from "@/types/sale";
-import { parseISO, getMonth, format } from "date-fns";
+
+// Static seasonal data that won't change between reloads
+const staticSeasonalData = [
+  { month: "Jan", monthNum: 0, revenue: 8500, count: 172, avgOrderValue: 49.42, revenueTrend: 9100, avgOrderTrend: 50.32 },
+  { month: "Feb", monthNum: 1, revenue: 7900, count: 155, avgOrderValue: 50.97, revenueTrend: 9800, avgOrderTrend: 54.78 },
+  { month: "Mar", monthNum: 2, revenue: 9300, count: 175, avgOrderValue: 53.14, revenueTrend: 10500, avgOrderTrend: 59.24 },
+  { month: "Apr", monthNum: 3, revenue: 10600, count: 190, avgOrderValue: 55.79, revenueTrend: 11200, avgOrderTrend: 63.70 },
+  { month: "May", monthNum: 4, revenue: 11900, count: 205, avgOrderValue: 58.05, revenueTrend: 11900, avgOrderTrend: 68.16 },
+  { month: "Jun", monthNum: 5, revenue: 13100, count: 215, avgOrderValue: 60.93, revenueTrend: 12600, avgOrderTrend: 72.62 },
+];
 
 interface SeasonalTrendsProps {
   sales: Sale[];
 }
 
 export const SeasonalTrends: React.FC<SeasonalTrendsProps> = ({ sales }) => {
-  const seasonalData = useMemo(() => {
-    // Group sales by month
-    const monthlyData: Record<number, { 
-      month: string, 
-      monthNum: number,
-      revenue: number, 
-      count: number,
-      avgOrderValue: number,
-      revenueTrend?: number, // Add these properties to fix TS errors
-      avgOrderTrend?: number
-    }> = {};
-    
-    // Initialize months - use only past months, not future
-    const currentMonth = new Date().getMonth();
-    
-    // Create data for past months only
-    for (let i = 0; i <= currentMonth; i++) {
-      const date = new Date(new Date().getFullYear(), i, 1);
-      monthlyData[i] = { 
-        month: format(date, 'MMM'), 
-        monthNum: i,
-        revenue: 0, 
-        count: 0,
-        avgOrderValue: 0 
-      };
-    }
-    
-    // Aggregate sales data by month
-    sales.forEach(sale => {
-      const saleDate = parseISO(sale.date);
-      const month = getMonth(saleDate);
-      
-      if (monthlyData[month]) {
-        monthlyData[month].revenue += sale.total;
-        monthlyData[month].count += 1;
-      }
-    });
-    
-    // Calculate average order value
-    Object.values(monthlyData).forEach(data => {
-      data.avgOrderValue = data.count > 0 ? data.revenue / data.count : 0;
-    });
-    
-    // Convert to array and sort by month number
-    let monthArray = Object.values(monthlyData).sort((a, b) => a.monthNum - b.monthNum);
-    
-    // Apply realistic data adjustments
-    for (let i = 0; i < monthArray.length; i++) {
-      // Make sure we have some data even if sales data is empty
-      monthArray[i].revenue = Math.max(1000 + (i * 500), monthArray[i].revenue);
-      monthArray[i].avgOrderValue = Math.max(50 + (i * 5), monthArray[i].avgOrderValue);
-      
-      // Create a slight seasonal pattern in the data
-      const seasonFactor = 1 + 0.2 * Math.sin((i / 11) * Math.PI * 2);
-      monthArray[i].revenue *= seasonFactor;
-    }
-    
-    // Calculate trend line values using simple linear regression
-    const totalMonths = monthArray.length;
-    
-    if (totalMonths > 1) {
-      const xValues = monthArray.map((_, i) => i);
-      const yRevenueValues = monthArray.map(item => item.revenue);
-      const yAOVValues = monthArray.map(item => item.avgOrderValue);
-      
-      // Calculate revenue trend line
-      const xMean = xValues.reduce((sum, x) => sum + x, 0) / totalMonths;
-      const yRevenueMean = yRevenueValues.reduce((sum, y) => sum + y, 0) / totalMonths;
-      
-      let numerator = 0;
-      let denominator = 0;
-      
-      for (let i = 0; i < totalMonths; i++) {
-        numerator += (xValues[i] - xMean) * (yRevenueValues[i] - yRevenueMean);
-        denominator += Math.pow(xValues[i] - xMean, 2);
-      }
-      
-      const revenueSlope = denominator !== 0 ? numerator / denominator : 0;
-      const revenueIntercept = yRevenueMean - (revenueSlope * xMean);
-      
-      // Calculate AOV trend line
-      const yAOVMean = yAOVValues.reduce((sum, y) => sum + y, 0) / totalMonths;
-      
-      numerator = 0;
-      denominator = 0;
-      
-      for (let i = 0; i < totalMonths; i++) {
-        numerator += (xValues[i] - xMean) * (yAOVValues[i] - yAOVMean);
-        denominator += Math.pow(xValues[i] - xMean, 2);
-      }
-      
-      const aovSlope = denominator !== 0 ? numerator / denominator : 0;
-      const aovIntercept = yAOVMean - (aovSlope * xMean);
-      
-      // Add trend line data points
-      monthArray = monthArray.map((item, index) => ({
-        ...item,
-        revenueTrend: revenueIntercept + (revenueSlope * index),
-        avgOrderTrend: aovIntercept + (aovSlope * index)
-      }));
-    }
-    
-    return monthArray;
-  }, [sales]);
-
   return (
     <Card>
       <CardHeader>
@@ -134,7 +38,7 @@ export const SeasonalTrends: React.FC<SeasonalTrendsProps> = ({ sales }) => {
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={seasonalData}
+              data={staticSeasonalData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
               <defs>
@@ -185,30 +89,26 @@ export const SeasonalTrends: React.FC<SeasonalTrendsProps> = ({ sales }) => {
                 fill="url(#colorAvgOrder)"
                 fillOpacity={0.3}
               />
-              {seasonalData.length > 1 && (
-                <>
-                  <ReferenceLine 
-                    yAxisId="left"
-                    stroke="#ff7300" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5" 
-                    segment={[
-                      { x: seasonalData[0].month, y: seasonalData[0].revenueTrend },
-                      { x: seasonalData[seasonalData.length-1].month, y: seasonalData[seasonalData.length-1].revenueTrend }
-                    ]} 
-                  />
-                  <ReferenceLine 
-                    yAxisId="right"
-                    stroke="#2e4783" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5" 
-                    segment={[
-                      { x: seasonalData[0].month, y: seasonalData[0].avgOrderTrend },
-                      { x: seasonalData[seasonalData.length-1].month, y: seasonalData[seasonalData.length-1].avgOrderTrend }
-                    ]} 
-                  />
-                </>
-              )}
+              <ReferenceLine 
+                yAxisId="left"
+                stroke="#ff7300" 
+                strokeWidth={2}
+                strokeDasharray="5 5" 
+                segment={[
+                  { x: staticSeasonalData[0].month, y: staticSeasonalData[0].revenueTrend },
+                  { x: staticSeasonalData[staticSeasonalData.length-1].month, y: staticSeasonalData[staticSeasonalData.length-1].revenueTrend }
+                ]} 
+              />
+              <ReferenceLine 
+                yAxisId="right"
+                stroke="#2e4783" 
+                strokeWidth={2}
+                strokeDasharray="5 5" 
+                segment={[
+                  { x: staticSeasonalData[0].month, y: staticSeasonalData[0].avgOrderTrend },
+                  { x: staticSeasonalData[staticSeasonalData.length-1].month, y: staticSeasonalData[staticSeasonalData.length-1].avgOrderTrend }
+                ]} 
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>

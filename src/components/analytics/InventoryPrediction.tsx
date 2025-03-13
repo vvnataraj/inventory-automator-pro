@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   BarChart, 
@@ -15,66 +16,26 @@ import {
 import { Sale } from "@/types/sale";
 import { Badge } from "@/components/ui/badge";
 
+// Static prediction data that won't change between reloads
+const staticStockPredictionData = [
+  { name: "Premium Drill Set", currentStock: 5, daysUntilRestock: 5, stockStatus: 'critical', fullName: "Premium Drill Set", itemId: "inv-101" },
+  { name: "Socket Wrench Kit", currentStock: 10, daysUntilRestock: 10, stockStatus: 'warning', fullName: "Socket Wrench Kit", itemId: "inv-102" },
+  { name: "Cordless Saw", currentStock: 12, daysUntilRestock: 10, stockStatus: 'warning', fullName: "Cordless Saw", itemId: "inv-103" },
+  { name: "Paint Sprayer", currentStock: 15, daysUntilRestock: 12, stockStatus: 'warning', fullName: "Paint Sprayer", itemId: "inv-104" },
+  { name: "Power Sander", currentStock: 18, daysUntilRestock: 15, stockStatus: 'good', fullName: "Power Sander", itemId: "inv-105" },
+  { name: "Hammer Drill", currentStock: 22, daysUntilRestock: 18, stockStatus: 'good', fullName: "Hammer Drill", itemId: "inv-106" },
+  { name: "Measuring Tape", currentStock: 35, daysUntilRestock: 25, stockStatus: 'good', fullName: "Measuring Tape", itemId: "inv-107" },
+  { name: "Wood Screws (Box)", currentStock: 42, daysUntilRestock: 28, stockStatus: 'good', fullName: "Wood Screws (Box of 100)", itemId: "inv-108" },
+  { name: "Paint Brushes", currentStock: 38, daysUntilRestock: 30, stockStatus: 'good', fullName: "Paint Brushes Set", itemId: "inv-109" },
+  { name: "Utility Knife", currentStock: 45, daysUntilRestock: 30, stockStatus: 'good', fullName: "Utility Knife", itemId: "inv-110" },
+];
+
 interface InventoryPredictionProps {
   sales: Sale[];
   className?: string;
 }
 
 export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales, className }) => {
-  const stockPredictionData = useMemo(() => {
-    // Count sales by product to determine popular items
-    const productSales: Record<string, { name: string; count: number; itemId: string }> = {};
-    
-    sales.forEach(sale => {
-      sale.items.forEach(item => {
-        const name = item.name;
-        if (!productSales[name]) {
-          productSales[name] = { name, count: 0, itemId: item.inventoryItemId };
-        }
-        productSales[name].count += item.quantity;
-      });
-    });
-    
-    // Convert to array and sort by count
-    const sortedProducts = Object.values(productSales)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10); // Top 10 products
-    
-    // Add specific products with critical and warning levels
-    const predictionData = sortedProducts.map((product, index) => {
-      // Calculate daily sales rate (assuming sales data is for last 30 days)
-      const dailyRate = product.count / 30;
-      
-      // Set specific stock levels for demonstration
-      let currentStock = Math.floor(Math.random() * 50) + 5;
-      let daysUntilRestock = dailyRate > 0 ? Math.floor(currentStock / dailyRate) : 100;
-      
-      // Ensure we have some items at each warning level
-      if (index === 0) {
-        // First item: critical (less than 7 days)
-        currentStock = Math.max(1, Math.floor(dailyRate * 5));
-        daysUntilRestock = 5;
-      } else if (index === 1 || index === 2) {
-        // Second and third items: warning (less than 14 days)
-        currentStock = Math.max(1, Math.floor(dailyRate * 10));
-        daysUntilRestock = 10;
-      }
-      
-      return {
-        name: product.name.length > 20 ? product.name.substring(0, 20) + '...' : product.name,
-        currentStock,
-        daysUntilRestock: Math.min(daysUntilRestock, 30), // Cap at 30 days
-        stockStatus: daysUntilRestock <= 7 ? 'critical' : daysUntilRestock <= 14 ? 'warning' : 'good',
-        fullName: product.name,
-        itemId: product.itemId
-      };
-    });
-    
-    // Sort by days until restock (ascending)
-    return predictionData.sort((a, b) => a.daysUntilRestock - b.daysUntilRestock);
-    
-  }, [sales]);
-
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'critical': return '#ef4444'; // Red
@@ -106,7 +67,7 @@ export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales,
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={stockPredictionData}
+              data={staticStockPredictionData}
               layout="vertical"
               margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
               barSize={20}
@@ -148,7 +109,7 @@ export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales,
                   style={{ fontSize: '11px', fill: '#333' }}
                 />
                 {
-                  stockPredictionData.map((entry, index) => (
+                  staticStockPredictionData.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={getStatusColor(entry.stockStatus)}

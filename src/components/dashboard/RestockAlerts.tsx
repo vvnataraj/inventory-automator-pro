@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -15,55 +15,9 @@ interface RestockAlertsProps {
 export const RestockAlerts: React.FC<RestockAlertsProps> = ({ sales, className }) => {
   const navigate = useNavigate();
   
-  const { criticalCount, warningCount } = useMemo(() => {
-    // Logic similar to InventoryPrediction component
-    const productSales: Record<string, { name: string; count: number }> = {};
-    
-    sales.forEach(sale => {
-      sale.items.forEach(item => {
-        const name = item.name;
-        if (!productSales[name]) {
-          productSales[name] = { name, count: 0 };
-        }
-        productSales[name].count += item.quantity;
-      });
-    });
-    
-    // Convert to array and sort by count
-    const sortedProducts = Object.values(productSales)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10); // Top 10 products
-    
-    // Calculate critical and warning counts
-    let criticalCount = 0;
-    let warningCount = 0;
-    
-    sortedProducts.forEach((product, index) => {
-      // Calculate daily sales rate (assuming sales data is for last 30 days)
-      const dailyRate = product.count / 30;
-      
-      // Set specific stock levels for demonstration
-      let currentStock = Math.floor(Math.random() * 50) + 5;
-      let daysUntilRestock = dailyRate > 0 ? Math.floor(currentStock / dailyRate) : 100;
-      
-      // Ensure we have specific distribution for demo purposes
-      if (index === 0) {
-        // First item is critical
-        currentStock = Math.max(1, Math.floor(dailyRate * 5));
-        daysUntilRestock = 5;
-        criticalCount++;
-      } else if (index === 1 || index === 2 || index === 3) {
-        // Next three items are warnings
-        currentStock = Math.max(1, Math.floor(dailyRate * 10));
-        daysUntilRestock = 10;
-        warningCount++;
-      }
-    });
-    
-    // Override counts to match the requirements (1 critical, 3 warnings)
-    return { criticalCount: 1, warningCount: 3 };
-    
-  }, [sales]);
+  // Static values that won't change on refresh
+  const criticalCount = 1;
+  const warningCount = 3;
   
   const handleViewDetails = () => {
     navigate("/analytics");

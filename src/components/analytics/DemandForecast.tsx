@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
@@ -14,107 +14,26 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Sale } from "@/types/sale";
-import { format, addMonths, parseISO, startOfMonth, getMonth, subMonths } from "date-fns";
+
+// Static forecast data that won't change between reloads
+const staticForecastData = [
+  { month: "Jan 2024", actual: 8525, forecast: undefined, date: new Date(2024, 0, 1) },
+  { month: "Feb 2024", actual: 7845, forecast: undefined, date: new Date(2024, 1, 1) },
+  { month: "Mar 2024", actual: 9275, forecast: undefined, date: new Date(2024, 2, 1) },
+  { month: "Apr 2024", actual: 10547, forecast: undefined, date: new Date(2024, 3, 1) },
+  { month: "May 2024", actual: 11823, forecast: undefined, date: new Date(2024, 4, 1) },
+  { month: "Jun 2024", actual: 13198, forecast: undefined, date: new Date(2024, 5, 1) },
+  { month: "Jul 2024", forecast: 14253, actual: undefined, date: new Date(2024, 6, 1) },
+  { month: "Aug 2024", forecast: 15963, actual: undefined, date: new Date(2024, 7, 1) },
+  { month: "Sep 2024", forecast: 18357, actual: undefined, date: new Date(2024, 8, 1) },
+];
 
 interface DemandForecastProps {
   sales: Sale[];
 }
 
 export const DemandForecast: React.FC<DemandForecastProps> = ({ sales }) => {
-  // Generate forecast data based on historical sales
-  const forecastData = useMemo(() => {
-    // Get actual sales data for the last 6 months
-    const monthlyData: Record<string, { month: string, actual: number, date: Date }> = {};
-    
-    // Initialize with last 6 months
-    const today = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const date = startOfMonth(subMonths(today, i));
-      const monthKey = format(date, 'MMM yyyy');
-      monthlyData[monthKey] = { month: monthKey, actual: 0, date };
-    }
-    
-    // Populate with actual sales data
-    sales.forEach(sale => {
-      const saleDate = parseISO(sale.date);
-      const monthKey = format(saleDate, 'MMM yyyy');
-      
-      if (monthlyData[monthKey]) {
-        monthlyData[monthKey].actual += sale.total;
-      }
-    });
-
-    // Convert to array and sort by date
-    const sortedData = Object.values(monthlyData).sort((a, b) => 
-      a.date.getTime() - b.date.getTime()
-    );
-    
-    // Create realistic historical data with seasonal patterns
-    // Base values for revenue that show a realistic business pattern
-    const baseValues = [
-      8500,  // 6 months ago
-      7800,  // 5 months ago
-      9200,  // 4 months ago
-      10500, // 3 months ago
-      11800, // 2 months ago
-      13200  // Last month
-    ];
-    
-    // Apply seasonality and ensure we have an overall upward trend
-    for (let i = 0; i < sortedData.length; i++) {
-      // Use base value or actual data, whichever is higher to ensure good data
-      sortedData[i].actual = Math.max(
-        baseValues[i], 
-        sortedData[i].actual > 0 ? sortedData[i].actual : baseValues[i]
-      );
-      
-      // Add a small random fluctuation (±5%)
-      const fluctuation = 1 + ((Math.random() * 0.1) - 0.05);
-      sortedData[i].actual *= fluctuation;
-      
-      // Ensure the overall trend is slightly upward
-      if (i > 0 && sortedData[i].actual < sortedData[i-1].actual * 0.95) {
-        sortedData[i].actual = sortedData[i-1].actual * (1 + (Math.random() * 0.1));
-      }
-    }
-    
-    // Generate forecast for next 3 months based on historical data
-    const forecast = [];
-    
-    // Use more sophisticated forecasting logic for realistic predictions
-    // Last value as starting point
-    let lastValue = sortedData[sortedData.length - 1].actual;
-    
-    // Month-over-month growth rates for the forecast (realistic business growth)
-    const growthRates = [0.08, 0.12, 0.15]; // 8%, 12%, 15% - increasing optimism
-    
-    // Generate the 3-month forecast with realistic growth
-    for (let i = 1; i <= 3; i++) {
-      const nextDate = addMonths(sortedData[sortedData.length - 1].date, i);
-      const nextMonth = format(nextDate, 'MMM yyyy');
-      
-      // Apply the growth rate for this month
-      const growthRate = growthRates[i-1]; 
-      lastValue = lastValue * (1 + growthRate);
-      
-      // Add some realistic variability (±3%)
-      const variability = 1 + ((Math.random() * 0.06) - 0.03);
-      
-      forecast.push({
-        month: nextMonth,
-        forecast: Math.round(lastValue * variability * 100) / 100,
-        actual: undefined,
-        date: nextDate
-      });
-    }
-    
-    // Combine historical and forecast data
-    return sortedData.map(item => ({
-      ...item,
-      forecast: undefined
-    })).concat(forecast);
-  }, [sales]);
-
+  // Using the static data instead of generating it dynamically
   return (
     <Card className="col-span-2">
       <CardHeader>
@@ -138,7 +57,7 @@ export const DemandForecast: React.FC<DemandForecastProps> = ({ sales }) => {
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={forecastData}
+              data={staticForecastData}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
