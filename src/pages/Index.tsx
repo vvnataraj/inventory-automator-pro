@@ -1,10 +1,10 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Box, DollarSign, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { inventoryItems } from "@/data/inventoryData";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const getInitialStats = () => [
   {
@@ -40,23 +40,20 @@ const getInitialStats = () => [
 export default function Index() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(getInitialStats());
+  const [categoryData, setCategoryData] = useState<{ name: string; value: number }[]>([]);
 
   useEffect(() => {
-    // Calculate total inventory value based on RRP
     const calculateTotalInventoryValue = () => {
       const totalValue = inventoryItems.reduce((sum, item) => {
-        // Use RRP if available, or price as fallback
         const itemValue = (item.rrp || item.price || 0) * item.stock;
         return sum + itemValue;
       }, 0);
       
-      // Format the value with commas for thousands and 2 decimal places
       const formattedValue = `$${totalValue.toLocaleString('en-US', { 
         minimumFractionDigits: 2,
         maximumFractionDigits: 2 
       })}`;
       
-      // Update the stats array with the calculated value
       setStats(prevStats => prevStats.map(stat => 
         stat.name === "Total Inventory" 
           ? { ...stat, value: formattedValue } 
@@ -64,7 +61,25 @@ export default function Index() {
       ));
     };
 
+    const calculateCategoryValues = () => {
+      const categoryValues = inventoryItems.reduce((acc, item) => {
+        const category = item.category;
+        const itemValue = (item.rrp || item.price || 0) * item.stock;
+        
+        acc[category] = (acc[category] || 0) + itemValue;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const data = Object.entries(categoryValues).map(([name, value]) => ({
+        name,
+        value: Number(value.toFixed(2))
+      }));
+
+      setCategoryData(data);
+    };
+
     calculateTotalInventoryValue();
+    calculateCategoryValues();
   }, []);
 
   const handleCardClick = (link: string | null) => {
@@ -72,6 +87,8 @@ export default function Index() {
       navigate(link);
     }
   };
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 
   return (
     <MainLayout>
@@ -112,11 +129,33 @@ export default function Index() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mt-6">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Inventory Overview</CardTitle>
+            <CardTitle>Inventory by Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Chart will be implemented in next iteration
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: $${value.toLocaleString()}`}
+                  >
+                    {categoryData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
