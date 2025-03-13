@@ -35,8 +35,8 @@ export const PackingSlipDialog = ({ open, onClose, transferData }: PackingSlipDi
     onPrintError: (error) => console.error('Print failed', error),
     pageStyle: "@page { size: auto; margin: 10mm; }",
     onAfterPrint: () => console.log('Print completed'),
-    // Use function to return content
-    content: () => printRef.current
+    // Specify contentRef function instead of content directly
+    contentRef: () => printRef.current
   });
   
   const generatePDF = () => {
@@ -160,7 +160,7 @@ export const PackingSlipDialog = ({ open, onClose, transferData }: PackingSlipDi
             Close
           </Button>
           <Button 
-            onClick={() => handlePrint()} 
+            onClick={handlePrint} 
             className="gap-2"
           >
             <Printer className="h-4 w-4" />
