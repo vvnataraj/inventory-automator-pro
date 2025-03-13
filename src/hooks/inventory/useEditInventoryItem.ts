@@ -2,17 +2,17 @@
 import { useState } from "react";
 import { useInventoryOperations } from "./useInventoryOperations";
 import { useInventoryReordering } from "./useInventoryReordering";
-import { InventoryItem, EditInventoryItemFormData } from "@/types/inventory";
+import { InventoryItem, EditInventoryItemFormData, LocationStock } from "@/types/inventory";
 import { useToast } from "@/hooks/use-toast";
 import { useLocations } from "@/hooks/useLocations";
 
 export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => void) => {
   const { updateItem } = useInventoryOperations();
-  const { updateReorderQuantity } = useInventoryReordering();
+  const { reorderStock } = useInventoryReordering();
   const { locations } = useLocations();
   const { toast } = useToast();
   
-  const [locationStocks, setLocationStocks] = useState<{ location: string; count: number }[]>(
+  const [locationStocks, setLocationStocks] = useState<LocationStock[]>(
     item?.locations?.map(loc => ({ 
       location: loc.name, 
       count: loc.stock 
@@ -57,11 +57,11 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
     
     // Update the item with the new data
     try {
-      updateItem(item.id, updatedFormData, updatedLocations);
+      updateItem(item.id, updatedFormData);
       
       // Also update reorder quantity if changed
       if (reorderQuantity !== item.reorderQuantity) {
-        updateReorderQuantity(item.id, reorderQuantity);
+        reorderStock(item, reorderQuantity);
       }
       
       toast({
