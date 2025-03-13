@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Table, 
@@ -20,7 +19,6 @@ interface LocationsTableProps {
     totalUnits: number;
     stockValue: number;
     spaceUtilization: number;
-    phoneNumber?: string;
   }>;
   onEdit: (location: any) => void;
   onDelete: (locationId: string) => void;
@@ -36,7 +34,6 @@ export function LocationsTable({ locations, onEdit, onDelete, onCall }: Location
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Phone</TableHead>
               <TableHead>Item Count</TableHead>
               <TableHead>Total Units</TableHead>
               <TableHead>Stock Value</TableHead>
@@ -49,23 +46,6 @@ export function LocationsTable({ locations, onEdit, onDelete, onCall }: Location
               <TableRow key={location.id}>
                 <TableCell className="font-medium">{location.name}</TableCell>
                 <TableCell>{location.type}</TableCell>
-                <TableCell>
-                  {location.phoneNumber ? (
-                    <div className="flex items-center gap-2">
-                      <span>{location.phoneNumber}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
-                        onClick={() => onCall(location.phoneNumber || "")}
-                      >
-                        <Phone className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground italic">None</span>
-                  )}
-                </TableCell>
                 <TableCell>{location.itemCount}</TableCell>
                 <TableCell>{location.totalUnits}</TableCell>
                 <TableCell>${location.stockValue.toLocaleString()}</TableCell>

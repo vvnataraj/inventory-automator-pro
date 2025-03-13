@@ -11,17 +11,14 @@ interface Location {
   totalUnits: number;
   stockValue: number;
   spaceUtilization: number;
-  phoneNumber?: string;
-  address?: string; // Adding this since it appears in locationsData
+  address?: string; // Keeping address as it appears in locationsData
 }
 
 export function useLocations() {
-  // Initialize locations with the data, ensuring each has a default phone number if not provided
+  // Initialize locations with the data
   const [locations, setLocations] = useState<Location[]>(
     locationsData.map(location => ({
-      ...location,
-      // Only add phoneNumber if it wasn't already present
-      phoneNumber: location.phoneNumber ?? ""
+      ...location
     }))
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +32,6 @@ export function useLocations() {
       totalUnits: 0,
       stockValue: 0,
       spaceUtilization: locationData.spaceUtilization,
-      phoneNumber: locationData.phoneNumber || "",
     };
     
     setLocations(prev => [...prev, newLocation]);
@@ -51,7 +47,6 @@ export function useLocations() {
               name: locationData.name, 
               type: locationData.type, 
               spaceUtilization: locationData.spaceUtilization,
-              phoneNumber: locationData.phoneNumber || location.phoneNumber || "", 
             } 
           : location
       )

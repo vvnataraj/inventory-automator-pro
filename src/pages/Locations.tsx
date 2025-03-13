@@ -1,10 +1,8 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useLocations } from "@/hooks/useLocations";
 import { EditLocationModal } from "@/components/locations/EditLocationModal";
 import { ListControls, ViewMode } from "@/components/common/ListControls";
-import { toast } from "@/components/ui/use-toast";
 import { LocationCard } from "@/components/locations/LocationCard";
 import { LocationsTable } from "@/components/locations/LocationsTable";
 import { EmptyLocationsState } from "@/components/locations/EmptyLocationsState";
@@ -49,25 +47,7 @@ export default function Locations() {
   };
 
   const handleCall = (phoneNumber: string) => {
-    if (!phoneNumber) {
-      toast({
-        title: "No phone number",
-        description: "This location doesn't have a phone number set.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Format the phone number for dialing
-    const formattedNumber = phoneNumber.replace(/[^\d+]/g, '');
-    
-    // Create a link to initiate a call
-    window.location.href = `tel:${formattedNumber}`;
-    
-    toast({
-      title: "Initiating call",
-      description: `Calling ${phoneNumber}`,
-    });
+    // No-op function as we're removing phone number functionality
   };
 
   const handleSort = (field: string) => {

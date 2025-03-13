@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Building2, Phone } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +20,6 @@ interface LocationCardProps {
     totalUnits: number;
     stockValue: number;
     spaceUtilization: number;
-    phoneNumber?: string;
   };
   onEdit: (location: any) => void;
   onDelete: (locationId: string) => void;
@@ -39,22 +38,6 @@ export function LocationCard({ location, onEdit, onDelete, onCall }: LocationCar
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {location.phoneNumber && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Phone:</span>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{location.phoneNumber}</span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
-                  onClick={() => onCall(location.phoneNumber || "")}
-                >
-                  <Phone className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          )}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Stock Items:</span>
             <span className="font-medium">{location.itemCount}</span>
