@@ -44,9 +44,10 @@ export function useEditInventoryItem(item: InventoryItem) {
         const total = locationStocksArray.reduce((sum, item) => sum + item.count, 0);
         setTotalStock(total);
         
+        // Fix: Convert totalStock to the correct type to match the InventoryItem type
         setFormData(prev => ({
           ...prev,
-          totalStock: total
+          totalStock: total.toString() // Convert number to string to match expected type
         }));
         
         console.log("Set location stocks:", locationStocksArray);
@@ -100,10 +101,10 @@ export function useEditInventoryItem(item: InventoryItem) {
     const newTotal = updatedLocationStocks.reduce((sum, item) => sum + item.count, 0);
     setTotalStock(newTotal);
     
-    // Update the form data stock if this is the current item's location
+    // Fix: Convert totalStock to string to match InventoryItem type
     setFormData(prev => ({
       ...prev,
-      totalStock: newTotal,
+      totalStock: newTotal.toString(), // Convert to string
       stock: prev.location === location ? newCount : prev.stock
     }));
     

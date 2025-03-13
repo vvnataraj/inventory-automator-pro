@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -117,7 +116,13 @@ export const DemandForecast: React.FC<DemandForecastProps> = ({ sales }) => {
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip 
-                formatter={(value) => value ? [`$${value.toFixed(2)}`, "Revenue"] : ["N/A", "Revenue"]} 
+                formatter={(value) => {
+                  if (value === undefined || value === null) {
+                    return ["N/A", "Revenue"];
+                  }
+                  // Ensure value is a number before calling toFixed
+                  return [`$${typeof value === 'number' ? value.toFixed(2) : value}`, "Revenue"];
+                }} 
               />
               <Legend />
               <Line

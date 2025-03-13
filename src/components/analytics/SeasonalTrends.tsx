@@ -77,8 +77,14 @@ export const SeasonalTrends: React.FC<SeasonalTrendsProps> = ({ sales }) => {
               <YAxis yAxisId="left" />
               <YAxis yAxisId="right" orientation="right" />
               <Tooltip formatter={(value, name) => {
-                if (name === "revenue") return [`$${value.toFixed(2)}`, "Revenue"];
-                if (name === "avgOrderValue") return [`$${value.toFixed(2)}`, "Avg Order Value"];
+                if (name === "revenue") {
+                  // Ensure value is a number before calling toFixed
+                  return [`$${typeof value === 'number' ? value.toFixed(2) : value}`, "Revenue"];
+                }
+                if (name === "avgOrderValue") {
+                  // Ensure value is a number before calling toFixed
+                  return [`$${typeof value === 'number' ? value.toFixed(2) : value}`, "Avg Order Value"];
+                }
                 return [value, name];
               }} />
               <Legend />
