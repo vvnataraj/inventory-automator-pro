@@ -14,6 +14,13 @@ export function useInventoryOperations() {
     try {
       console.log("Updating inventory item:", updatedItem);
       
+      // Calculate total stock from all locations if available
+      if (updatedItem.locations && updatedItem.locations.length > 0) {
+        const totalStock = updatedItem.locations.reduce((sum, loc) => sum + loc.stock, 0);
+        console.log(`Calculated total stock from all locations: ${totalStock}`);
+        updatedItem.stock = totalStock;
+      }
+      
       // Ensure lastUpdated is set to current time
       const itemToUpdate = {
         ...updatedItem,

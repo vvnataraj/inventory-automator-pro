@@ -46,13 +46,14 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
   });
   
   const [reorderQuantity, setReorderQuantity] = useState<number>(
-    item?.reorderQuantity || 0
+    item?.reorderQuantity || item?.minStockCount || 0
   );
   
   // Calculate total stock from all locations
   const totalStock = locationStocks.reduce((sum, loc) => sum + loc.count, 0);
   
   const handleLocationStockChange = (location: string, newCount: number) => {
+    console.log(`Location stock change: ${location} = ${newCount}`);
     setLocationStocks(prev => 
       prev.map(loc => 
         loc.location === location ? { ...loc, count: newCount } : loc
@@ -80,9 +81,12 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
       stock: loc.count
     }));
     
+    // Calculate total stock from all locations
+    const totalStockFromLocations = locationStocks.reduce((sum, loc) => sum + loc.count, 0);
+    
     const updatedItem = {
       ...formData,
-      stock: totalStock,
+      stock: totalStockFromLocations, // Update total stock based on sum of locations
       locations: updatedLocations,
       lastUpdated: new Date().toISOString()
     };
@@ -94,7 +98,7 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
     if (!item) return;
     
     // Calculate total stock from all locations
-    const totalStock = locationStocks.reduce((sum, loc) => sum + loc.count, 0);
+    const totalStockFromLocations = locationStocks.reduce((sum, loc) => sum + loc.count, 0);
     
     // Map location stocks back to the format expected by the API
     const updatedLocations = locationStocks.map(loc => ({
@@ -105,9 +109,9 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
     // Add totalStock to formData
     const updatedFormData = {
       ...formData,
-      stock: totalStock,
+      stock: totalStockFromLocations, // Update total stock based on sum of locations
       // Convert to string to fix the TypeScript error
-      totalStock: totalStock.toString()
+      totalStock: totalStockFromLocations.toString()
     };
     
     // Update the item with the new data
@@ -124,7 +128,7 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
       // Also update reorder quantity if changed
       if (reorderQuantity !== item.reorderQuantity) {
         // Fix: Pass the item and quantity separately to match function signature
-        reorderStock(updatedItem, reorderQuantity - item.reorderQuantity);
+        reorderStock(updatedItem, reorderQuantity - (item.reorderQuantity || 0));
       }
       
       toast({

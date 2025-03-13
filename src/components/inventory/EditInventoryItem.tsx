@@ -42,6 +42,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
       setIsSaving(true);
       console.log("Submitting form with data:", formData);
       console.log("Current stock value:", formData.stock);
+      console.log("Total stock from locations:", totalStock);
       
       // Get all items that need to be updated (across all locations)
       const itemsToUpdate = prepareItemsForSave();

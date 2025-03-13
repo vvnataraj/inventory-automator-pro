@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { InventoryItem, TransferData } from "@/types/inventory";
-import { format } from "date-fns";
 import { useLocations } from "@/hooks/useLocations";
 import { PackingSlipDialog } from "./PackingSlipDialog";
 
@@ -39,9 +38,19 @@ export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: T
   const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [transferData, setTransferData] = useState<TransferData | null>(null);
   
+  // Calculate the available stock at the selected source location
+  const availableStock = React.useMemo(() => {
+    if (item.locations && item.locations.length > 0) {
+      const locationStock = item.locations.find(loc => loc.name === fromLocation);
+      return locationStock ? locationStock.stock : 0;
+    }
+    // If no locations array, use the item's total stock
+    return item.stock;
+  }, [item, fromLocation]);
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (quantity > 0 && quantity <= item.stock && toLocation && fromLocation !== toLocation) {
+    if (quantity > 0 && quantity <= availableStock && toLocation && fromLocation !== toLocation) {
       // Create transfer data for packing slip
       const transferData: TransferData = {
         fromLocation,
@@ -162,11 +171,14 @@ export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: T
                   name="quantity"
                   type="number"
                   min={1}
-                  max={item.stock}
+                  max={availableStock}
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
                   className="col-span-3"
                 />
+                <div className="col-span-4 text-xs text-right text-muted-foreground">
+                  Available at {fromLocation}: {availableStock}
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-3">
@@ -175,7 +187,7 @@ export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: T
               </Button>
               <Button 
                 type="submit" 
-                disabled={quantity <= 0 || quantity > item.stock || !toLocation || fromLocation === toLocation}
+                disabled={quantity <= 0 || quantity > availableStock || !toLocation || fromLocation === toLocation}
               >
                 Transfer
               </Button>
