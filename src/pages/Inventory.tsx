@@ -13,7 +13,10 @@ export default function Inventory() {
   
   return (
     <MainLayout>
-      <InventoryHeader onAddItem={actions.handleAddItem} />
+      <InventoryHeader 
+        onAddItem={actions.handleAddItem} 
+        items={state.items}
+      />
       
       <InventoryControls 
         searchQuery={state.searchQuery}
