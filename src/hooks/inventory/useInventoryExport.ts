@@ -32,28 +32,30 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         return items;
       }
       
-      const dbItems = data.map(item => {
+      // Map Supabase items to InventoryItem type with correct property names
+      const dbItems: InventoryItem[] = data.map(item => {
         const dimensionsObj = item.dimensions as Record<string, any> | null;
         const weightObj = item.weight as Record<string, any> | null;
         
         return {
           id: item.id,
-          sku: item.sku,
-          name: item.name,
+          sku: item.sku || "",
+          name: item.name || "",
           description: item.description || "",
           category: item.category || "",
           subcategory: item.subcategory || "",
           brand: item.brand || "",
-          rrp: item.price || 0,
-          cost: item.cost || 0,
-          stock: item.stock || 0,
+          price: typeof item.price === 'number' ? item.price : 0,
+          rrp: typeof item.price === 'number' ? item.price : 0,
+          cost: typeof item.cost === 'number' ? item.cost : 0,
+          stock: typeof item.stock === 'number' ? item.stock : 0,
           lowStockThreshold: item.low_stock_threshold || 5,
           minStockCount: item.min_stock_count || 1,
           location: item.location || "",
           barcode: item.barcode || "",
-          dateAdded: item.date_added,
-          lastUpdated: item.last_updated,
-          imageUrl: item.image_url,
+          dateAdded: item.date_added || new Date().toISOString(),
+          lastUpdated: item.last_updated || new Date().toISOString(),
+          imageUrl: item.image_url || "",
           dimensions: dimensionsObj ? {
             length: Number(dimensionsObj.length) || 0,
             width: Number(dimensionsObj.width) || 0,
@@ -64,10 +66,10 @@ export const useInventoryExport = (items: InventoryItem[]) => {
             value: Number(weightObj.value) || 0,
             unit: (weightObj.unit as 'kg' | 'g' | 'lb') || 'kg'
           } : undefined,
-          isActive: item.is_active,
+          isActive: item.is_active !== false, // Default to true if undefined
           supplier: item.supplier || "",
-          tags: item.tags || []
-        } as InventoryItem;
+          tags: Array.isArray(item.tags) ? item.tags : []
+        };
       });
       
       console.log("Fetched all items from Supabase:", dbItems);
@@ -137,7 +139,7 @@ export const useInventoryExport = (items: InventoryItem[]) => {
           URL.revokeObjectURL(url);
           setIsExporting(false);
           setIsExportDialogOpen(false);
-          toast.success(`Inventory exported as ${exportFormat?.toUpperCase()} from database successfully!`);
+          toast.success(`Inventory exported as ${exportFormat?.toUpperCase()} successfully!`);
         }, 100);
       }, 500);
     } catch (error) {

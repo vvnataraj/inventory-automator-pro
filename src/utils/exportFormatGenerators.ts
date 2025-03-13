@@ -5,15 +5,35 @@ import { InventoryItem } from "@/types/inventory";
  * Generates CSV content from inventory items
  */
 export const generateCSV = (data: InventoryItem[]): string => {
-  const headers = ["id", "sku", "name", "category", "description", "cost", "rrp", "stock", "location", "supplier", "isActive"];
+  // Include all relevant fields for export
+  const headers = [
+    "id", "sku", "name", "description", "category", "subcategory", 
+    "brand", "cost", "rrp", "price", "stock", "lowStockThreshold",
+    "minStockCount", "location", "barcode", "supplier", "dateAdded", 
+    "lastUpdated", "isActive"
+  ];
+  
   const csvRows = [headers.join(",")];
   
   data.forEach(item => {
     const row = headers.map(header => {
       const value = item[header as keyof InventoryItem];
+      
+      // Handle string values with commas
       if (typeof value === "string" && value.includes(",")) {
         return `"${value}"`;
       }
+      
+      // Handle null/undefined values
+      if (value === null || value === undefined) {
+        return "";
+      }
+      
+      // Handle boolean values
+      if (typeof value === "boolean") {
+        return value ? "true" : "false";
+      }
+      
       return value;
     });
     
@@ -31,8 +51,34 @@ export const generateXML = (data: InventoryItem[]): string => {
   
   data.forEach(item => {
     xml += '  <item>\n';
+    
+    // Process each property in the item
     Object.entries(item).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
+        // Skip complex objects like dimensions, weight
+        if (typeof value === 'object') {
+          if (key === 'dimensions' && value) {
+            xml += `    <${key}>\n`;
+            Object.entries(value).forEach(([dimKey, dimValue]) => {
+              xml += `      <${dimKey}>${dimValue}</${dimKey}>\n`;
+            });
+            xml += `    </${key}>\n`;
+          } else if (key === 'weight' && value) {
+            xml += `    <${key}>\n`;
+            Object.entries(value).forEach(([weightKey, weightValue]) => {
+              xml += `      <${weightKey}>${weightValue}</${weightKey}>\n`;
+            });
+            xml += `    </${key}>\n`;
+          } else if (Array.isArray(value) && key === 'tags') {
+            xml += `    <${key}>\n`;
+            value.forEach(tag => {
+              xml += `      <tag>${tag}</tag>\n`;
+            });
+            xml += `    </${key}>\n`;
+          }
+          return;
+        }
+        
         const escapedValue = String(value)
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
@@ -43,6 +89,7 @@ export const generateXML = (data: InventoryItem[]): string => {
         xml += `    <${key}>${escapedValue}</${key}>\n`;
       }
     });
+    
     xml += '  </item>\n';
   });
   
@@ -69,9 +116,9 @@ export const getMimeType = (format: string): string => {
     case "xml":
       return "application/xml";
     case "xlsx":
-      return "text/csv"; // simplified as CSV
+      return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     case "pdf":
-      return "text/csv"; // simplified as CSV
+      return "application/pdf";
     default:
       return "text/plain";
   }
