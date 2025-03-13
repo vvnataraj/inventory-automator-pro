@@ -57,6 +57,84 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          barcode: string | null
+          brand: string | null
+          category: string | null
+          cost: number | null
+          date_added: string | null
+          description: string | null
+          dimensions: Json | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          last_updated: string | null
+          location: string | null
+          low_stock_threshold: number | null
+          min_stock_count: number | null
+          name: string
+          price: number | null
+          rrp: number | null
+          sku: string
+          stock: number | null
+          subcategory: string | null
+          supplier: string | null
+          tags: string[] | null
+          weight: Json | null
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string | null
+          category?: string | null
+          cost?: number | null
+          date_added?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          last_updated?: string | null
+          location?: string | null
+          low_stock_threshold?: number | null
+          min_stock_count?: number | null
+          name: string
+          price?: number | null
+          rrp?: number | null
+          sku: string
+          stock?: number | null
+          subcategory?: string | null
+          supplier?: string | null
+          tags?: string[] | null
+          weight?: Json | null
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string | null
+          category?: string | null
+          cost?: number | null
+          date_added?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          last_updated?: string | null
+          location?: string | null
+          low_stock_threshold?: number | null
+          min_stock_count?: number | null
+          name?: string
+          price?: number | null
+          rrp?: number | null
+          sku?: string
+          stock?: number | null
+          subcategory?: string | null
+          supplier?: string | null
+          tags?: string[] | null
+          weight?: Json | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

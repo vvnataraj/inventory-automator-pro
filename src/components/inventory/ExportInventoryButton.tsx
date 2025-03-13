@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, FileDown, Upload, X } from "lucide-react";
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface InventoryDataActionsProps {
   items: InventoryItem[];
@@ -47,68 +47,131 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
     setIsImportDialogOpen(true);
   };
 
-  const generateExport = () => {
-    setIsExporting(true);
-    
-    // Get all items rather than just current page items
-    const dataToExport = [...items];
-    
-    setTimeout(() => {
-      let content = "";
-      let filename = `inventory-export-${new Date().toISOString().split('T')[0]}`;
-      let mimeType = "";
+  const fetchAllItemsFromDatabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .select('*');
       
-      switch (exportFormat) {
-        case "csv":
-          content = generateCSV(dataToExport);
-          filename += ".csv";
-          mimeType = "text/csv";
-          break;
-        case "json":
-          content = JSON.stringify(dataToExport, null, 2);
-          filename += ".json";
-          mimeType = "application/json";
-          break;
-        case "xml":
-          content = generateXML(dataToExport);
-          filename += ".xml";
-          mimeType = "application/xml";
-          break;
-        case "xlsx":
-          // For XLSX, we'd need a library like exceljs or xlsx
-          // This is a simplified version that just creates a CSV
-          content = generateCSV(dataToExport);
-          filename += ".csv"; // Using CSV as fallback
-          mimeType = "text/csv";
-          toast.info("XLSX export is simplified as CSV format");
-          break;
-        case "pdf":
-          // For PDF, we'd need a library like jspdf
-          content = generateCSV(dataToExport);
-          filename += ".csv"; // Using CSV as fallback
-          mimeType = "text/csv";
-          toast.info("PDF export is simplified as CSV format");
-          break;
+      if (error) {
+        console.error("Error fetching items from Supabase:", error);
+        toast.error("Failed to fetch all items from database");
+        return null;
       }
       
-      // Create a download link
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
+      if (!data || data.length === 0) {
+        console.log("No data in Supabase, using provided items");
+        return items;
+      }
       
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+      const dbItems = data.map(item => {
+        return {
+          id: item.id,
+          sku: item.sku,
+          name: item.name,
+          description: item.description || "",
+          category: item.category || "",
+          subcategory: item.subcategory || "",
+          brand: item.brand || "",
+          rrp: item.price || 0,
+          cost: item.cost || 0,
+          stock: item.stock || 0,
+          lowStockThreshold: item.low_stock_threshold || 5,
+          minStockCount: item.min_stock_count || 1,
+          location: item.location || "",
+          barcode: item.barcode || "",
+          dateAdded: item.date_added,
+          lastUpdated: item.last_updated,
+          imageUrl: item.image_url,
+          dimensions: item.dimensions,
+          weight: item.weight,
+          isActive: item.is_active,
+          supplier: item.supplier || "",
+          tags: item.tags || []
+        } as InventoryItem;
+      });
+      
+      console.log("Fetched all items from Supabase:", dbItems);
+      return dbItems;
+    } catch (error) {
+      console.error("Error in fetchAllItemsFromDatabase:", error);
+      toast.error("Failed to fetch items from database");
+      return items;
+    }
+  };
+
+  const generateExport = async () => {
+    setIsExporting(true);
+    
+    try {
+      const allItems = await fetchAllItemsFromDatabase();
+      
+      if (!allItems) {
+        toast.error("Failed to export data from database");
         setIsExporting(false);
         setIsExportDialogOpen(false);
-        toast.success(`Inventory exported as ${exportFormat.toUpperCase()} successfully!`);
-      }, 100);
-    }, 500); // Simulating processing time
+        return;
+      }
+      
+      const dataToExport = allItems;
+      
+      setTimeout(() => {
+        let content = "";
+        let filename = `inventory-export-${new Date().toISOString().split('T')[0]}`;
+        let mimeType = "";
+        
+        switch (exportFormat) {
+          case "csv":
+            content = generateCSV(dataToExport);
+            filename += ".csv";
+            mimeType = "text/csv";
+            break;
+          case "json":
+            content = JSON.stringify(dataToExport, null, 2);
+            filename += ".json";
+            mimeType = "application/json";
+            break;
+          case "xml":
+            content = generateXML(dataToExport);
+            filename += ".xml";
+            mimeType = "application/xml";
+            break;
+          case "xlsx":
+            content = generateCSV(dataToExport);
+            filename += ".csv";
+            mimeType = "text/csv";
+            toast.info("XLSX export is simplified as CSV format");
+            break;
+          case "pdf":
+            content = generateCSV(dataToExport);
+            filename += ".csv";
+            mimeType = "text/csv";
+            toast.info("PDF export is simplified as CSV format");
+            break;
+        }
+        
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          setIsExporting(false);
+          setIsExportDialogOpen(false);
+          toast.success(`Inventory exported as ${exportFormat.toUpperCase()} from database successfully!`);
+        }, 100);
+      }, 500);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export data");
+      setIsExporting(false);
+      setIsExportDialogOpen(false);
+    }
   };
 
   const handleFileImport = () => {
@@ -127,11 +190,9 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
 
     setIsImporting(true);
 
-    // Check file type
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     let isValidFileType = false;
 
-    // Validate file type matches selected import format
     if (exportFormat === 'csv' && fileExtension === 'csv') isValidFileType = true;
     if (exportFormat === 'json' && fileExtension === 'json') isValidFileType = true;
     if (exportFormat === 'xml' && fileExtension === 'xml') isValidFileType = true;
@@ -165,14 +226,105 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
             break;
           case "xlsx":
           case "pdf":
-            // For these formats, we're currently supporting CSV as fallback
             importedItems = parseCSV(content);
             break;
         }
         
         if (onImport && importedItems.length > 0) {
-          onImport(importedItems);
-          toast.success(`Successfully imported ${importedItems.length} items`);
+          const importPromises = importedItems.map(async (item) => {
+            try {
+              const { data: existingItems, error: checkError } = await supabase
+                .from('inventory_items')
+                .select('id')
+                .eq('sku', item.sku);
+              
+              if (checkError) {
+                console.error("Error checking existing item:", checkError);
+                return null;
+              }
+              
+              if (existingItems && existingItems.length > 0) {
+                const { error: updateError } = await supabase
+                  .from('inventory_items')
+                  .update({
+                    name: item.name,
+                    description: item.description,
+                    category: item.category,
+                    subcategory: item.subcategory,
+                    brand: item.brand,
+                    price: item.rrp,
+                    cost: item.cost,
+                    stock: item.stock,
+                    low_stock_threshold: item.lowStockThreshold,
+                    min_stock_count: item.minStockCount,
+                    location: item.location,
+                    barcode: item.barcode,
+                    last_updated: new Date().toISOString(),
+                    image_url: item.imageUrl,
+                    dimensions: item.dimensions,
+                    weight: item.weight,
+                    is_active: item.isActive,
+                    supplier: item.supplier,
+                    tags: item.tags
+                  })
+                  .eq('id', existingItems[0].id);
+                
+                if (updateError) {
+                  console.error("Error updating item:", updateError);
+                  return null;
+                }
+                
+                return { ...item, id: existingItems[0].id };
+              } else {
+                const { error: insertError } = await supabase
+                  .from('inventory_items')
+                  .insert({
+                    id: item.id || undefined,
+                    sku: item.sku,
+                    name: item.name,
+                    description: item.description,
+                    category: item.category,
+                    subcategory: item.subcategory,
+                    brand: item.brand,
+                    price: item.rrp,
+                    cost: item.cost,
+                    stock: item.stock,
+                    low_stock_threshold: item.lowStockThreshold,
+                    min_stock_count: item.minStockCount,
+                    location: item.location,
+                    barcode: item.barcode,
+                    date_added: item.dateAdded || new Date().toISOString(),
+                    last_updated: item.lastUpdated || new Date().toISOString(),
+                    image_url: item.imageUrl,
+                    dimensions: item.dimensions,
+                    weight: item.weight,
+                    is_active: item.isActive,
+                    supplier: item.supplier,
+                    tags: item.tags
+                  });
+                
+                if (insertError) {
+                  console.error("Error inserting item:", insertError);
+                  return null;
+                }
+                
+                return item;
+              }
+            } catch (error) {
+              console.error("Error importing item:", error);
+              return null;
+            }
+          });
+          
+          const importedResults = await Promise.all(importPromises);
+          const successfulImports = importedResults.filter(item => item !== null) as InventoryItem[];
+          
+          if (successfulImports.length > 0) {
+            onImport(successfulImports);
+            toast.success(`Successfully imported ${successfulImports.length} items to database`);
+          } else {
+            toast.error("Failed to import items to database");
+          }
         } else {
           toast.error("No valid items found in the import file");
         }
@@ -218,8 +370,6 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
         
         const item: Record<string, any> = {};
         headers.forEach((header, index) => {
-          // Handle special types like numbers and booleans
-          const value = values[index];
           if (value === undefined) return;
           
           if (value === "true") item[header] = true;
@@ -242,13 +392,11 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
       const itemEl = itemElements[i];
       const item: Record<string, any> = {};
       
-      // Get all child elements
       for (let j = 0; j < itemEl.children.length; j++) {
         const child = itemEl.children[j];
         const key = child.tagName;
         const value = child.textContent || "";
         
-        // Handle special types like numbers and booleans
         if (value === "true") item[key] = true;
         else if (value === "false") item[key] = false;
         else if (!isNaN(Number(value)) && value !== "") item[key] = Number(value);
@@ -268,7 +416,6 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
     data.forEach(item => {
       const row = headers.map(header => {
         const value = item[header as keyof InventoryItem];
-        // Handle special cases, like strings with commas
         if (typeof value === "string" && value.includes(",")) {
           return `"${value}"`;
         }
@@ -288,7 +435,6 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
       xml += '  <item>\n';
       Object.entries(item).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
-          // Escape special XML characters
           const escapedValue = String(value)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -360,7 +506,6 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
         </DropdownMenuContent>
       </DropdownMenu>
       
-      {/* Hidden file input for import */}
       <input
         type="file"
         ref={fileInputRef}
@@ -375,13 +520,12 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
         }
       />
       
-      {/* Export Dialog */}
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Export Inventory</DialogTitle>
             <DialogDescription>
-              You are about to export {items.length} inventory items as a {exportFormat?.toUpperCase()} file.
+              You are about to export all inventory items from the database as a {exportFormat?.toUpperCase()} file.
             </DialogDescription>
           </DialogHeader>
           
@@ -406,7 +550,6 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Import Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -414,7 +557,7 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
             <DialogDescription>
               Select a {exportFormat?.toUpperCase()} file to import inventory items.
               <p className="text-muted-foreground text-sm mt-2">
-                Note: This will add new items to your inventory. Duplicate SKUs will be handled automatically.
+                Note: This will add new items to your inventory database. Duplicate SKUs will be updated automatically.
               </p>
             </DialogDescription>
           </DialogHeader>
@@ -442,4 +585,3 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
     </>
   );
 };
-
