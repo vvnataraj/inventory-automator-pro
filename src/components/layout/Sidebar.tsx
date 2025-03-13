@@ -87,7 +87,7 @@ export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
       "flex h-full flex-col bg-white border-r transition-all duration-300",
       collapsed ? "w-[70px]" : "w-64"
     )}>
-      <div className="flex h-16 items-center px-4 border-b justify-end">
+      <div className="flex items-center px-4 py-2 justify-end">
         <Button 
           variant="ghost" 
           size="icon" 

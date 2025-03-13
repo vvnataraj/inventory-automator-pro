@@ -23,7 +23,7 @@ export function Header() {
   };
   
   return (
-    <header className="border-b bg-white">
+    <header className="border-b bg-white w-full">
       <div className="flex h-16 items-center px-4 gap-4">
         <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-5 w-5" />
