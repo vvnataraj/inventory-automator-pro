@@ -5,7 +5,7 @@ import { InventoryItem } from "@/types/inventory";
  * Generates CSV content from inventory items
  */
 export const generateCSV = (data: InventoryItem[]): string => {
-  // Include all relevant fields needed for import
+  // Include all relevant fields needed for import, ensuring id (UUID) is first
   const headers = [
     "id", "sku", "name", "description", "category", "subcategory", 
     "brand", "price", "rrp", "cost", "stock", "lowStockThreshold",
@@ -71,8 +71,14 @@ export const generateXML = (data: InventoryItem[]): string => {
   data.forEach(item => {
     xml += '  <item>\n';
     
+    // Always include the ID first to ensure it's preserved
+    xml += `    <id>${item.id}</id>\n`;
+    
     // Process each property in the item
     Object.entries(item).forEach(([key, value]) => {
+      // Skip id since we already added it
+      if (key === 'id') return;
+      
       if (value !== null && value !== undefined) {
         // Handle complex objects like dimensions, weight
         if (key === 'dimensions' && value) {

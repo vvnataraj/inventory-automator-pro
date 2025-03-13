@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,7 +39,8 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         const weightObj = item.weight as Record<string, any> | null;
         
         return {
-          id: item.id || "",
+          // Ensure ID is preserved
+          id: item.id,
           sku: item.sku || "",
           name: item.name || "",
           description: item.description || "",

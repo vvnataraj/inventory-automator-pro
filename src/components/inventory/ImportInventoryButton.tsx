@@ -134,8 +134,11 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       return [];
     };
 
+    // Preserve original ID if it exists, otherwise generate a new one
+    const itemId = item.id || `item-${uuidv4()}`;
+
     return {
-      id: item.id || `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      id: itemId,
       sku: item.sku || "",
       name: item.name || "",
       description: item.description || "",
