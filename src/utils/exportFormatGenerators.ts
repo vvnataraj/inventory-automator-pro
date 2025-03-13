@@ -10,7 +10,8 @@ export const generateCSV = (data: InventoryItem[]): string => {
     "id", "sku", "name", "description", "category", "subcategory", 
     "brand", "price", "rrp", "cost", "stock", "lowStockThreshold",
     "minStockCount", "location", "barcode", "dateAdded", 
-    "lastUpdated", "imageUrl", "isActive", "supplier"
+    "lastUpdated", "imageUrl", "isActive", "supplier", 
+    "dimensions", "weight", "tags"
   ];
   
   const csvRows = [headers.join(",")];
@@ -21,15 +22,15 @@ export const generateCSV = (data: InventoryItem[]): string => {
       
       // Handle special cases for complex objects
       if (header === "dimensions" && item.dimensions) {
-        return JSON.stringify(item.dimensions);
+        return `"${JSON.stringify(item.dimensions).replace(/"/g, '""')}"`;
       }
       
       if (header === "weight" && item.weight) {
-        return JSON.stringify(item.weight);
+        return `"${JSON.stringify(item.weight).replace(/"/g, '""')}"`;
       }
       
       if (header === "tags" && Array.isArray(item.tags)) {
-        return JSON.stringify(item.tags);
+        return `"${JSON.stringify(item.tags).replace(/"/g, '""')}"`;
       }
       
       // Handle string values with commas by quoting them
@@ -73,38 +74,30 @@ export const generateXML = (data: InventoryItem[]): string => {
     // Process each property in the item
     Object.entries(item).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
-        // Skip complex objects like dimensions, weight
-        if (typeof value === 'object') {
-          if (key === 'dimensions' && value) {
-            xml += `    <${key}>\n`;
-            Object.entries(value).forEach(([dimKey, dimValue]) => {
-              xml += `      <${dimKey}>${dimValue}</${dimKey}>\n`;
-            });
-            xml += `    </${key}>\n`;
-          } else if (key === 'weight' && value) {
-            xml += `    <${key}>\n`;
-            Object.entries(value).forEach(([weightKey, weightValue]) => {
-              xml += `      <${weightKey}>${weightValue}</${weightKey}>\n`;
-            });
-            xml += `    </${key}>\n`;
-          } else if (Array.isArray(value) && key === 'tags') {
-            xml += `    <${key}>\n`;
-            value.forEach(tag => {
-              xml += `      <tag>${tag}</tag>\n`;
-            });
-            xml += `    </${key}>\n`;
-          }
-          return;
+        // Handle complex objects like dimensions, weight
+        if (key === 'dimensions' && value) {
+          xml += `    <${key}>\n`;
+          Object.entries(value).forEach(([dimKey, dimValue]) => {
+            xml += `      <${dimKey}>${dimValue}</${dimKey}>\n`;
+          });
+          xml += `    </${key}>\n`;
+        } else if (key === 'weight' && value) {
+          xml += `    <${key}>\n`;
+          Object.entries(value).forEach(([weightKey, weightValue]) => {
+            xml += `      <${weightKey}>${weightValue}</${weightKey}>\n`;
+          });
+          xml += `    </${key}>\n`;
+        } else if (Array.isArray(value) && key === 'tags') {
+          xml += `    <${key}>\n`;
+          value.forEach(tag => {
+            xml += `      <tag>${escapeXml(String(tag))}</tag>\n`;
+          });
+          xml += `    </${key}>\n`;
+        } else if (typeof value !== 'object') {
+          // Handle primitive values
+          const escapedValue = escapeXml(String(value));
+          xml += `    <${key}>${escapedValue}</${key}>\n`;
         }
-        
-        const escapedValue = String(value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&apos;');
-        
-        xml += `    <${key}>${escapedValue}</${key}>\n`;
       }
     });
     
@@ -113,6 +106,18 @@ export const generateXML = (data: InventoryItem[]): string => {
   
   xml += '</inventory>';
   return xml;
+};
+
+/**
+ * Helper function to escape special XML characters
+ */
+const escapeXml = (unsafe: string): string => {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 };
 
 /**

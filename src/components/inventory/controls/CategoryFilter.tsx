@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { inventoryItems } from "@/data/inventoryData";
 
 interface CategoryFilterProps {
   categoryFilter: string | undefined;
@@ -21,10 +20,18 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
 
   useEffect(() => {
-    // Extract unique categories from inventory items
-    const categories = Array.from(
-      new Set(inventoryItems.map((item) => item.category))
-    ).sort();
+    // Common categories in hardware inventory
+    const categories = [
+      "Tools",
+      "Hardware",
+      "Fasteners",
+      "Electrical",
+      "Plumbing",
+      "Paint",
+      "Garden",
+      "Storage",
+      "Building Materials"
+    ];
     setCategoryOptions(categories);
   }, []);
 
