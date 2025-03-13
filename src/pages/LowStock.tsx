@@ -22,22 +22,27 @@ export default function LowStock() {
 
   useEffect(() => {
     // Find items with low stock
-    const uniqueSkus = new Set<string>();
+    const lowStockSkus = new Set<string>();
     
     // First pass: identify low stock SKUs
-    const skusWithLowStock = inventoryItems.filter(item => {
-      // Find all items with the same SKU
+    inventoryItems.forEach(item => {
+      // Find all items with the same SKU to calculate total stock
       const sameSkuItems = inventoryItems.filter(invItem => invItem.sku === item.sku);
       const totalStock = sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
-      return totalStock <= item.lowStockThreshold;
-    }).map(item => item.sku);
+      
+      if (totalStock <= item.lowStockThreshold) {
+        lowStockSkus.add(item.sku);
+      }
+    });
     
-    skusWithLowStock.forEach(sku => uniqueSkus.add(sku));
+    console.log(`Found ${lowStockSkus.size} unique SKUs with low stock`);
     
     // Second pass: get one representative item for each low-stock SKU
-    const uniqueLowStockItems = Array.from(uniqueSkus).map(sku => {
+    const uniqueLowStockItems = Array.from(lowStockSkus).map(sku => {
       return inventoryItems.find(item => item.sku === sku);
     }).filter(Boolean) as InventoryItem[];
+    
+    console.log(`Filtered to ${uniqueLowStockItems.length} unique low stock items`);
     
     // Sort items
     const sortedItems = [...uniqueLowStockItems].sort((a, b) => {
