@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -16,24 +15,18 @@ export const useAuthOperations = (
   const navigate = useNavigate();
 
   /**
-   * Fetches user profile data from the profiles view
+   * Fetches user profile data from auth.users raw_user_meta_data
    */
   const fetchUserProfile = async (user: User) => {
     try {
-      // Use the profiles view which maps to auth.users
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', user.id)
-        .single();
+      console.log("Fetching user profile for:", user.id);
       
-      if (error) throw error;
+      // We now get metadata directly from the user object
+      const metadata = user.user_metadata || {};
       
       // Merge profile data with user object
-      if (data) {
-        user.username = data.username;
-        user.avatar_url = data.avatar_url;
-      }
+      user.username = metadata.username || null;
+      user.avatar_url = metadata.avatar_url || null;
       
       return user;
     } catch (error) {
@@ -48,6 +41,7 @@ export const useAuthOperations = (
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log("Signing in user:", email);
       
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
