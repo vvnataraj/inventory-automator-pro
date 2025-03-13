@@ -16,6 +16,7 @@ export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps)
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
   const handleSendMessage = async () => {
     if (!message.trim()) {
@@ -24,6 +25,7 @@ export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps)
     }
 
     setIsLoading(true);
+    setErrorDetails(null);
     
     try {
       // Use the Supabase Edge Function to send the message to Slack
@@ -42,6 +44,8 @@ export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps)
       const data = await response.json();
       
       if (!response.ok) {
+        console.error("Error response data:", data);
+        setErrorDetails(JSON.stringify(data, null, 2));
         throw new Error(data.error || "Failed to send message");
       }
 
@@ -50,7 +54,13 @@ export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps)
       onClose();
     } catch (error) {
       console.error("Error sending message to Slack:", error);
-      toast.error("Failed to send message to Slack. Please try again.");
+      
+      // Display a more detailed error message
+      toast.error(`Failed to send message to Slack: ${error.message}`);
+      
+      if (!errorDetails) {
+        setErrorDetails(`Error: ${error.message}\nTime: ${new Date().toLocaleString()}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -88,6 +98,21 @@ export function SlackMessageDialog({ isOpen, onClose }: SlackMessageDialogProps)
               required
             />
           </div>
+
+          {errorDetails && (
+            <div className="grid gap-2">
+              <Label htmlFor="error-details" className="text-destructive">Error Details</Label>
+              <Textarea
+                id="error-details"
+                value={errorDetails}
+                readOnly
+                className="min-h-[100px] bg-destructive/10 border-destructive/20 text-xs font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Please share these details with your administrator if the problem persists.
+              </p>
+            </div>
+          )}
         </div>
         
         <DialogFooter>

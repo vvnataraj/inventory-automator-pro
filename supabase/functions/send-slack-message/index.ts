@@ -59,8 +59,13 @@ serve(async (req) => {
 
     if (!slackResponse.ok) {
       const errorText = await slackResponse.text();
-      console.error("Slack error response:", errorText);
-      throw new Error(`Failed to send to Slack: ${slackResponse.statusText}`);
+      const errorDetails = {
+        status: slackResponse.status,
+        statusText: slackResponse.statusText,
+        response: errorText
+      };
+      console.error("Slack error response details:", JSON.stringify(errorDetails));
+      throw new Error(`Failed to send to Slack: ${slackResponse.status} ${slackResponse.statusText}. Response: ${errorText}`);
     }
 
     return new Response(
@@ -71,7 +76,13 @@ serve(async (req) => {
     console.error("Error sending message to Slack:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        errorDetails: {
+          message: error.message,
+          time: new Date().toISOString()
+        }
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
