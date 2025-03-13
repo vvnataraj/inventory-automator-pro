@@ -12,6 +12,9 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
   const { locations } = useLocations();
   const { toast } = useToast();
   
+  const [formData, setFormData] = useState<InventoryItem | null>(item);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  
   const [locationStocks, setLocationStocks] = useState<LocationStock[]>(
     item?.locations?.map(loc => ({ 
       location: loc.name, 
@@ -27,12 +30,45 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
     item?.reorderQuantity || 0
   );
   
+  // Calculate total stock from all locations
+  const totalStock = locationStocks.reduce((sum, loc) => sum + loc.count, 0);
+  
   const handleLocationStockChange = (location: string, newCount: number) => {
     setLocationStocks(prev => 
       prev.map(loc => 
         loc.location === location ? { ...loc, count: newCount } : loc
       )
     );
+  };
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    if (!formData) return;
+    
+    const newValue = type === 'number' ? (value ? Number(value) : 0) : value;
+    setFormData({
+      ...formData,
+      [name]: newValue
+    });
+  };
+  
+  const prepareItemsForSave = () => {
+    if (!formData) return [];
+    
+    // Map location stocks back to the format expected by the API
+    const updatedLocations = locationStocks.map(loc => ({
+      name: loc.location,
+      stock: loc.count
+    }));
+    
+    const updatedItem = {
+      ...formData,
+      stock: totalStock,
+      locations: updatedLocations,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    return [updatedItem];
   };
   
   const handleSubmit = (formData: EditInventoryItemFormData) => {
@@ -61,7 +97,7 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
       
       // Also update reorder quantity if changed
       if (reorderQuantity !== item.reorderQuantity) {
-        reorderStock(item, reorderQuantity);
+        reorderStock(item);
       }
       
       toast({
@@ -81,10 +117,16 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
   };
   
   return {
+    formData,
+    isOpen,
+    setIsOpen,
     locationStocks,
+    totalStock,
     reorderQuantity,
     setReorderQuantity,
+    handleChange,
     handleLocationStockChange,
     handleSubmit,
+    prepareItemsForSave
   };
 };

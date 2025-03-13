@@ -28,13 +28,15 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
     handleChange,
     handleLocationStockChange,
     prepareItemsForSave
-  } = useEditInventoryItem(item);
+  } = useEditInventoryItem(item, () => setIsOpen(false));
   
   const [isSaving, setIsSaving] = useState(false);
   const { updateItem } = useInventoryOperations();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData) return;
     
     try {
       setIsSaving(true);
@@ -90,16 +92,18 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
         </Button>
       </DialogTrigger>
       
-      <EditInventoryDialog
-        formData={formData}
-        locationStocks={locationStocks}
-        totalStock={totalStock}
-        isSaving={isSaving}
-        onCancel={() => handleOpenChange(false)}
-        onSubmit={handleSubmit}
-        handleChange={handleChange}
-        handleLocationStockChange={handleLocationStockChange}
-      />
+      {formData && (
+        <EditInventoryDialog
+          formData={formData}
+          locationStocks={locationStocks}
+          totalStock={totalStock}
+          isSaving={isSaving}
+          onCancel={() => handleOpenChange(false)}
+          onSubmit={handleSubmit}
+          handleChange={handleChange}
+          handleLocationStockChange={handleLocationStockChange}
+        />
+      )}
     </Dialog>
   );
 };

@@ -7,10 +7,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { InventoryItem } from "@/types/inventory";
+import { InventoryItem, LocationStock } from "@/types/inventory";
 import { StockDistributionCard } from "./StockDistributionCard";
 import { InventoryItemEditForm } from "./InventoryItemForm";
-import { LocationStock } from "@/hooks/inventory/useEditInventoryItem";
 
 interface EditInventoryDialogProps {
   formData: InventoryItem;

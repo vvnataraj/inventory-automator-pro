@@ -12,8 +12,14 @@ import { TransferData } from "@/types/inventory";
 import { format } from "date-fns";
 import { Printer } from "lucide-react";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
 import { useReactToPrint } from "react-to-print";
+
+// Add missing types for jspdf-autotable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 interface PackingSlipDialogProps {
   open: boolean;
@@ -25,8 +31,12 @@ export const PackingSlipDialog = ({ open, onClose, transferData }: PackingSlipDi
   const printRef = useRef<HTMLDivElement>(null);
   
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
     documentTitle: `Packing_Slip_${transferData.referenceNumber}`,
+    onPrintError: (error) => console.error('Print failed', error),
+    pageStyle: "@page { size: auto; margin: 10mm; }",
+    removeAfterPrint: true,
+    // Use function in content to access the ref
+    content: () => printRef.current
   });
   
   const generatePDF = () => {
@@ -149,7 +159,10 @@ export const PackingSlipDialog = ({ open, onClose, transferData }: PackingSlipDi
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <Button onClick={handlePrint} className="gap-2">
+          <Button 
+            onClick={() => handlePrint()} 
+            className="gap-2"
+          >
             <Printer className="h-4 w-4" />
             Print
           </Button>
