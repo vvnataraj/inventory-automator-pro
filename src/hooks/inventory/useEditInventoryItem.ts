@@ -20,16 +20,30 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
   const [formData, setFormData] = useState<InventoryItem | null>(item);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   
-  const [locationStocks, setLocationStocks] = useState<LocationStock[]>(
-    item?.locations?.map(loc => ({ 
-      location: loc.name, 
-      count: loc.stock 
-    })) || 
-    locations.map(loc => ({ 
-      location: loc.name, 
-      count: 0 
-    }))
-  );
+  // Initialize locationStocks properly based on item's locations or create a default distribution
+  const [locationStocks, setLocationStocks] = useState<LocationStock[]>(() => {
+    if (item?.locations && item.locations.length > 0) {
+      // Use existing location data if available
+      return item.locations.map(loc => ({ 
+        location: loc.name, 
+        count: loc.stock 
+      }));
+    } else if (item) {
+      // If no locations specified but we have the item, put all stock in the first location
+      // and set other locations to 0
+      const result = locations.map((loc, index) => ({ 
+        location: loc.name, 
+        count: index === 0 ? item.stock : 0 
+      }));
+      return result;
+    } else {
+      // Fallback for new items
+      return locations.map(loc => ({ 
+        location: loc.name, 
+        count: 0 
+      }));
+    }
+  });
   
   const [reorderQuantity, setReorderQuantity] = useState<number>(
     item?.reorderQuantity || 0

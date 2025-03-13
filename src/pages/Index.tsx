@@ -64,16 +64,18 @@ export default function Index() {
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mt-6">
-        <CategoryPieChart 
-          data={categoryData} 
-          onSliceClick={handlePieChartClick} 
-          className="lg:col-span-3"
-        />
-        <RestockAlerts 
-          sales={sales} 
-          className="lg:col-span-2" 
-        />
-        <RecentActivities className="lg:col-span-2" />
+        <div className="lg:col-span-3">
+          <CategoryPieChart 
+            data={categoryData} 
+            onSliceClick={handlePieChartClick} 
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <RestockAlerts sales={sales} />
+        </div>
+        <div className="lg:col-span-2">
+          <RecentActivities />
+        </div>
       </div>
       
       <div className="mt-6">
