@@ -6,7 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Shield, ShieldAlert, ShieldCheck } from "lucide-react";
+import { 
+  Check, 
+  Shield, 
+  ShieldAlert, 
+  ShieldCheck, 
+  X 
+} from "lucide-react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 export default function RolesManagement() {
   const { user } = useAuth();
@@ -55,6 +69,22 @@ export default function RolesManagement() {
     }
   };
   
+  // Role permissions matrix
+  const permissionsMatrix = [
+    { feature: "View items", admin: true, manager: true, user: true },
+    { feature: "Add new items", admin: true, manager: true, user: false },
+    { feature: "Edit items", admin: true, manager: true, user: false },
+    { feature: "Delete items", admin: true, manager: true, user: false },
+    { feature: "Transfer items", admin: true, manager: true, user: false },
+    { feature: "View sales data", admin: true, manager: true, user: true },
+    { feature: "Create sales", admin: true, manager: true, user: false },
+    { feature: "View purchase orders", admin: true, manager: true, user: true },
+    { feature: "Create purchase orders", admin: true, manager: true, user: false },
+    { feature: "Access system settings", admin: true, manager: false, user: false },
+    { feature: "Manage users", admin: true, manager: false, user: false },
+    { feature: "Assign roles", admin: true, manager: false, user: false },
+  ];
+  
   return (
     <Card>
       <CardHeader>
@@ -64,7 +94,7 @@ export default function RolesManagement() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <h3 className="text-sm font-medium mb-2">Current roles:</h3>
             {loading ? (
@@ -135,6 +165,50 @@ export default function RolesManagement() {
               </p>
             </div>
           )}
+          
+          <div className="pt-4">
+            <h3 className="text-sm font-medium mb-4">Role Permissions Matrix</h3>
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[300px]">Feature / Permission</TableHead>
+                    <TableHead className="text-center">Admin</TableHead>
+                    <TableHead className="text-center">Manager</TableHead>
+                    <TableHead className="text-center">User</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {permissionsMatrix.map((row, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{row.feature}</TableCell>
+                      <TableCell className="text-center">
+                        {row.admin ? (
+                          <Check className="h-4 w-4 text-green-500 mx-auto" />
+                        ) : (
+                          <X className="h-4 w-4 text-red-500 mx-auto" />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {row.manager ? (
+                          <Check className="h-4 w-4 text-green-500 mx-auto" />
+                        ) : (
+                          <X className="h-4 w-4 text-red-500 mx-auto" />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {row.user ? (
+                          <Check className="h-4 w-4 text-green-500 mx-auto" />
+                        ) : (
+                          <X className="h-4 w-4 text-red-500 mx-auto" />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
