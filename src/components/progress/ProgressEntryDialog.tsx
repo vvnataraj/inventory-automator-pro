@@ -42,6 +42,7 @@ export function ProgressEntryDialog({ isOpen, onClose }: ProgressEntryDialogProp
 
       toast.success("Progress logged successfully!");
       setDescription("");
+      setName(""); // Reset name field too
       onClose();
     } catch (error) {
       console.error("Error logging progress:", error);

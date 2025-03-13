@@ -29,7 +29,7 @@ export default function Progress() {
       
       // Use 'from' with a type assertion to handle the TypeScript error
       const { data, error } = await supabase
-        .from('progress_entries')
+        .from('progress_entries' as any)
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -49,20 +49,21 @@ export default function Progress() {
   useEffect(() => {
     fetchProgressEntries();
     
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel('progress_entries_changes')
+    // Set up real-time subscription with improved event handling
+    const channel = supabase
+      .channel('progress_updates')
       .on('postgres_changes', { 
-        event: '*', 
+        event: 'INSERT', 
         schema: 'public', 
         table: 'progress_entries' 
       }, () => {
+        console.log('New progress entry detected, refreshing data...');
         fetchProgressEntries();
       })
       .subscribe();
     
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, []);
 
@@ -138,7 +139,10 @@ export default function Progress() {
 
       <ProgressEntryDialog 
         isOpen={isEntryDialogOpen}
-        onClose={() => setIsEntryDialogOpen(false)}
+        onClose={() => {
+          setIsEntryDialogOpen(false);
+          fetchProgressEntries(); // Refresh data when dialog closes
+        }}
       />
     </MainLayout>
   );
