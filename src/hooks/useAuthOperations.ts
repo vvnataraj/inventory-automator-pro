@@ -16,18 +16,23 @@ export const useAuthOperations = (
   const navigate = useNavigate();
 
   /**
-   * Fetches user profile data from auth.users raw_user_meta_data
+   * Fetches user profile data directly from auth.users
    */
   const fetchUserProfile = async (user: User) => {
     try {
       console.log("Fetching user profile for:", user.id);
       
-      // We now get metadata directly from the user object
-      const metadata = user.user_metadata || {};
+      // The username and avatar_url should already be in the user object
+      // from the Supabase SDK since we're using the direct column
       
-      // Merge profile data with user object
-      user.username = metadata.username || null;
-      user.avatar_url = metadata.avatar_url || null;
+      // If for some reason they aren't populated, ensure they're at least null
+      if (user.username === undefined) {
+        user.username = null;
+      }
+      
+      if (user.avatar_url === undefined) {
+        user.avatar_url = null;
+      }
       
       return user;
     } catch (error) {
