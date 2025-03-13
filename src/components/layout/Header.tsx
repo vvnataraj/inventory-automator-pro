@@ -125,8 +125,7 @@ export function Header() {
                 <Avatar className="h-9 w-9">
                   <AvatarImage
                     src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png"
-                    alt="User avatar"
-                    style={{ mixBlendMode: 'multiply' }}
+                    alt={user?.email || "User"}
                   />
                   <AvatarFallback className="bg-primary/10 text-primary">
                     {getUserInitials()}
