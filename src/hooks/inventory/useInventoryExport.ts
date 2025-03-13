@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,8 @@ export const useInventoryExport = (items: InventoryItem[]) => {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [exportedFileName, setExportedFileName] = useState<string | null>(null);
 
   const handleExport = (format: string) => {
     setExportFormat(format);
@@ -150,12 +151,22 @@ export const useInventoryExport = (items: InventoryItem[]) => {
     }
   };
 
+  const cleanupExport = () => {
+    if (downloadUrl) {
+      URL.revokeObjectURL(downloadUrl);
+    }
+    setIsExporting(false);
+    setExportedFileName('');
+    setDownloadUrl('');
+  };
+
   return {
     isExportDialogOpen,
     setIsExportDialogOpen,
     exportFormat,
     isExporting,
     handleExport,
-    generateExport
+    generateExport,
+    cleanupExport
   };
 };

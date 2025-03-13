@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -72,8 +73,10 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
         }
         
         if (data && data.length > 0) {
+          // Cast data to array of objects with category property
+          const categoriesData = data as { category: string }[];
           const uniqueCategories = Array.from(
-            new Set(data.map(item => item.category).filter(Boolean) as string[])
+            new Set(categoriesData.map(item => item.category).filter(Boolean) as string[])
           ).sort();
           
           setCategories(uniqueCategories);
@@ -159,7 +162,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80" align="end">
+        <PopoverContent className="w-80 z-50 bg-background" align="end">
           <div className="space-y-4">
             <h4 className="font-medium">Filter Inventory</h4>
             
@@ -178,7 +181,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background">
                   <SelectItem value="">All Categories</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>

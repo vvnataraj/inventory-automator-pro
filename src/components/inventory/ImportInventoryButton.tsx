@@ -79,7 +79,7 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       if (importFile.name.endsWith('.json')) {
         importedItems = JSON.parse(fileContent);
       } else if (importFile.name.endsWith('.csv')) {
-        importedItems = parseCSV(fileContent);
+        importedItems = processCSV(fileContent);
       } else {
         toast.error("Unsupported file format. Please use JSON or CSV.");
         setIsImporting(false);
@@ -153,33 +153,43 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
     }
   };
 
-  const parseCSV = (csvContent: string): any[] => {
+  const processCSV = (csvContent: string): any[] => {
     const lines = csvContent.split('\n');
-    const headers = lines[0].split(',').map(header => 
-      header.trim().replace(/^"(.*)"$/, '$1')
-    );
+    const result = [];
+    const headers = lines[0].split(',').map(h => h.trim());
     
-    return lines.slice(1).filter(line => line.trim()).map(line => {
-      const values = line.split(',');
-      const item: Record<string, any> = {};
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim() === '') continue;
+      
+      const obj: Record<string, any> = {};
+      const values = lines[i].split(',');
       
       headers.forEach((header, index) => {
         let value = values[index]?.trim() || '';
         
         value = value.replace(/^"(.*)"$/, '$1');
         
-        if (value.toLowerCase() === 'true') value = true;
-        if (value.toLowerCase() === 'false') value = false;
-        
-        if (!isNaN(Number(value)) && value !== '') {
-          value = Number(value);
+        if (value.toLowerCase() === 'true') {
+          obj[header] = true;
+          return;
+        }
+        if (value.toLowerCase() === 'false') {
+          obj[header] = false;
+          return;
         }
         
-        item[header] = value;
+        if (!isNaN(Number(value)) && value !== '') {
+          obj[header] = Number(value);
+          return;
+        }
+        
+        obj[header] = value;
       });
       
-      return item;
-    });
+      result.push(obj);
+    }
+    
+    return result;
   };
 
   const checkSupabaseConnection = async (): Promise<boolean> => {
