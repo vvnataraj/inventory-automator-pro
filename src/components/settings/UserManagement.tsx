@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import AddUserDialog from "./AddUserDialog";
 import UserTable from "./UserTable";
@@ -28,22 +28,28 @@ export default function UserManagement({ initialUsers, loading, onRefresh }: Use
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Update users when initialUsers prop changes
+  // Update users when initialUsers prop changes, with safeguards
   useEffect(() => {
-    setUsers(initialUsers);
+    // Only update if initialUsers actually changes and is an array
+    if (Array.isArray(initialUsers) && initialUsers.length > 0) {
+      setUsers(initialUsers);
+    }
   }, [initialUsers]);
   
-  // Filter users based on search term
-  const filteredUsers = users.filter(user => {
-    if (!searchTerm) return true;
+  // Memoize the filter function to prevent recomputation on each render
+  const getFilteredUsers = useCallback(() => {
+    if (!searchTerm) return users;
     const searchLower = searchTerm.toLowerCase();
     
-    return (
+    return users.filter(user => (
       (user.email && user.email.toLowerCase().includes(searchLower)) ||
       (user.username && user.username.toLowerCase().includes(searchLower)) ||
       user.roles.some(role => role.toLowerCase().includes(searchLower))
-    );
-  });
+    ));
+  }, [users, searchTerm]);
+  
+  // Compute filtered users only when needed
+  const filteredUsers = getFilteredUsers();
   
   if (!isAdmin()) {
     return (

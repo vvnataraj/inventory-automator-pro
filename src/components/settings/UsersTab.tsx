@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,15 +13,10 @@ export default function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Fetch all users when the component mounts (only for admins)
-  useEffect(() => {
-    if (!rolesLoading && isAdmin()) {
-      fetchUsers();
-    }
-  }, [rolesLoading, isAdmin]);
-  
-  // Function to fetch all users from the database
-  const fetchUsers = async () => {
+  // Memoize the fetchUsers function to prevent recreation on each render
+  const fetchUsers = useCallback(async () => {
+    if (!isAdmin()) return;
+    
     try {
       setLoading(true);
       
@@ -64,7 +59,14 @@ export default function UsersTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAdmin]); // Only depend on isAdmin, not any state that changes frequently
+  
+  // Fetch users once when component mounts and roles are loaded
+  useEffect(() => {
+    if (!rolesLoading && isAdmin()) {
+      fetchUsers();
+    }
+  }, [rolesLoading, isAdmin, fetchUsers]); // Include fetchUsers in deps as it's memoized now
   
   // Render the component
   if (rolesLoading) {

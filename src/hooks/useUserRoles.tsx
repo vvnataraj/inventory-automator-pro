@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,19 +12,19 @@ export function useUserRoles() {
   const [loading, setLoading] = useState(true);
   
   // Check if user has a specific role
-  const hasRole = (checkRole: Role) => role === checkRole;
+  const hasRole = useCallback((checkRole: Role) => role === checkRole, [role]);
   
   // Check if user is admin
-  const isAdmin = () => role === 'admin';
+  const isAdmin = useCallback(() => role === 'admin', [role]);
   
   // Check if user is manager or admin (managers and admins both have elevated permissions)
-  const isManager = () => role === 'manager' || role === 'admin';
+  const isManager = useCallback(() => role === 'manager' || role === 'admin', [role]);
   
   // Check if user is a regular user with read-only access
-  const isReadOnly = () => role === null || role === 'user';
+  const isReadOnly = useCallback(() => role === null || role === 'user', [role]);
   
-  // Fetch user role
-  const fetchRoles = async () => {
+  // Fetch user role with memoization to prevent recreation on each render
+  const fetchRoles = useCallback(async () => {
     if (!user) {
       setRole(null);
       setLoading(false);
@@ -56,10 +56,10 @@ export function useUserRoles() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
   
   // Set a role for the current user (replacing any existing role)
-  const setUserRole = async (newRole: Role) => {
+  const setUserRole = useCallback(async (newRole: Role) => {
     if (!user) return false;
     
     try {
@@ -95,11 +95,12 @@ export function useUserRoles() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, fetchRoles]);
   
+  // Only fetch roles when user changes, not on every render
   useEffect(() => {
     fetchRoles();
-  }, [user]);
+  }, [user?.id]); // Only depend on user.id, not the entire user object
   
   return {
     role,
