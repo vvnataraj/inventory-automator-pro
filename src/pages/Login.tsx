@@ -51,7 +51,7 @@ export default function Login() {
               <span className="font-bold text-6xl bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent mb-2">
                 STOCK<span className="text-purple-600">topus</span>
               </span>
-              <span className="text-2xl text-gray-600">Inventory Management System</span>
+              <span className="text-2xl text-gray-600">Many hands make light work</span>
             </div>
             <p className="mt-6 text-lg text-gray-700 max-w-md">
               Efficiently manage your inventory, track orders, and analyze sales all in one place. Take control of your business today.
