@@ -20,8 +20,8 @@ export function useLocations() {
   const [locations, setLocations] = useState<Location[]>(
     locationsData.map(location => ({
       ...location,
-      // Use nullish coalescing to safely handle locations without phoneNumber
-      phoneNumber: location.phoneNumber ?? "" // Default to empty string if phoneNumber doesn't exist
+      // Only add phoneNumber if it wasn't already present
+      phoneNumber: location.phoneNumber ?? ""
     }))
   );
   const [isLoading, setIsLoading] = useState(false);
