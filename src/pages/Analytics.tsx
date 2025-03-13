@@ -13,11 +13,11 @@ export default function Analytics() {
         <h1 className="text-3xl font-semibold tracking-tight">Analytics Dashboard</h1>
       </div>
       
-      <div className="mb-6">
+      <SalesAnalytics sales={sales} />
+      
+      <div className="mt-6">
         <TopProfitableItems />
       </div>
-      
-      <SalesAnalytics sales={sales} />
     </MainLayout>
   );
 }

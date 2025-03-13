@@ -12,6 +12,7 @@ interface Location {
   stockValue: number;
   spaceUtilization: number;
   phoneNumber?: string;
+  address?: string; // Adding this since it appears in locationsData
 }
 
 export function useLocations() {
@@ -19,7 +20,7 @@ export function useLocations() {
   const [locations, setLocations] = useState<Location[]>(
     locationsData.map(location => ({
       ...location,
-      // Use optional chaining and nullish coalescing to safely handle locations without phoneNumber
+      // Use nullish coalescing to safely handle locations without phoneNumber
       phoneNumber: location.phoneNumber ?? "" // Default to empty string if phoneNumber doesn't exist
     }))
   );
