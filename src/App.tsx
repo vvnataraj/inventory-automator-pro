@@ -20,6 +20,7 @@ import Support from "@/pages/Support";
 import Training from "@/pages/Training";
 import Documentation from "@/pages/Documentation";
 import LowStock from "@/pages/LowStock";
+import Users from "@/pages/Users";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -92,6 +93,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireManager={true}>
                     <Locations />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/users" 
+                element={
+                  <ProtectedRoute requireManager={true}>
+                    <Users />
                   </ProtectedRoute>
                 } 
               />
