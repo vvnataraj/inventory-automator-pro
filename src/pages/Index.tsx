@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Box, DollarSign, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -88,6 +89,12 @@ export default function Index() {
     }
   };
 
+  const handlePieChartClick = (data: any, index: number) => {
+    if (data && data.name) {
+      navigate(`/inventory?category=${encodeURIComponent(data.name)}`);
+    }
+  };
+
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 
   return (
@@ -145,6 +152,8 @@ export default function Index() {
                     paddingAngle={5}
                     dataKey="value"
                     label={({ name, value }) => `${name}: $${value.toLocaleString()}`}
+                    onClick={handlePieChartClick}
+                    className="cursor-pointer"
                   >
                     {categoryData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -153,7 +162,10 @@ export default function Index() {
                   <Tooltip 
                     formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
                   />
-                  <Legend />
+                  <Legend 
+                    onClick={(data) => handlePieChartClick(data, -1)}
+                    className="cursor-pointer"
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
