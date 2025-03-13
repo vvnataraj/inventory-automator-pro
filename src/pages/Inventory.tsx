@@ -22,7 +22,7 @@ export default function Inventory() {
     if (categoryParam && categoryParam !== state.categoryFilter) {
       actions.setCategoryFilter(categoryParam);
     }
-  }, [searchParams]);
+  }, [searchParams, state.categoryFilter, actions]);
   
   // Update URL when category filter changes
   useEffect(() => {
@@ -33,7 +33,13 @@ export default function Inventory() {
       searchParams.delete('category');
       setSearchParams(searchParams);
     }
-  }, [state.categoryFilter]);
+  }, [state.categoryFilter, searchParams, setSearchParams]);
+
+  // Add specific effect to manually trigger data fetch when the page loads
+  useEffect(() => {
+    console.log("Inventory page mounted, fetching items...");
+    actions.fetchItems();
+  }, [actions]);
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
     // Process each imported item
@@ -95,6 +101,11 @@ export default function Inventory() {
         {state.isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          </div>
+        ) : state.items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <h3 className="text-xl font-semibold mb-2">No inventory items found</h3>
+            <p className="text-muted-foreground mb-4">Try changing your search criteria or add new items.</p>
           </div>
         ) : (
           <>

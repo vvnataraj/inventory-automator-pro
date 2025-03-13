@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +15,13 @@ export function useInventoryDatabase() {
     locationFilter?: string
   ) => {
     try {
+      console.log("Attempting to fetch from Supabase with params:", {
+        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+      });
+      
       let supabaseQuery = supabase
         .from('inventory_items')
-        .select('*');
+        .select('*', { count: 'exact' });
       
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.toLowerCase().trim();
@@ -43,17 +47,19 @@ export function useInventoryDatabase() {
       
       if (fetchError) {
         console.error("Error fetching from Supabase:", fetchError);
-        throw new Error("Failed to fetch from database");
+        return { items: [], count: 0, error: fetchError };
       }
       
       if (!data || data.length === 0) {
+        console.log("No items returned from Supabase, falling back to local data");
         return { items: [], count: 0, error: null };
       }
       
       const dbItems = data.map(item => mapSupabaseItemToInventoryItem(item));
+      console.log(`Successfully fetched ${dbItems.length} items from Supabase`);
       return { items: dbItems, count: count || dbItems.length, error: null };
     } catch (error) {
-      console.error("Failed to fetch from Supabase:", error);
+      console.error("Exception in fetchFromSupabase:", error);
       return { items: [], count: 0, error };
     }
   }, []);
@@ -66,6 +72,10 @@ export function useInventoryDatabase() {
     categoryFilter?: string,
     locationFilter?: string
   ) => {
+    console.log("Fetching from local data with params:", {
+      page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+    });
+    
     let filteredItems = [...inventoryItems];
     
     if (searchQuery.trim()) {
@@ -107,6 +117,7 @@ export function useInventoryDatabase() {
     const start = (page - 1) * pageSize;
     const paginatedItems = sortedItems.slice(start, start + pageSize);
     
+    console.log(`Returning ${paginatedItems.length} items from local data (total: ${total})`);
     return { items: paginatedItems, total };
   }, []);
 
@@ -142,7 +153,7 @@ export function useInventoryDatabase() {
         value: Number(weightObj.value) || 0,
         unit: (weightObj.unit as 'kg' | 'g' | 'lb') || 'kg'
       } : undefined,
-      isActive: item.is_active,
+      isActive: item.is_active !== false, // Default to true if undefined
       supplier: item.supplier || "",
       tags: item.tags || []
     } as InventoryItem;

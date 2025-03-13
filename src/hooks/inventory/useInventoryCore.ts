@@ -1,9 +1,8 @@
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { toast } from "sonner";
 import { useInventoryDatabase } from "./useInventoryDatabase";
-import { useInventoryOperations } from "./useInventoryOperations";
 
 export function useInventoryCore(
   page: number = 1, 
@@ -23,7 +22,6 @@ export function useInventoryCore(
   const isFetchingRef = useRef(false);
   
   const { fetchFromSupabase, fetchFromLocal } = useInventoryDatabase();
-  const { updateItem, addItem, deleteItem } = useInventoryOperations();
   
   const fetchItems = useCallback(async (forceRefresh = false) => {
     // Prevent duplicate fetches
@@ -87,6 +85,11 @@ export function useInventoryCore(
     setLastRefresh(Date.now());
     fetchItems(true);
   }, [fetchItems]);
+
+  // Add useEffect to fetch items when dependencies change
+  useEffect(() => {
+    fetchItems();
+  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);
 
   return { 
     items, 
