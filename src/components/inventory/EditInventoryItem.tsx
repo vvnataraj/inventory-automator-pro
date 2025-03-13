@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Pencil } from "lucide-react";
 import {
   Dialog,
@@ -11,120 +10,110 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { InventoryItem } from "@/types/inventory";
+import { Separator } from "@/components/ui/separator";
+import { StockDistributionCard } from "./edit/StockDistributionCard";
+import { InventoryItemEditForm } from "./edit/InventoryItemForm";
+import { useEditInventoryItem } from "@/hooks/inventory/useEditInventoryItem";
+import { toast } from "sonner";
+import { useInventoryOperations } from "@/hooks/inventory/useInventoryOperations";
 
 interface EditInventoryItemProps {
   item: InventoryItem;
   onSave: (updatedItem: InventoryItem) => void;
+  showLabel?: boolean;
 }
 
-export const EditInventoryItem = ({ item, onSave }: EditInventoryItemProps) => {
-  const [formData, setFormData] = React.useState(item);
-  const [isOpen, setIsOpen] = React.useState(false);
+export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInventoryItemProps) => {
+  const {
+    formData,
+    isOpen,
+    setIsOpen,
+    locationStocks,
+    totalStock,
+    handleChange,
+    handleLocationStockChange,
+    prepareItemsForSave
+  } = useEditInventoryItem(item);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { updateItem } = useInventoryOperations();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    setIsOpen(false);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'stock' || name === 'cost' || name === 'rrp' || name === 'minStockCount' ? Number(value) : value
-    }));
+    
+    try {
+      // Get all items that need to be updated (across all locations)
+      const itemsToUpdate = prepareItemsForSave();
+      console.log("Items to update:", itemsToUpdate);
+      
+      // Update each item
+      for (const itemToUpdate of itemsToUpdate) {
+        await updateItem(itemToUpdate);
+      }
+      
+      // Call the onSave callback with the current item's updated version
+      const currentItemUpdate = itemsToUpdate.find(i => i.id === item.id);
+      if (currentItemUpdate) {
+        onSave(currentItemUpdate);
+      }
+      
+      toast.success("Item updated successfully across all locations");
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error updating items:", error);
+      toast.error("Failed to update item");
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button 
+          variant="ghost" 
+          size={showLabel ? "sm" : "icon"}
+          className={showLabel ? "h-8 flex gap-1" : ""}
+        >
           <Pencil className="h-4 w-4" />
+          {showLabel && "Edit"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Item</DialogTitle>
           <DialogDescription>
             Make changes to the inventory item here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+          <div className="space-y-4">
+            <h4 className="font-medium text-sm">Item Details</h4>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <InventoryItemEditForm 
+                formData={formData}
                 onChange={handleChange}
-                className="col-span-3"
+                totalStock={totalStock}
+                readOnlyStock={true}
               />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="cost" className="text-right">Cost Price</Label>
-              <Input
-                id="cost"
-                name="cost"
-                type="number"
-                value={formData.cost}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="rrp" className="text-right">RRP</Label>
-              <Input
-                id="rrp"
-                name="rrp"
-                type="number"
-                value={formData.rrp || ""}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="stock" className="text-right">Stock</Label>
-              <Input
-                id="stock"
-                name="stock"
-                type="number"
-                value={formData.stock}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="minStockCount" className="text-right">Min Stock</Label>
-              <Input
-                id="minStockCount"
-                name="minStockCount"
-                type="number"
-                value={formData.minStockCount}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">Location</Label>
-              <Input
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save changes</Button>
+              </div>
+            </form>
           </div>
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Save changes</Button>
+          
+          <div>
+            <h4 className="font-medium text-sm mb-3">Location Inventory</h4>
+            <StockDistributionCard
+              locationStocks={locationStocks}
+              totalStock={totalStock}
+              reorderQuantity={formData.minStockCount}
+              onLocationStockChange={handleLocationStockChange}
+            />
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,36 +1,145 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Box, DollarSign, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { inventoryItems } from "@/data/inventoryData";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { LeastProfitableItems } from "@/components/dashboard/LeastProfitableItems";
+import { 
+  Tooltip as UITooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
-const stats = [
+const getInitialStats = () => [
   {
     name: "Total Inventory",
-    value: "12,345",
+    value: "Loading...",
     change: "+4.75%",
     icon: Box,
+    link: "/inventory",
+    subValue: null
   },
   {
     name: "Low Stock Items",
     value: "23",
     change: "-12%",
     icon: TrendingUp,
+    link: "/low-stock"
   },
   {
     name: "Monthly Revenue",
     value: "$45,231",
     change: "+20.1%",
     icon: DollarSign,
+    link: null
   },
   {
     name: "Active Orders",
     value: "56",
     change: "+8%",
     icon: BarChart3,
+    link: null
   },
 ];
 
 export default function Index() {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState(getInitialStats());
+  const [categoryData, setCategoryData] = useState<{ name: string; value: number }[]>([]);
+  const [lowStockCount, setLowStockCount] = useState<number>(0);
+
+  useEffect(() => {
+    const calculateTotalInventoryValue = () => {
+      const totalCostValue = inventoryItems.reduce((sum, item) => {
+        const itemCostValue = (item.cost || 0) * item.stock;
+        return sum + itemCostValue;
+      }, 0);
+      
+      const totalRrpValue = inventoryItems.reduce((sum, item) => {
+        const itemRrpValue = (item.rrp || item.price || 0) * item.stock;
+        return sum + itemRrpValue;
+      }, 0);
+      
+      const formattedCostValue = `$${totalCostValue.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+      })}`;
+      
+      const formattedRrpValue = `$${totalRrpValue.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+      })}`;
+      
+      setStats(prevStats => prevStats.map(stat => 
+        stat.name === "Total Inventory" 
+          ? { ...stat, value: formattedCostValue, subValue: formattedRrpValue } 
+          : stat
+      ));
+    };
+
+    const calculateCategoryValues = () => {
+      const categoryValues = inventoryItems.reduce((acc, item) => {
+        const category = item.category;
+        const itemValue = (item.rrp || item.price || 0) * item.stock;
+        
+        acc[category] = (acc[category] || 0) + itemValue;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const data = Object.entries(categoryValues).map(([name, value]) => ({
+        name,
+        value: Number(value.toFixed(2))
+      }));
+
+      setCategoryData(data);
+    };
+
+    const calculateLowStockItems = () => {
+      const lowStockItems = inventoryItems.filter(item => {
+        const sameSkuItems = inventoryItems.filter(invItem => invItem.sku === item.sku);
+        const totalStock = sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
+        
+        const bufferedThreshold = item.lowStockThreshold * 1.1;
+        
+        return totalStock <= bufferedThreshold;
+      });
+      
+      const uniqueLowStockItems = Array.from(
+        new Set(lowStockItems.map(item => item.sku))
+      ).map(sku => lowStockItems.find(item => item.sku === sku));
+      
+      const count = uniqueLowStockItems.length;
+      setLowStockCount(count);
+      
+      setStats(prevStats => prevStats.map(stat => 
+        stat.name === "Low Stock Items" 
+          ? { ...stat, value: count.toString() } 
+          : stat
+      ));
+    };
+
+    calculateTotalInventoryValue();
+    calculateCategoryValues();
+    calculateLowStockItems();
+  }, []);
+
+  const handleCardClick = (link: string | null) => {
+    if (link) {
+      navigate(link);
+    }
+  };
+
+  const handlePieChartClick = (data: any, index: number) => {
+    if (data && data.name) {
+      navigate(`/inventory?category=${encodeURIComponent(data.name)}`);
+    }
+  };
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between">
@@ -38,39 +147,145 @@ export default function Index() {
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
         {stats.map((stat) => (
-          <Card key={stat.name} className="animate-fade-in">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {stat.name}
-              </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">
-                <span
-                  className={
-                    stat.change.startsWith("+")
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }
-                >
-                  {stat.change}
-                </span>{" "}
-                from last month
-              </p>
-            </CardContent>
-          </Card>
+          stat.name === "Low Stock Items" ? (
+            <TooltipProvider key={stat.name}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <Card 
+                    className={`animate-fade-in ${stat.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+                    onClick={() => handleCardClick(stat.link)}
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        {stat.name}
+                      </CardTitle>
+                      <stat.icon className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stat.value}</div>
+                      <p className="text-xs text-muted-foreground">
+                        <span
+                          className={
+                            stat.change.startsWith("+")
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {stat.change}
+                        </span>{" "}
+                        from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TooltipTrigger>
+                <TooltipContent className="bg-slate-950 text-white dark:bg-slate-50 dark:text-slate-950">
+                  <p>Consider reordering these items to maintain optimal stock levels</p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
+          ) : stat.name === "Total Inventory" ? (
+            <Card 
+              key={stat.name} 
+              className={`animate-fade-in ${stat.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+              onClick={() => handleCardClick(stat.link)}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {stat.name}
+                </CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-muted-foreground">
+                    <span
+                      className={
+                        stat.change.startsWith("+")
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }
+                    >
+                      {stat.change}
+                    </span>{" "}
+                    from last month
+                  </p>
+                  {stat.subValue && (
+                    <div className="text-xs font-medium">
+                      <span className="text-muted-foreground">RRP: </span>
+                      <span className="text-green-600">{stat.subValue}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card 
+              key={stat.name} 
+              className={`animate-fade-in ${stat.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+              onClick={() => handleCardClick(stat.link)}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {stat.name}
+                </CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span
+                    className={
+                      stat.change.startsWith("+")
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    {stat.change}
+                  </span>{" "}
+                  from last month
+                </p>
+              </CardContent>
+            </Card>
+          )
         ))}
       </div>
+      
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mt-6">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Inventory Overview</CardTitle>
+            <CardTitle>Inventory by Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Chart will be implemented in next iteration
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: $${value.toLocaleString()}`}
+                    onClick={handlePieChartClick}
+                    className="cursor-pointer"
+                  >
+                    {categoryData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
+                  />
+                  <Legend 
+                    onClick={(data) => handlePieChartClick(data, -1)}
+                    className="cursor-pointer"
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -98,6 +313,10 @@ export default function Index() {
             </div>
           </CardContent>
         </Card>
+      </div>
+      
+      <div className="mt-6">
+        <LeastProfitableItems />
       </div>
     </MainLayout>
   );

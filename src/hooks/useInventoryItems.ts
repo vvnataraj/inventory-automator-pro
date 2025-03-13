@@ -1,7 +1,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
-import { getInventoryItems, inventoryItems } from "@/data/inventoryData";
+import { inventoryItems } from "@/data/inventoryData";
+import { toast } from "sonner";
+import { useInventoryDatabase } from "./inventory/useInventoryDatabase";
+import { useInventoryOperations } from "./inventory/useInventoryOperations";
+import { useInventorySpecialOps } from "./inventory/useInventorySpecialOps";
 
 export function useInventoryItems(
   page: number = 1, 
@@ -16,112 +20,146 @@ export function useInventoryItems(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
-  const fetchItems = useCallback(() => {
+  const { fetchFromSupabase, fetchFromLocal } = useInventoryDatabase();
+  const { updateItem, addItem, deleteItem } = useInventoryOperations();
+  const { reorderItem: reorderItemBase, reorderStock: reorderStockBase, reactivateAllItems: reactivateAllItemsBase } = useInventorySpecialOps();
+  
+  const fetchItems = useCallback(async () => {
     setIsLoading(true);
     try {
-      const result = getInventoryItems(page, 20, searchQuery);
+      // Try to fetch from Supabase first
+      const { items: dbItems, count, error: dbError } = await fetchFromSupabase(
+        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+      );
       
-      // Apply any additional filtering
-      let filteredItems = [...result.items];
-      
-      if (categoryFilter) {
-        filteredItems = filteredItems.filter(item => 
-          item.category.toLowerCase() === categoryFilter.toLowerCase()
+      if (dbError || dbItems.length === 0) {
+        // Fallback to local data if Supabase fetch fails or returns no results
+        console.log("Falling back to local data");
+        const { items: localItems, total } = fetchFromLocal(
+          page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
         );
+        
+        setItems(localItems);
+        setTotalItems(total);
+        
+        if (dbError) {
+          toast.error("Failed to fetch items from database, using local data");
+        }
+      } else {
+        setItems(dbItems);
+        setTotalItems(count);
+        console.log("Fetched items from Supabase:", dbItems);
       }
       
-      if (locationFilter) {
-        filteredItems = filteredItems.filter(item => 
-          item.location.toLowerCase() === locationFilter.toLowerCase()
-        );
-      }
-      
-      // Apply sorting
-      const sortedItems = filteredItems.sort((a, b) => {
-        const aValue = a[sortField];
-        const bValue = b[sortField];
-        
-        if (aValue === undefined || bValue === undefined) return 0;
-        
-        const comparison = typeof aValue === 'string' 
-          ? aValue.localeCompare(bValue as string)
-          : Number(aValue) - Number(bValue);
-          
-        return sortDirection === 'asc' ? comparison : -comparison;
-      });
-      
-      setItems(sortedItems);
-      setTotalItems(result.total);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to fetch inventory items"));
       console.error("Failed to fetch inventory items:", err);
+      
+      // Fallback to local data
+      const { items: localItems, total } = fetchFromLocal(
+        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+      );
+      
+      setItems(localItems);
+      setTotalItems(total);
+      
+      toast.error("Failed to fetch items from database, using local data");
     } finally {
       setIsLoading(false);
     }
-  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter]);
+  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchFromSupabase, fetchFromLocal]);
   
   useEffect(() => {
-    const timeoutId = setTimeout(fetchItems, 500);
+    const timeoutId = setTimeout(() => {
+      fetchItems();
+    }, 300);
     return () => clearTimeout(timeoutId);
   }, [fetchItems]);
   
-  const updateItem = useCallback((updatedItem: InventoryItem) => {
-    // Update in-memory items first
+  // Wrap the specialized operations to work with our state
+  const reorderItemWrapper = useCallback((itemId: string, direction: 'up' | 'down') => {
+    reorderItemBase(items, setItems, itemId, direction);
+  }, [items, reorderItemBase]);
+  
+  const reorderStockWrapper = useCallback(async (item: InventoryItem, quantity: number = 0) => {
+    const updatedItem = await reorderStockBase(item, quantity);
     setItems(currentItems => 
-      currentItems.map(item => 
-        item.id === updatedItem.id ? updatedItem : item
+      currentItems.map(currentItem => 
+        currentItem.id === updatedItem.id ? updatedItem : currentItem
       )
     );
-    
-    // Update the global inventory items array
-    const itemIndex = inventoryItems.findIndex(item => item.id === updatedItem.id);
-    if (itemIndex !== -1) {
-      inventoryItems[itemIndex] = updatedItem;
-    }
-  }, []);
+    return updatedItem;
+  }, [reorderStockBase]);
   
-  const addItem = useCallback((newItem: InventoryItem) => {
-    // Add to global inventory items array
-    inventoryItems.unshift(newItem);
-    
-    // Add to current items if it should appear on the current page
-    setItems(currentItems => {
-      // If we're on the first page, add the item to the top
-      if (page === 1) {
-        return [newItem, ...currentItems.slice(0, -1)]; // Remove last item to maintain page size
-      }
-      return currentItems;
-    });
-    
-    // Update total count
-    setTotalItems(prev => prev + 1);
-  }, [page]);
-  
-  const deleteItem = useCallback((itemId: string) => {
-    // Remove from current items
-    setItems(currentItems => 
-      currentItems.filter(item => item.id !== itemId)
-    );
-    
-    // Remove from global inventory items array
-    const itemIndex = inventoryItems.findIndex(item => item.id === itemId);
-    if (itemIndex !== -1) {
-      inventoryItems.splice(itemIndex, 1);
+  const reactivateAllItemsWrapper = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await reactivateAllItemsBase();
+      
+      // Update local inventory items
+      inventoryItems.forEach(item => {
+        if (!item.isActive) {
+          item.isActive = true;
+          item.lastUpdated = new Date().toISOString();
+        }
+      });
+      
+      await fetchItems();
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to reactivate items:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-    
-    // Update total count
-    setTotalItems(prev => prev - 1);
-  }, []);
+  }, [reactivateAllItemsBase, fetchItems]);
+
+  const updateItemWrapper = useCallback(async (updatedItem: InventoryItem) => {
+    const success = await updateItem(updatedItem);
+    if (success) {
+      setItems(currentItems => 
+        currentItems.map(item => 
+          item.id === updatedItem.id ? updatedItem : item
+        )
+      );
+    }
+  }, [updateItem]);
+
+  const addItemWrapper = useCallback(async (newItem: InventoryItem) => {
+    const success = await addItem(newItem);
+    if (success) {
+      const pageSize = 20;
+      const start = (page - 1) * pageSize;
+      const paginatedItems = inventoryItems.slice(start, start + pageSize);
+      
+      setItems(paginatedItems);
+      setTotalItems(prev => prev + 1);
+    }
+  }, [addItem, page]);
+
+  const deleteItemWrapper = useCallback(async (itemId: string) => {
+    const success = await deleteItem(itemId);
+    if (success) {
+      setItems(currentItems => 
+        currentItems.filter(item => item.id !== itemId)
+      );
+      setTotalItems(prev => prev - 1);
+    }
+  }, [deleteItem]);
   
   return { 
     items, 
     totalItems, 
     isLoading, 
     error, 
-    updateItem, 
-    addItem, 
-    deleteItem,
-    fetchItems
+    updateItem: updateItemWrapper, 
+    addItem: addItemWrapper, 
+    deleteItem: deleteItemWrapper,
+    reorderItem: reorderItemWrapper,
+    reorderStock: reorderStockWrapper,
+    fetchItems,
+    reactivateAllItems: reactivateAllItemsWrapper
   };
 }

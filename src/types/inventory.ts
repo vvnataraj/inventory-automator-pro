@@ -1,3 +1,4 @@
+
 export interface InventoryItem {
   id: string;
   sku: string;
@@ -6,6 +7,7 @@ export interface InventoryItem {
   category: string;
   subcategory: string;
   brand: string;
+  price: number;
   rrp?: number;
   cost: number;
   stock: number;
