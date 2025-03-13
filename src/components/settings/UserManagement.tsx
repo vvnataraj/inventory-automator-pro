@@ -46,6 +46,8 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
+      console.log("Fetching users data as admin");
+      
       // First fetch all user roles
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
@@ -54,70 +56,73 @@ export default function UserManagement() {
       if (rolesError) throw rolesError;
       
       // Create a map to group roles by user_id
-      const userRolesMap = new Map<string, User>();
+      const userRolesMap = new Map<string, string[]>();
       
       if (rolesData && rolesData.length > 0) {
         rolesData.forEach(role => {
           if (!userRolesMap.has(role.user_id)) {
-            userRolesMap.set(role.user_id, {
-              id: role.user_id,
-              email: "", // Will be populated later
-              username: null, // Will be populated later
-              roles: [role.role],
-              created_at: new Date().toISOString(),
-              last_sign_in_at: null,
-              is_disabled: false
-            });
+            userRolesMap.set(role.user_id, [role.role]);
           } else {
-            const user = userRolesMap.get(role.user_id);
-            if (user) {
-              user.roles.push(role.role);
+            const roles = userRolesMap.get(role.user_id);
+            if (roles) {
+              roles.push(role.role);
             }
           }
         });
+      }
         
-        // Get profile information including username and creation date
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, created_at');
-        
-        // Get user emails from auth - note: this requires admin access via server function in production
-        // For demonstration, we're using direct auth queries which will work in development
-        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-        
-        // Update user information with profile data
-        if (profiles && !profilesError) {
-          profiles.forEach(profile => {
-            if (userRolesMap.has(profile.id)) {
-              const user = userRolesMap.get(profile.id);
-              if (user) {
-                user.username = profile.username;
-                user.created_at = profile.created_at;
-              }
-            }
-          });
+      // Get profile information including username and creation date
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, created_at');
+      
+      if (profilesError) throw profilesError;
+      
+      // For demonstration, try to get users directly from auth - requires service role
+      let authUsers: AuthUser[] = [];
+      try {
+        const { data, error } = await supabase.auth.admin.listUsers();
+        if (data?.users && !error) {
+          authUsers = data.users as AuthUser[];
+        } else {
+          console.warn("Could not fetch auth users with admin privileges:", error);
         }
+      } catch (err) {
+        console.warn("Error accessing auth.admin.listUsers:", err);
+        // Fallback to just using profiles if we can't access auth directly
+      }
         
-        // Update user information with auth data
-        if (authUsers?.users && !authError) {
-          // Explicitly type the users array
-          const typedUsers = authUsers.users as AuthUser[];
+      // Combine data from profiles and roles
+      const combinedUsers: User[] = [];
+      
+      if (profiles) {
+        profiles.forEach(profile => {
+          // Find auth data for this user (if available)
+          const authUser = authUsers.find(u => u.id === profile.id);
           
-          typedUsers.forEach(authUser => {
-            if (userRolesMap.has(authUser.id)) {
-              const user = userRolesMap.get(authUser.id);
-              if (user) {
-                user.email = authUser.email || "";
-                user.last_sign_in_at = authUser.last_sign_in_at || null;
-              }
-            }
+          // Get roles for this user
+          const roles = userRolesMap.has(profile.id) ? 
+            userRolesMap.get(profile.id) || [] : 
+            ['user']; // Default role if no specific roles assigned
+          
+          combinedUsers.push({
+            id: profile.id,
+            email: authUser?.email || "Unknown email", // Use auth email if available
+            username: profile.username,
+            created_at: profile.created_at || authUser?.created_at || new Date().toISOString(),
+            last_sign_in_at: authUser?.last_sign_in_at || null,
+            roles: roles,
+            is_disabled: false // We may not have this info without auth.admin access
           });
-        }
-        
-        setUsers(Array.from(userRolesMap.values()));
+        });
+      }
+      
+      console.log("Found users:", combinedUsers.length);
+      setUsers(combinedUsers);
+      
+      if (combinedUsers.length > 0) {
         toast.success("Users loaded successfully");
       } else {
-        setUsers([]);
         toast.info("No users found in the system");
       }
     } catch (error) {

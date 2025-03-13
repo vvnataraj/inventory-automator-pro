@@ -58,11 +58,12 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
   // Format user display info
   const displayEmail = user.email || "No email";
   
-  // Show username if it's the current user's profile or if the user is an admin
-  // This is the key change - we now always show usernames to admins
-  const displayUsername = isAdmin() || isOwnProfile 
+  // As admin, always show real usernames - never mask them
+  const displayUsername = isAdmin() 
     ? (user.username || "—") 
-    : "•••••••";
+    : isOwnProfile 
+      ? (user.username || "—") 
+      : "•••••••";
   
   // Get the primary role (first in the array) or default to 'user'
   const primaryRole = user.roles.length > 0 ? user.roles[0] : 'user';
