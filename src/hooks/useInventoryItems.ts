@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { getInventoryItems, inventoryItems } from "@/data/inventoryData";
