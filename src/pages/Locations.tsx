@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useLocations } from "@/hooks/useLocations";
 import { EditLocationModal } from "@/components/locations/EditLocationModal";
@@ -8,6 +9,7 @@ import { LocationsTable } from "@/components/locations/LocationsTable";
 import { EmptyLocationsState } from "@/components/locations/EmptyLocationsState";
 import { DeleteLocationDialog } from "@/components/locations/DeleteLocationDialog";
 import { LocationsHeader } from "@/components/locations/LocationsHeader";
+import { useSearchParams } from "react-router-dom";
 
 type SortField = "name" | "type" | "itemCount" | "totalUnits" | "stockValue" | "spaceUtilization";
 type SortDirection = "asc" | "desc";
@@ -18,15 +20,33 @@ export default function Locations() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [locationFilter, setLocationFilter] = useState<string | undefined>(undefined);
   const [editingLocation, setEditingLocation] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
 
-  const filteredLocations = locations.filter(location =>
-    location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    location.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Listen for URL changes to apply filters from URL parameters
+  useEffect(() => {
+    const locationParam = searchParams.get("location");
+    if (locationParam) {
+      console.log(`Setting location filter from URL: ${locationParam}`);
+      setLocationFilter(locationParam);
+    }
+  }, [searchParams]);
+
+  const filteredLocations = locations.filter(location => {
+    // Apply search filter
+    const matchesSearch = 
+      location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      location.type.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Apply location filter if specified
+    const matchesLocationFilter = !locationFilter || location.name === locationFilter;
+    
+    return matchesSearch && matchesLocationFilter;
+  });
 
   const handleEdit = (location: any) => {
     setEditingLocation(location);
@@ -84,7 +104,11 @@ export default function Locations() {
 
   return (
     <MainLayout>
-      <LocationsHeader onLocationAdded={addLocation} />
+      <LocationsHeader 
+        onLocationAdded={addLocation}
+        locationFilter={locationFilter}
+        onLocationFilterChange={setLocationFilter}
+      />
 
       <ListControls 
         searchPlaceholder="Search locations..."

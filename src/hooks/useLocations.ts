@@ -1,7 +1,8 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { locationsData } from "@/data/inventoryData";
 import { LocationFormData } from "@/components/locations/AddLocationModal";
+import { availableLocations } from "@/components/inventory/form/FormFields";
 
 interface Location {
   id: string;
@@ -11,7 +12,7 @@ interface Location {
   totalUnits: number;
   stockValue: number;
   spaceUtilization: number;
-  address?: string; // Keeping address as it appears in locationsData
+  address?: string;
 }
 
 export function useLocations() {
@@ -22,6 +23,32 @@ export function useLocations() {
     }))
   );
   const [isLoading, setIsLoading] = useState(false);
+
+  // On mount, ensure all available locations from inventory are represented
+  useEffect(() => {
+    const existingLocationNames = new Set(locations.map(loc => loc.name));
+    
+    // Add any missing locations from the availableLocations list
+    const locationsToAdd: Location[] = [];
+    
+    availableLocations.forEach(name => {
+      if (!existingLocationNames.has(name)) {
+        locationsToAdd.push({
+          id: `location-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          name,
+          type: "Warehouse",
+          itemCount: 0,
+          totalUnits: 0,
+          stockValue: 0,
+          spaceUtilization: 50, // Default value
+        });
+      }
+    });
+    
+    if (locationsToAdd.length > 0) {
+      setLocations(prev => [...prev, ...locationsToAdd]);
+    }
+  }, []);
 
   const addLocation = useCallback((locationData: LocationFormData) => {
     const newLocation: Location = {

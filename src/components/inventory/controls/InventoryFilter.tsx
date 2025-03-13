@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { locations } from "@/data/inventoryData";
+import { availableLocations } from "@/components/inventory/form/FormFields";
 
 interface InventoryFilterProps {
   categoryFilter: string | undefined;
@@ -146,7 +146,7 @@ export const InventoryFilter: React.FC<InventoryFilterProps> = ({
                 <span>All Locations</span>
               </CommandItem>
               
-              {locations.map((location) => (
+              {availableLocations.map((location) => (
                 <CommandItem 
                   key={location} 
                   onSelect={() => handleLocationSelect(location)}

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { ImageUploadField } from "./ImageUploadField";
 
-// Available locations for the dropdown
+// Available locations for the dropdown - use exact names from the data
 export const availableLocations = ["Warehouse A", "Warehouse B", "Storefront", "Online"];
 
 interface FormFieldProps {
