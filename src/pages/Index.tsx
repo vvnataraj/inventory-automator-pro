@@ -20,7 +20,7 @@ const getInitialStats = () => [
     value: "23",
     change: "-12%",
     icon: TrendingUp,
-    link: null
+    link: "/low-stock"
   },
   {
     name: "Monthly Revenue",
@@ -42,6 +42,7 @@ export default function Index() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(getInitialStats());
   const [categoryData, setCategoryData] = useState<{ name: string; value: number }[]>([]);
+  const [lowStockCount, setLowStockCount] = useState<number>(0);
 
   useEffect(() => {
     const calculateTotalInventoryValue = () => {
@@ -79,8 +80,34 @@ export default function Index() {
       setCategoryData(data);
     };
 
+    const calculateLowStockItems = () => {
+      // Count items with low stock
+      const lowStockItems = inventoryItems.filter(item => {
+        // Find all items with the same SKU to calculate total stock
+        const sameSkuItems = inventoryItems.filter(invItem => invItem.sku === item.sku);
+        const totalStock = sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
+        return totalStock <= item.lowStockThreshold;
+      });
+      
+      // Get unique items (by SKU) to avoid counting the same product multiple times
+      const uniqueLowStockItems = Array.from(
+        new Set(lowStockItems.map(item => item.sku))
+      ).map(sku => lowStockItems.find(item => item.sku === sku));
+      
+      const count = uniqueLowStockItems.length;
+      setLowStockCount(count);
+      
+      // Update the stats with the count
+      setStats(prevStats => prevStats.map(stat => 
+        stat.name === "Low Stock Items" 
+          ? { ...stat, value: count.toString() } 
+          : stat
+      ));
+    };
+
     calculateTotalInventoryValue();
     calculateCategoryValues();
+    calculateLowStockItems();
   }, []);
 
   const handleCardClick = (link: string | null) => {
