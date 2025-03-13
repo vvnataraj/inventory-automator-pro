@@ -49,7 +49,7 @@ const App = () => (
               <Route 
                 path="/inventory" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute readOnly={false}>
                     <Inventory />
                   </ProtectedRoute>
                 } 
@@ -57,7 +57,7 @@ const App = () => (
               <Route 
                 path="/orders" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute readOnly={false}>
                     <Orders />
                   </ProtectedRoute>
                 } 
@@ -65,7 +65,7 @@ const App = () => (
               <Route 
                 path="/purchases" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute readOnly={false}>
                     <Purchases />
                   </ProtectedRoute>
                 } 
@@ -73,7 +73,7 @@ const App = () => (
               <Route 
                 path="/progress" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireManager={true}>
                     <Progress />
                   </ProtectedRoute>
                 } 
@@ -81,7 +81,7 @@ const App = () => (
               <Route 
                 path="/locations" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireManager={true}>
                     <Locations />
                   </ProtectedRoute>
                 } 
@@ -89,7 +89,7 @@ const App = () => (
               <Route 
                 path="/sales" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute readOnly={false}>
                     <Sales />
                   </ProtectedRoute>
                 } 
@@ -105,7 +105,7 @@ const App = () => (
               <Route 
                 path="/settings" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireManager={true}>
                     <Settings />
                   </ProtectedRoute>
                 } 

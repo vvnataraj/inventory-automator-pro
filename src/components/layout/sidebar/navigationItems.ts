@@ -52,16 +52,19 @@ export const sections = [
   { 
     title: "User", 
     icon: User, 
-    items: userItems 
+    items: userItems,
+    requiredRole: null // Visible to all authenticated users
   },
   { 
     title: "Admin", 
     icon: Shield, 
-    items: adminItems 
+    items: adminItems,
+    requiredRole: 'manager' // Only visible to managers and admins
   },
   { 
     title: "Help", 
     icon: LifeBuoy, 
-    items: helpItems 
+    items: helpItems,
+    requiredRole: null // Visible to all authenticated users
   }
 ];

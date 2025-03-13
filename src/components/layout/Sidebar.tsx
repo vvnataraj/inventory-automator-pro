@@ -6,6 +6,7 @@ import { navigation, adminItems, helpItems, sections } from "./sidebar/navigatio
 import { SidebarNavItem } from "./sidebar/SidebarNavItem";
 import { SidebarSection } from "./sidebar/SidebarSection";
 import { CollapseButton } from "./sidebar/CollapseButton";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -19,6 +20,7 @@ export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
   });
   
   const location = useLocation();
+  const { isManager, isAdmin } = useUserRoles();
   
   // Check if current location is in admin section
   const isAdminActive = adminItems.some(item => item.href === location.pathname);
@@ -39,6 +41,14 @@ export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
 
   const handleSectionToggle = (section: string, state: boolean) => {
     setOpenSections(prev => ({ ...prev, [section]: state }));
+  };
+
+  // Function to check if user has access to a section
+  const hasAccessToSection = (requiredRole: string | null) => {
+    if (requiredRole === null) return true;
+    if (requiredRole === 'manager') return isManager();
+    if (requiredRole === 'admin') return isAdmin();
+    return false;
   };
 
   return (
@@ -65,7 +75,7 @@ export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
         ))}
         
         {/* Collapsible sections */}
-        {sections.map((section) => (
+        {sections.filter(section => hasAccessToSection(section.requiredRole)).map((section) => (
           <SidebarSection
             key={section.title}
             title={section.title}

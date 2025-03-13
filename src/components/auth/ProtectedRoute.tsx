@@ -17,7 +17,7 @@ export const ProtectedRoute = ({
   readOnly = false 
 }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
-  const { isAdmin, isManager, loading: rolesLoading } = useUserRoles();
+  const { isAdmin, isManager, isReadOnly, loading: rolesLoading } = useUserRoles();
   const location = useLocation();
 
   // Don't render anything while checking authentication or roles
@@ -50,6 +50,14 @@ export const ProtectedRoute = ({
     }} replace />;
   }
 
+  // Check for read-only access
+  if (readOnly === false && isReadOnly()) {
+    return <Navigate to="/" state={{ 
+      from: location,
+      error: "You don't have permission to access this functionality" 
+    }} replace />;
+  }
+
   // Render children if all checks pass
   return <>{children}</>;
-};
+}

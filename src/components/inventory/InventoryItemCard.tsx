@@ -9,6 +9,7 @@ import { TransferInventoryItem } from "./TransferInventoryItem";
 import { DeleteInventoryItem } from "./DeleteInventoryItem";
 import { ReorderInventoryItem } from "./ReorderInventoryItem";
 import { ShoppingCart } from "lucide-react";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import {
   Tooltip,
   TooltipContent,
@@ -38,6 +39,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   isLast = false
 }) => {
   const isLowStock = item.stock <= item.lowStockThreshold;
+  const { isReadOnly } = useUserRoles();
   
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
@@ -93,36 +95,40 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
       </CardContent>
       
       <CardFooter className="pt-0 flex gap-2 flex-wrap">
-        {onReorder && (
-          <ReorderInventoryItem
-            item={item}
-            isFirst={isFirst}
-            isLast={isLast}
-            onReorder={onReorder}
-          />
+        {!isReadOnly() && (
+          <>
+            {onReorder && (
+              <ReorderInventoryItem
+                item={item}
+                isFirst={isFirst}
+                isLast={isLast}
+                onReorder={onReorder}
+              />
+            )}
+            {onReorderStock && isLowStock && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-8 w-8" 
+                      onClick={() => onReorderStock(item)}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Reorder stock</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <EditInventoryItem item={item} onSave={onSave} />
+            <TransferInventoryItem item={item} onTransfer={onTransfer} />
+            <DeleteInventoryItem item={item} onDelete={onDelete} />
+          </>
         )}
-        {onReorderStock && isLowStock && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-8 w-8" 
-                  onClick={() => onReorderStock(item)}
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Reorder stock</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        <EditInventoryItem item={item} onSave={onSave} />
-        <TransferInventoryItem item={item} onTransfer={onTransfer} />
-        <DeleteInventoryItem item={item} onDelete={onDelete} />
       </CardFooter>
     </Card>
   );
