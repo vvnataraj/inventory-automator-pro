@@ -36,7 +36,7 @@ export const LeastProfitableItems = () => {
     <Card className="col-span-7">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-xl font-medium">
-          3 Least Profitable Items
+          Slow Moving Low Profit Items
         </CardTitle>
         <TrendingDown className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
