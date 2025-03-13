@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { InventoryItem, SortField } from "@/types/inventory";
 import { EditInventoryItem } from "./EditInventoryItem";
@@ -100,7 +99,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               <SortHeader field="stock" label="Stock" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <SortHeader field="location" label="Location" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <th className="py-3 px-4 text-left font-medium text-muted-foreground">Status</th>
-              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Reorder</th>
               <th className="py-3 px-4 text-left font-medium text-muted-foreground">Actions</th>
             </tr>
           </thead>
@@ -136,24 +134,17 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   )}
                 </td>
                 <td className="py-3 px-4">
-                  <div className="flex gap-1">
-                    <ReorderInventoryItem 
-                      item={item}
-                      isFirst={index === 0}
-                      isLast={index === items.length - 1}
-                      onReorder={onReorderItem}
-                    />
+                  <div className="flex flex-wrap gap-1">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button 
                             variant="outline" 
-                            size="sm" 
-                            className="h-8 flex gap-1" 
+                            size="icon" 
+                            className="h-8 w-8" 
                             onClick={() => onOpenReorderDialog(item)}
                           >
                             <ShoppingCart className="h-4 w-4" />
-                            Restock
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -161,27 +152,41 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  </div>
-                </td>
-                <td className="py-3 px-4">
-                  <div className="flex gap-2">
-                    <EditInventoryItem item={item} onSave={onSaveItem} showLabel={true} />
-                    <TransferInventoryItem item={item} onTransfer={onTransferItem} showLabel={true} />
                     
-                    <Button 
-                      variant={item.isActive ? "outline" : "ghost"} 
-                      size="sm"
-                      className={cn(
-                        "h-8 flex gap-1",
-                        item.isActive ? "text-amber-600 hover:bg-amber-100 hover:text-amber-700" : "text-green-600 hover:bg-green-100 hover:text-green-700"
-                      )}
-                      onClick={() => setDiscontinueItem(item)}
-                    >
-                      <CircleSlash className="h-4 w-4" />
-                      {item.isActive ? "Discontinue" : "Reactivate"}
-                    </Button>
+                    <TransferInventoryItem item={item} onTransfer={onTransferItem} showLabel={false} />
+                    <EditInventoryItem item={item} onSave={onSaveItem} showLabel={false} />
                     
-                    <DeleteInventoryItem item={item} onDelete={onDeleteItem} showLabel={true} />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant={item.isActive ? "outline" : "ghost"} 
+                            size="icon"
+                            className={cn(
+                              "h-8 w-8",
+                              item.isActive ? "text-amber-600 hover:bg-amber-100 hover:text-amber-700" : "text-green-600 hover:bg-green-100 hover:text-green-700"
+                            )}
+                            onClick={() => setDiscontinueItem(item)}
+                          >
+                            <CircleSlash className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{item.isActive ? "Discontinue" : "Reactivate"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <DeleteInventoryItem item={item} onDelete={onDeleteItem} showLabel={false} />
+                    
+                    <div className="ms-1">
+                      <ReorderInventoryItem 
+                        item={item}
+                        isFirst={index === 0}
+                        isLast={index === items.length - 1}
+                        onReorder={onReorderItem}
+                      />
+                    </div>
                   </div>
                 </td>
               </tr>

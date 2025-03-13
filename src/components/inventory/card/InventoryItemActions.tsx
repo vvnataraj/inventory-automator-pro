@@ -74,54 +74,67 @@ export const InventoryItemActions: React.FC<InventoryItemActionsProps> = ({
   
   return (
     <>
-      {onReorder && (
-        <ReorderInventoryItem
-          item={item}
-          isFirst={isFirst}
-          isLast={isLast}
-          onReorder={onReorder}
-          showLabel={true}
-        />
-      )}
-      
-      {onReorderStock && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 flex gap-1" 
-                onClick={() => setReorderDialogOpen(true)}
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Restock
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Reorder stock</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-      
-      <TransferInventoryItem item={item} onTransfer={onTransfer} showLabel={true} />
-      <EditInventoryItem item={item} onSave={onSave} showLabel={true} />
-      
-      <Button 
-        variant={item.isActive ? "outline" : "ghost"} 
-        size="sm"
-        className={cn(
-          "h-8 flex gap-1",
-          item.isActive ? "text-amber-600 hover:bg-amber-100 hover:text-amber-700" : "text-green-600 hover:bg-green-100 hover:text-green-700"
-        )}
-        onClick={() => setDiscontinueDialogOpen(true)}
-      >
-        <CircleSlash className="h-4 w-4" />
-        {item.isActive ? "Discontinue" : "Reactivate"}
-      </Button>
-      
-      <DeleteInventoryItem item={item} onDelete={onDelete} showLabel={true} />
+      <div className="flex flex-wrap gap-2">
+        <div className="flex gap-1">
+          {onReorder && (
+            <ReorderInventoryItem
+              item={item}
+              isFirst={isFirst}
+              isLast={isLast}
+              onReorder={onReorder}
+              showLabel={false}
+            />
+          )}
+        </div>
+        
+        <div className="flex gap-1">
+          {onReorderStock && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8" 
+                    onClick={() => setReorderDialogOpen(true)}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Reorder stock</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
+          <TransferInventoryItem item={item} onTransfer={onTransfer} showLabel={false} />
+          <EditInventoryItem item={item} onSave={onSave} showLabel={false} />
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant={item.isActive ? "outline" : "ghost"} 
+                  size="icon"
+                  className={cn(
+                    "h-8 w-8",
+                    item.isActive ? "text-amber-600 hover:bg-amber-100 hover:text-amber-700" : "text-green-600 hover:bg-green-100 hover:text-green-700"
+                  )}
+                  onClick={() => setDiscontinueDialogOpen(true)}
+                >
+                  <CircleSlash className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{item.isActive ? "Discontinue" : "Reactivate"}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <DeleteInventoryItem item={item} onDelete={onDelete} showLabel={false} />
+        </div>
+      </div>
       
       {onReorderStock && (
         <ReorderDialog

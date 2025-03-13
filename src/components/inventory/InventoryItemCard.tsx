@@ -39,7 +39,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
         {/* This space intentionally left empty for flex layout purposes */}
       </CardContent>
       
-      <CardFooter className="pt-0 flex gap-2 flex-wrap">
+      <CardFooter className="pt-0 flex justify-center">
         <InventoryItemActions 
           item={item}
           onSave={onSave}
