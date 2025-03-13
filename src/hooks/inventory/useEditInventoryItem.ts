@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
 import { toast } from "sonner";
 
-interface LocationStock {
+export interface LocationStock {
   location: string;
   count: number;
 }
@@ -15,19 +14,15 @@ export function useEditInventoryItem(item: InventoryItem) {
   const [locationStocks, setLocationStocks] = useState<LocationStock[]>([]);
   const [totalStock, setTotalStock] = useState(0);
 
-  // Re-initialize the form data when the item changes or dialog opens
   useEffect(() => {
     if (isOpen) {
-      // Update form data with the latest item data
       setFormData({...item});
       
       try {
-        // Find all items with the same SKU across different locations
         const sameSkuItems = inventoryItems.filter(
           (inventoryItem) => inventoryItem.sku === item.sku
         );
         
-        // Group by location and sum the stock
         const stockByLocation = sameSkuItems.reduce<{ [key: string]: number }>((acc, curr) => {
           if (!acc[curr.location]) {
             acc[curr.location] = 0;
@@ -36,19 +31,16 @@ export function useEditInventoryItem(item: InventoryItem) {
           return acc;
         }, {});
         
-        // Convert to array for rendering
         const locationStocksArray = Object.entries(stockByLocation).map(([location, count]) => ({
           location,
           count,
-        })).sort((a, b) => b.count - a.count); // Sort by count descending
+        })).sort((a, b) => b.count - a.count);
         
         setLocationStocks(locationStocksArray);
         
-        // Calculate total stock across all locations
         const total = locationStocksArray.reduce((sum, item) => sum + item.count, 0);
         setTotalStock(total);
         
-        // Update the form data with the total stock
         setFormData(prev => ({
           ...prev,
           totalStock: total
@@ -69,7 +61,6 @@ export function useEditInventoryItem(item: InventoryItem) {
   };
 
   const handleLocationStockChange = (location: string, newCount: number) => {
-    // Update the locationStocks array
     const updatedLocationStocks = locationStocks.map(locStock => 
       locStock.location === location 
         ? { ...locStock, count: newCount } 
@@ -78,38 +69,29 @@ export function useEditInventoryItem(item: InventoryItem) {
     
     setLocationStocks(updatedLocationStocks);
     
-    // Recalculate the total stock
     const newTotal = updatedLocationStocks.reduce((sum, item) => sum + item.count, 0);
     setTotalStock(newTotal);
     
-    // Update the form data with the new total
     setFormData(prev => ({
       ...prev,
       totalStock: newTotal,
-      // If this is the item's specific location, update its stock too
       stock: prev.location === location ? newCount : prev.stock
     }));
   };
 
-  // Prepare the updated items for all locations when saving
   const prepareItemsForSave = () => {
-    // Find all items with the same SKU
     const sameSkuItems = inventoryItems.filter(
       (inventoryItem) => inventoryItem.sku === item.sku
     );
     
-    // Create an array of updated items
     return sameSkuItems.map(inventoryItem => {
-      // Find this item's location in our locationStocks
       const locationData = locationStocks.find(
         locStock => locStock.location === inventoryItem.location
       );
       
-      // If found, update the stock value, otherwise keep the original
       return {
         ...inventoryItem,
         stock: locationData ? locationData.count : inventoryItem.stock,
-        // Copy other updated fields from the form
         name: formData.name,
         description: formData.description,
         cost: formData.cost,

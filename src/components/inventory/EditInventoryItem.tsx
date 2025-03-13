@@ -4,19 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import {
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { InventoryItem } from "@/types/inventory";
-import { Separator } from "@/components/ui/separator";
-import { StockDistributionCard } from "./edit/StockDistributionCard";
-import { InventoryItemEditForm } from "./edit/InventoryItemForm";
 import { useEditInventoryItem } from "@/hooks/inventory/useEditInventoryItem";
 import { toast } from "sonner";
 import { useInventoryOperations } from "@/hooks/inventory/useInventoryOperations";
+import { EditInventoryDialog } from "./edit/EditInventoryDialog";
 
 interface EditInventoryItemProps {
   item: InventoryItem;
@@ -88,51 +82,17 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
           {showLabel && "Edit"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Item</DialogTitle>
-          <DialogDescription>
-            Make changes to the inventory item here. Click save when you're done.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
-          <div className="space-y-4">
-            <h4 className="font-medium text-sm">Item Details</h4>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <InventoryItemEditForm 
-                formData={formData}
-                onChange={handleChange}
-                totalStock={totalStock}
-                readOnlyStock={true}
-              />
-              <div className="flex justify-end gap-3 mt-6">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => handleOpenChange(false)} 
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? "Saving..." : "Save changes"}
-                </Button>
-              </div>
-            </form>
-          </div>
-          
-          <div>
-            <h4 className="font-medium text-sm mb-3">Location Inventory</h4>
-            <StockDistributionCard
-              locationStocks={locationStocks}
-              totalStock={totalStock}
-              reorderQuantity={formData.minStockCount}
-              onLocationStockChange={handleLocationStockChange}
-            />
-          </div>
-        </div>
-      </DialogContent>
+      
+      <EditInventoryDialog
+        formData={formData}
+        locationStocks={locationStocks}
+        totalStock={totalStock}
+        isSaving={isSaving}
+        onCancel={() => handleOpenChange(false)}
+        onSubmit={handleSubmit}
+        handleChange={handleChange}
+        handleLocationStockChange={handleLocationStockChange}
+      />
     </Dialog>
   );
 };
