@@ -12,41 +12,57 @@ export function useInventoryOperations() {
 
   const updateItem = useCallback(async (updatedItem: InventoryItem) => {
     try {
+      // Ensure lastUpdated is set to current time
+      const itemToUpdate = {
+        ...updatedItem,
+        lastUpdated: new Date().toISOString()
+      };
+      
       // Check if we have a valid UUID, if not, create one
-      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(updatedItem.id);
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemToUpdate.id);
       
       // For non-UUID items, update only the local array
       if (!isValidUUID) {
-        console.log("Non-UUID item detected, updating local array only:", updatedItem.id);
+        console.log("Non-UUID item detected, updating local array only:", itemToUpdate.id);
         
         // Update local inventory items array
-        const itemIndex = inventoryItems.findIndex(item => item.id === updatedItem.id);
+        const itemIndex = inventoryItems.findIndex(item => item.id === itemToUpdate.id);
         if (itemIndex !== -1) {
-          inventoryItems[itemIndex] = updatedItem;
+          inventoryItems[itemIndex] = itemToUpdate;
+          console.log("Updated local item:", itemToUpdate);
+        } else {
+          console.error("Item not found in local inventory:", itemToUpdate.id);
+          throw new Error("Item not found in local inventory");
         }
         
         return true;
       }
       
-      const supabaseItem = mapInventoryItemToSupabaseItem(updatedItem);
+      // For UUID items, update in Supabase
+      const supabaseItem = mapInventoryItemToSupabaseItem(itemToUpdate);
       
-      const { error } = await supabase
+      console.log("Updating item in Supabase:", supabaseItem);
+      const { error, data } = await supabase
         .from('inventory_items')
         .update(supabaseItem)
-        .eq('id', updatedItem.id);
+        .eq('id', itemToUpdate.id)
+        .select();
       
       if (error) {
         console.error("Error updating item in Supabase:", error);
         throw error;
       }
       
+      console.log("Supabase update response:", data);
+      
       // Update local inventory items array for fallback
-      const itemIndex = inventoryItems.findIndex(item => item.id === updatedItem.id);
+      const itemIndex = inventoryItems.findIndex(item => item.id === itemToUpdate.id);
       if (itemIndex !== -1) {
-        inventoryItems[itemIndex] = updatedItem;
+        inventoryItems[itemIndex] = itemToUpdate;
+        console.log("Also updated item in local array for consistency");
       }
       
-      console.log("Item updated successfully:", updatedItem);
+      console.log("Item updated successfully:", itemToUpdate);
       return true;
     } catch (error) {
       console.error("Failed to update item:", error);
@@ -54,7 +70,11 @@ export function useInventoryOperations() {
       // Still update local inventory as fallback
       const itemIndex = inventoryItems.findIndex(item => item.id === updatedItem.id);
       if (itemIndex !== -1) {
-        inventoryItems[itemIndex] = updatedItem;
+        inventoryItems[itemIndex] = {
+          ...updatedItem,
+          lastUpdated: new Date().toISOString()
+        };
+        console.log("Updated local inventory as fallback");
       }
       
       toast.error("Failed to update item in database");

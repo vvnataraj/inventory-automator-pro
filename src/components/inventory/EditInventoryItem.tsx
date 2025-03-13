@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import {
@@ -35,21 +35,23 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
     handleLocationStockChange,
     prepareItemsForSave
   } = useEditInventoryItem(item);
-
+  
+  const [isSaving, setIsSaving] = useState(false);
   const { updateItem } = useInventoryOperations();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      setIsSaving(true);
+      
       // Get all items that need to be updated (across all locations)
       const itemsToUpdate = prepareItemsForSave();
       console.log("Items to update:", itemsToUpdate);
       
       // Update each item
-      for (const itemToUpdate of itemsToUpdate) {
-        await updateItem(itemToUpdate);
-      }
+      const updatePromises = itemsToUpdate.map(itemToUpdate => updateItem(itemToUpdate));
+      await Promise.all(updatePromises);
       
       // Call the onSave callback with the current item's updated version
       const currentItemUpdate = itemsToUpdate.find(i => i.id === item.id);
@@ -62,6 +64,8 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
     } catch (error) {
       console.error("Error updating items:", error);
       toast.error("Failed to update item");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -96,10 +100,12 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
                 readOnlyStock={true}
               />
               <div className="flex justify-end gap-3 mt-6">
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit">Save changes</Button>
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? "Saving..." : "Save changes"}
+                </Button>
               </div>
             </form>
           </div>
