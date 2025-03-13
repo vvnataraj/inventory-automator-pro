@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ChevronUp, ChevronDown } from "lucide-react";
@@ -19,11 +18,15 @@ import { formatDistanceToNow } from "date-fns";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { ListControls, ViewMode } from "@/components/common/ListControls";
 import { OrderDetailsDialog } from "@/components/orders/OrderDetailsDialog";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 type SortField = "orderNumber" | "customerName" | "createdAt" | "total" | "status";
 type SortDirection = "asc" | "desc";
 
 export default function Orders() {
+  const { role } = useUserRoles();
+  const isBasicUser = role === 'user';
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [badgeDisplayMode, setBadgeDisplayMode] = useState<"inline" | "stacked">("inline");
@@ -133,10 +136,12 @@ export default function Orders() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Orders</h1>
         <div className="flex gap-2">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Order
-          </Button>
+          {!isBasicUser && (
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Order
+            </Button>
+          )}
           {viewMode === "card" && (
             <Button variant="outline" className="gap-2" onClick={toggleBadgeDisplayMode}>
               {badgeDisplayMode === "inline" ? "Stacked" : "Inline"} Display
