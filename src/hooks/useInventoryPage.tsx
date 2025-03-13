@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -22,7 +21,8 @@ export function useInventoryPage() {
     deleteItem, 
     reorderItem, 
     reorderStock,
-    fetchItems
+    fetchItems,
+    reactivateAllItems
   } = useInventoryItems(
     currentPage, 
     searchQuery,
@@ -92,6 +92,10 @@ export function useInventoryPage() {
     toast.success(`Successfully transferred ${quantity} units of ${item.name} to ${newLocation}`);
   };
 
+  const handleReactivateAllItems = async () => {
+    await reactivateAllItems();
+  };
+
   return {
     state: {
       searchQuery,
@@ -122,7 +126,8 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      fetchItems
+      fetchItems,
+      handleReactivateAllItems
     }
   };
 }

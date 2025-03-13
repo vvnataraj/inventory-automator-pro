@@ -9,6 +9,8 @@ import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { InventoryPagination } from "@/components/inventory/InventoryPagination";
 import { InventoryItem } from "@/types/inventory";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
@@ -42,68 +44,82 @@ export default function Inventory() {
   
   return (
     <MainLayout>
-      <InventoryHeader 
-        onAddItem={actions.handleAddItem} 
-        items={state.items}
-        onImportItems={handleImportItems}
-      />
-      
-      <InventoryControls 
-        searchQuery={state.searchQuery}
-        setSearchQuery={actions.setSearchQuery}
-        viewMode={state.viewMode}
-        setViewMode={actions.setViewMode}
-        sortField={state.sortField}
-        sortDirection={state.sortDirection}
-        onSort={actions.handleSort}
-        onSortDirectionChange={actions.setSortDirection}
-      />
-
-      {state.isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-        </div>
-      ) : (
-        <>
-          {state.viewMode === "grid" ? (
-            <InventoryGrid 
-              items={state.items}
-              onSaveItem={actions.handleSaveItem}
-              onTransferItem={actions.handleTransferItem}
-              onDeleteItem={actions.handleDeleteItem}
-              onReorderStock={actions.handleReorderStock}
-            />
-          ) : (
-            <InventoryTable 
-              items={state.items}
-              sortField={state.sortField}
-              sortDirection={state.sortDirection}
-              onSort={actions.handleSort}
-              onSaveItem={actions.handleSaveItem}
-              onTransferItem={actions.handleTransferItem}
-              onDeleteItem={actions.handleDeleteItem}
-              onReorderItem={actions.handleReorderItem}
-              onOpenReorderDialog={actions.handleOpenReorderDialog}
-            />
-          )}
-
-          <InventoryPagination 
-            currentPage={state.currentPage}
-            itemsPerPage={state.itemsPerPage}
-            totalItems={state.totalItems}
-            onPageChange={actions.setCurrentPage}
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-between items-center">
+          <InventoryHeader 
+            onAddItem={actions.handleAddItem} 
+            items={state.items}
+            onImportItems={handleImportItems}
           />
-        </>
-      )}
-
-      {state.selectedItem && (
-        <ReorderDialog
-          item={state.selectedItem}
-          open={state.reorderDialogOpen}
-          onClose={() => actions.setReorderDialogOpen(false)}
-          onReorder={actions.handleReorderStock}
+          
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={actions.handleReactivateAllItems}
+            disabled={state.isLoading}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Reactivate All Discontinued Items
+          </Button>
+        </div>
+        
+        <InventoryControls 
+          searchQuery={state.searchQuery}
+          setSearchQuery={actions.setSearchQuery}
+          viewMode={state.viewMode}
+          setViewMode={actions.setViewMode}
+          sortField={state.sortField}
+          sortDirection={state.sortDirection}
+          onSort={actions.handleSort}
+          onSortDirectionChange={actions.setSortDirection}
         />
-      )}
+
+        {state.isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <>
+            {state.viewMode === "grid" ? (
+              <InventoryGrid 
+                items={state.items}
+                onSaveItem={actions.handleSaveItem}
+                onTransferItem={actions.handleTransferItem}
+                onDeleteItem={actions.handleDeleteItem}
+                onReorderStock={actions.handleReorderStock}
+              />
+            ) : (
+              <InventoryTable 
+                items={state.items}
+                sortField={state.sortField}
+                sortDirection={state.sortDirection}
+                onSort={actions.handleSort}
+                onSaveItem={actions.handleSaveItem}
+                onTransferItem={actions.handleTransferItem}
+                onDeleteItem={actions.handleDeleteItem}
+                onReorderItem={actions.handleReorderItem}
+                onOpenReorderDialog={actions.handleOpenReorderDialog}
+              />
+            )}
+
+            <InventoryPagination 
+              currentPage={state.currentPage}
+              itemsPerPage={state.itemsPerPage}
+              totalItems={state.totalItems}
+              onPageChange={actions.setCurrentPage}
+            />
+          </>
+        )}
+
+        {state.selectedItem && (
+          <ReorderDialog
+            item={state.selectedItem}
+            open={state.reorderDialogOpen}
+            onClose={() => actions.setReorderDialogOpen(false)}
+            onReorder={actions.handleReorderStock}
+          />
+        )}
+      </div>
     </MainLayout>
   );
 }

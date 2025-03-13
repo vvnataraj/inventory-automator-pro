@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { getInventoryItems, inventoryItems } from "@/data/inventoryData";
@@ -21,34 +20,27 @@ export function useInventoryItems(
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
     try {
-      // First attempt to fetch from Supabase
       let dbItems: InventoryItem[] = [];
       let supabaseQuery = supabase
         .from('inventory_items')
         .select('*');
       
-      // Apply search filter
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.toLowerCase().trim();
-        // Use ilike with multiple conditions
         supabaseQuery = supabaseQuery.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
       }
       
-      // Apply category filter
       if (categoryFilter) {
         supabaseQuery = supabaseQuery.eq('category', categoryFilter);
       }
       
-      // Apply location filter
       if (locationFilter) {
         supabaseQuery = supabaseQuery.eq('location', locationFilter);
       }
       
-      // Apply sorting
       const supabaseSortField = sortField === 'rrp' ? 'price' : sortField;
       supabaseQuery = supabaseQuery.order(supabaseSortField, { ascending: sortDirection === 'asc' });
       
-      // Apply pagination
       const pageSize = 20;
       const start = (page - 1) * pageSize;
       supabaseQuery = supabaseQuery.range(start, start + pageSize - 1);
@@ -61,9 +53,7 @@ export function useInventoryItems(
       }
       
       if (data && data.length > 0) {
-        // Transform Supabase data to match our InventoryItem type
         dbItems = data.map(item => {
-          // Safely cast dimensions and weight to Record<string, any>
           const dimensionsObj = item.dimensions as Record<string, any> | null;
           const weightObj = item.weight as Record<string, any> | null;
           
@@ -105,11 +95,9 @@ export function useInventoryItems(
         setTotalItems(count || dbItems.length);
         console.log("Fetched items from Supabase:", dbItems);
       } else {
-        // Fall back to local data if no data in Supabase yet
         console.log("No data in Supabase, using local data");
         let filteredItems = [...inventoryItems];
-
-        // Apply search query filter
+        
         if (searchQuery.trim()) {
           const query = searchQuery.toLowerCase().trim();
           filteredItems = filteredItems.filter(item =>
@@ -119,21 +107,18 @@ export function useInventoryItems(
           );
         }
         
-        // Apply category filter if provided
         if (categoryFilter) {
           filteredItems = filteredItems.filter(item => 
             item.category.toLowerCase() === categoryFilter.toLowerCase()
           );
         }
         
-        // Apply location filter if provided
         if (locationFilter) {
           filteredItems = filteredItems.filter(item => 
             item.location.toLowerCase() === locationFilter.toLowerCase()
           );
         }
         
-        // Apply sorting
         const sortedItems = filteredItems.sort((a, b) => {
           const aValue = a[sortField];
           const bValue = b[sortField];
@@ -147,7 +132,6 @@ export function useInventoryItems(
           return sortDirection === 'asc' ? comparison : -comparison;
         });
         
-        // Calculate pagination
         const total = sortedItems.length;
         const pageSize = 20;
         const start = (page - 1) * pageSize;
@@ -162,7 +146,6 @@ export function useInventoryItems(
       setError(err instanceof Error ? err : new Error("Failed to fetch inventory items"));
       console.error("Failed to fetch inventory items:", err);
       
-      // Fall back to the local data if there's an error
       const filteredItems = [...inventoryItems];
       const pageSize = 20;
       const start = (page - 1) * pageSize;
@@ -186,14 +169,12 @@ export function useInventoryItems(
   
   const updateItem = useCallback(async (updatedItem: InventoryItem) => {
     try {
-      // First update the local state for immediate UI response
       setItems(currentItems => 
         currentItems.map(item => 
           item.id === updatedItem.id ? updatedItem : item
         )
       );
       
-      // Try to update in Supabase first
       const { error } = await supabase
         .from('inventory_items')
         .update({
@@ -225,7 +206,6 @@ export function useInventoryItems(
         throw error;
       }
       
-      // If no error from Supabase, also update the local data array
       const itemIndex = inventoryItems.findIndex(item => item.id === updatedItem.id);
       if (itemIndex !== -1) {
         inventoryItems[itemIndex] = updatedItem;
@@ -236,7 +216,6 @@ export function useInventoryItems(
       console.error("Failed to update item:", error);
       toast.error("Failed to update item in database");
       
-      // Update local data as fallback
       const itemIndex = inventoryItems.findIndex(item => item.id === updatedItem.id);
       if (itemIndex !== -1) {
         inventoryItems[itemIndex] = updatedItem;
@@ -246,7 +225,6 @@ export function useInventoryItems(
   
   const addItem = useCallback(async (newItem: InventoryItem) => {
     try {
-      // Try to add to Supabase first
       const { error } = await supabase
         .from('inventory_items')
         .insert({
@@ -279,44 +257,33 @@ export function useInventoryItems(
         throw error;
       }
       
-      // Add to local inventory items array as fallback
       inventoryItems.unshift(newItem);
       
-      // Add to current items if on first page
-      setItems(currentItems => {
-        if (page === 1) {
-          return [newItem, ...currentItems.slice(0, -1)]; // Remove last item to maintain page size
-        }
-        return currentItems;
-      });
+      const pageSize = 20;
+      const start = (page - 1) * pageSize;
+      const paginatedItems = inventoryItems.slice(start, start + pageSize);
       
-      // Update total count
-      setTotalItems(prev => prev + 1);
+      setItems(paginatedItems);
+      setTotalItems(inventoryItems.length);
       
       console.log("Item added successfully:", newItem);
     } catch (error) {
       console.error("Failed to add item:", error);
       toast.error("Failed to add item to database");
       
-      // Add to local data as fallback
       inventoryItems.unshift(newItem);
       
-      // Add to current items if on first page
-      setItems(currentItems => {
-        if (page === 1) {
-          return [newItem, ...currentItems.slice(0, -1)]; // Remove last item to maintain page size
-        }
-        return currentItems;
-      });
+      const pageSize = 20;
+      const start = (page - 1) * pageSize;
+      const paginatedItems = inventoryItems.slice(start, start + pageSize);
       
-      // Update total count
-      setTotalItems(prev => prev + 1);
+      setItems(paginatedItems);
+      setTotalItems(inventoryItems.length);
     }
   }, [page]);
   
   const deleteItem = useCallback(async (itemId: string) => {
     try {
-      // Try to delete from Supabase first
       const { error } = await supabase
         .from('inventory_items')
         .delete()
@@ -327,18 +294,15 @@ export function useInventoryItems(
         throw error;
       }
       
-      // Remove from current items
       setItems(currentItems => 
         currentItems.filter(item => item.id !== itemId)
       );
       
-      // Remove from global inventory items array
       const itemIndex = inventoryItems.findIndex(item => item.id === itemId);
       if (itemIndex !== -1) {
         inventoryItems.splice(itemIndex, 1);
       }
       
-      // Update total count
       setTotalItems(prev => prev - 1);
       
       console.log("Item deleted successfully:", itemId);
@@ -346,29 +310,24 @@ export function useInventoryItems(
       console.error("Failed to delete item:", error);
       toast.error("Failed to delete item from database");
       
-      // Remove from current items as fallback
       setItems(currentItems => 
         currentItems.filter(item => item.id !== itemId)
       );
       
-      // Remove from global inventory items array
       const itemIndex = inventoryItems.findIndex(item => item.id === itemId);
       if (itemIndex !== -1) {
         inventoryItems.splice(itemIndex, 1);
       }
       
-      // Update total count
       setTotalItems(prev => prev - 1);
     }
   }, []);
   
-  // Add reordering functionality
   const reorderItem = useCallback((itemId: string, direction: 'up' | 'down') => {
     setItems(currentItems => {
       const itemIndex = currentItems.findIndex(item => item.id === itemId);
       if (itemIndex === -1) return currentItems;
       
-      // Can't move first item up or last item down
       if ((direction === 'up' && itemIndex === 0) || 
           (direction === 'down' && itemIndex === currentItems.length - 1)) {
         return currentItems;
@@ -377,25 +336,20 @@ export function useInventoryItems(
       const newItems = [...currentItems];
       const swapIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1;
       
-      // Swap the items
       [newItems[itemIndex], newItems[swapIndex]] = [newItems[swapIndex], newItems[itemIndex]];
       
       return newItems;
     });
   }, []);
   
-  // Updated reorderStock functionality with quantity parameter
   const reorderStock = useCallback(async (item: InventoryItem, quantity: number = 0) => {
     try {
-      // In a real application, this would send an order to the supplier
-      // For now, we'll simulate a reorder by updating the stock
       const reorderedItem = {
         ...item,
         stock: item.stock + (quantity > 0 ? quantity : Math.max(item.minStockCount, item.lowStockThreshold * 2)),
         lastUpdated: new Date().toISOString()
       };
-
-      // Update the item in our local state and database
+      
       await updateItem(reorderedItem);
       
       return reorderedItem;
@@ -405,6 +359,56 @@ export function useInventoryItems(
       return item;
     }
   }, []);
+  
+  const reactivateAllItems = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data: discontinuedItems, error: fetchError } = await supabase
+        .from('inventory_items')
+        .select('*')
+        .eq('is_active', false);
+      
+      if (fetchError) {
+        console.error("Error fetching discontinued items from Supabase:", fetchError);
+        throw new Error("Failed to fetch discontinued items");
+      }
+      
+      if (!discontinuedItems || discontinuedItems.length === 0) {
+        toast.info("No discontinued items found to reactivate");
+        setIsLoading(false);
+        return;
+      }
+      
+      const updatePromises = discontinuedItems.map(item => 
+        supabase
+          .from('inventory_items')
+          .update({ 
+            is_active: true,
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', item.id)
+      );
+      
+      await Promise.all(updatePromises);
+      
+      inventoryItems.forEach(item => {
+        if (!item.isActive) {
+          item.isActive = true;
+          item.lastUpdated = new Date().toISOString();
+        }
+      });
+      
+      await fetchItems();
+      
+      toast.success(`Successfully reactivated ${discontinuedItems.length} discontinued items`);
+    } catch (error) {
+      console.error("Failed to reactivate discontinued items:", error);
+      toast.error("Failed to reactivate discontinued items");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchItems]);
   
   return { 
     items, 
@@ -416,6 +420,7 @@ export function useInventoryItems(
     deleteItem,
     reorderItem,
     reorderStock,
-    fetchItems
+    fetchItems,
+    reactivateAllItems
   };
 }
