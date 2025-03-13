@@ -1,3 +1,4 @@
+
 import { useInventoryPage } from "@/hooks/useInventoryPage";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -66,6 +67,8 @@ export default function Inventory() {
           sortDirection={state.sortDirection}
           onSort={actions.handleSort}
           onSortDirectionChange={actions.setSortDirection}
+          locationFilter={state.locationFilter}
+          onLocationFilterChange={actions.setLocationFilter}
         />
 
         {state.isLoading ? (
