@@ -3,7 +3,6 @@ import React from "react";
 import { SortField, SortDirection } from "@/types/inventory";
 import { SearchInput } from "./controls/SearchInput";
 import { ViewModeToggle } from "./controls/ViewModeToggle";
-import { CategoryFilter } from "./controls/CategoryFilter";
 import { SortControl } from "./controls/SortControl";
 
 interface InventoryControlsProps {
@@ -15,8 +14,6 @@ interface InventoryControlsProps {
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
   onSortDirectionChange: (direction: SortDirection) => void;
-  categoryFilter?: string;
-  onCategoryFilterChange?: (category: string | undefined) => void;
 }
 
 export const InventoryControls: React.FC<InventoryControlsProps> = ({
@@ -28,8 +25,6 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
   sortDirection,
   onSort,
   onSortDirectionChange,
-  categoryFilter,
-  onCategoryFilterChange,
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -41,11 +36,6 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
       <ViewModeToggle 
         viewMode={viewMode} 
         setViewMode={setViewMode} 
-      />
-      
-      <CategoryFilter 
-        categoryFilter={categoryFilter} 
-        onCategoryFilterChange={onCategoryFilterChange}
       />
       
       <SortControl 

@@ -1,4 +1,3 @@
-
 import { useInventoryPage } from "@/hooks/useInventoryPage";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -10,37 +9,10 @@ import { InventoryPagination } from "@/components/inventory/InventoryPagination"
 import { InventoryItem } from "@/types/inventory";
 import { toast } from "sonner";
 import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
-  const [searchParams, setSearchParams] = useSearchParams();
   
-  // Handle category filter from URL when component mounts
-  useEffect(() => {
-    const categoryParam = searchParams.get('category');
-    if (categoryParam && categoryParam !== state.categoryFilter) {
-      actions.setCategoryFilter(categoryParam);
-    }
-  }, [searchParams, actions.setCategoryFilter, state.categoryFilter]); 
-  
-  // Update URL when category filter changes
-  useEffect(() => {
-    // Create a new searchParams object to avoid modifying the current one directly
-    const newParams = new URLSearchParams(searchParams);
-    
-    if (state.categoryFilter) {
-      newParams.set('category', state.categoryFilter);
-    } else {
-      newParams.delete('category');
-    }
-    
-    // Only update if the params have actually changed
-    if (newParams.toString() !== searchParams.toString()) {
-      setSearchParams(newParams);
-    }
-  }, [state.categoryFilter, setSearchParams, searchParams]);
-
   // Add specific effect to manually trigger data fetch when the page loads
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
@@ -94,8 +66,6 @@ export default function Inventory() {
           sortDirection={state.sortDirection}
           onSort={actions.handleSort}
           onSortDirectionChange={actions.setSortDirection}
-          categoryFilter={state.categoryFilter}
-          onCategoryFilterChange={actions.handleCategoryFilterChange}
         />
 
         {state.isLoading ? (

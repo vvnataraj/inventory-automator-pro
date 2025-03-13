@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -11,11 +12,10 @@ export function useInventoryPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [categoryFilter, searchQuery]);
+  }, [searchQuery]);
   
   const { 
     items, 
@@ -33,8 +33,7 @@ export function useInventoryPage() {
     currentPage, 
     searchQuery,
     sortField,
-    sortDirection,
-    categoryFilter
+    sortDirection
   );
   
   const itemsPerPage = 20;
@@ -47,11 +46,6 @@ export function useInventoryPage() {
       setSortDirection('asc');
     }
   };
-
-  const handleCategoryFilterChange = useCallback((category: string | undefined) => {
-    console.log("Setting category filter to:", category);
-    setCategoryFilter(category);
-  }, []);
 
   const handleSaveItem = useCallback(async (updatedItem: InventoryItem) => {
     const success = await updateItem(updatedItem);
@@ -146,7 +140,6 @@ export function useInventoryPage() {
       isLoading,
       totalItems,
       itemsPerPage,
-      categoryFilter
     },
     actions: {
       setSearchQuery,
@@ -156,8 +149,6 @@ export function useInventoryPage() {
       setSortDirection,
       setReorderDialogOpen,
       setSelectedItem,
-      setCategoryFilter,
-      handleCategoryFilterChange,
       handleSort,
       handleSaveItem,
       handleAddItem,
