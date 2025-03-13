@@ -21,7 +21,7 @@ export function useUserRoles() {
   const isManager = useCallback(() => role === 'manager' || role === 'admin', [role]);
   
   // Check if user is a regular user with read-only access
-  // Now correctly identifies 'user' role as NOT read-only
+  // A user with the 'user' role should NOT be considered read-only
   const isReadOnly = useCallback(() => role === null, [role]);
   
   // Fetch user role with memoization to prevent recreation on each render
@@ -47,13 +47,16 @@ export function useUserRoles() {
         throw error;
       }
       
-      // Get the first role or default to null
-      const userRole = data && data.length > 0 ? data[0].role as Role : null;
+      // Get the first role or default to 'user' instead of null
+      // This ensures authenticated users without explicit roles get 'user' role by default
+      const userRole = data && data.length > 0 ? data[0].role as Role : 'user';
       console.log("Fetched role:", userRole);
       setRole(userRole);
     } catch (error) {
       console.error("Error fetching user roles:", error);
       toast.error("Failed to load user permissions: " + error.message);
+      // Still set a default 'user' role on error to prevent access issues
+      setRole('user');
     } finally {
       setLoading(false);
     }
