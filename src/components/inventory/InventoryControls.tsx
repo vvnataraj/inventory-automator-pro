@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useInventoryDatabase } from "@/hooks/inventory/useInventoryDatabase";
+import { supabase } from "@/integrations/supabase/client";
 
 interface InventoryControlsProps {
   searchQuery: string;
@@ -57,11 +57,9 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
   const [categories, setCategories] = useState<string[]>([]);
   const { fetchFromSupabase } = useInventoryDatabase();
   
-  // Fetch categories from the database
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // First try to get categories from Supabase
         const { data, error } = await supabase
           .from('inventory_items')
           .select('category')
@@ -69,15 +67,13 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
         
         if (error) {
           console.error("Error fetching categories:", error);
-          // Fall back to hard-coded categories if there's an error
           fallbackToLocalCategories();
           return;
         }
         
         if (data && data.length > 0) {
-          // Extract unique categories
           const uniqueCategories = Array.from(
-            new Set(data.map(item => item.category).filter(Boolean))
+            new Set(data.map(item => item.category).filter(Boolean) as string[])
           ).sort();
           
           setCategories(uniqueCategories);
@@ -91,7 +87,6 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
     };
     
     const fallbackToLocalCategories = () => {
-      // Extract categories from local data
       import('@/data/inventoryData').then(({ inventoryItems }) => {
         const uniqueCategories = new Set<string>();
         inventoryItems.forEach(item => {

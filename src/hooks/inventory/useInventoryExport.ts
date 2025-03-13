@@ -38,7 +38,7 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         const weightObj = item.weight as Record<string, any> | null;
         
         return {
-          id: item.id,
+          id: item.id || "",
           sku: item.sku || "",
           name: item.name || "",
           description: item.description || "",
@@ -66,7 +66,7 @@ export const useInventoryExport = (items: InventoryItem[]) => {
             value: Number(weightObj.value) || 0,
             unit: (weightObj.unit as 'kg' | 'g' | 'lb') || 'kg'
           } : undefined,
-          isActive: Boolean(item.is_active !== false), // Default to true if undefined
+          isActive: typeof item.is_active === 'boolean' ? item.is_active : true,
           supplier: item.supplier || "",
           tags: Array.isArray(item.tags) ? item.tags : []
         };
@@ -136,7 +136,7 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         
         setTimeout(() => {
           document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          URL.revoObjectURL(url);
           setIsExporting(false);
           setIsExportDialogOpen(false);
           toast.success(`Inventory exported as ${exportFormat?.toUpperCase()} successfully!`);

@@ -136,7 +136,7 @@ export function useInventoryDatabase() {
       subcategory: item.subcategory || "",
       brand: item.brand || "",
       price: typeof item.price === 'number' ? item.price : 0,
-      rrp: typeof item.price === 'number' ? item.price : 0,
+      rrp: typeof item.rrp === 'number' ? item.rrp : (typeof item.price === 'number' ? item.price : 0),
       cost: typeof item.cost === 'number' ? item.cost : 0,
       stock: typeof item.stock === 'number' ? item.stock : 0,
       lowStockThreshold: typeof item.low_stock_threshold === 'number' ? item.low_stock_threshold : 5,
@@ -156,7 +156,7 @@ export function useInventoryDatabase() {
         value: Number(weightObj.value) || 0,
         unit: (weightObj.unit as 'kg' | 'g' | 'lb') || 'kg'
       } : undefined,
-      isActive: Boolean(item.is_active !== false), // Default to true if undefined
+      isActive: typeof item.is_active === 'boolean' ? item.is_active : true,
       supplier: item.supplier || "",
       tags: Array.isArray(item.tags) ? item.tags : []
     };
@@ -171,7 +171,8 @@ export function useInventoryDatabase() {
       category: item.category,
       subcategory: item.subcategory,
       brand: item.brand,
-      price: item.rrp, // Map rrp to price
+      price: item.price,
+      rrp: item.rrp,
       cost: item.cost,
       stock: item.stock,
       low_stock_threshold: item.lowStockThreshold,

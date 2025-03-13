@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileUp } from "lucide-react";
@@ -53,8 +54,8 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       imageUrl: item.imageUrl || item.image_url || "",
       dimensions: item.dimensions,
       weight: item.weight,
-      isActive: item.isActive !== undefined ? Boolean(item.isActive) : 
-            (item.is_active !== undefined ? Boolean(item.is_active) : true),
+      isActive: typeof item.isActive === 'boolean' ? item.isActive : 
+              (typeof item.is_active === 'boolean' ? item.is_active : true),
       supplier: item.supplier || "",
       tags: Array.isArray(item.tags) ? item.tags : []
     };
