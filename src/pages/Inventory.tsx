@@ -9,8 +9,6 @@ import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { InventoryPagination } from "@/components/inventory/InventoryPagination";
 import { InventoryItem } from "@/types/inventory";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
@@ -51,16 +49,6 @@ export default function Inventory() {
             items={state.items}
             onImportItems={handleImportItems}
           />
-          
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={actions.handleReactivateAllItems}
-            disabled={state.isLoading}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Reactivate All Discontinued Items
-          </Button>
         </div>
         
         <InventoryControls 
