@@ -5,12 +5,29 @@ import { inventoryItems } from "@/data/inventoryData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useInventoryDatabase } from "./useInventoryDatabase";
+import { v4 as uuidv4 } from "uuid";
 
 export function useInventoryOperations() {
   const { mapInventoryItemToSupabaseItem } = useInventoryDatabase();
 
   const updateItem = useCallback(async (updatedItem: InventoryItem) => {
     try {
+      // Check if we have a valid UUID, if not, create one
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(updatedItem.id);
+      
+      // For non-UUID items, update only the local array
+      if (!isValidUUID) {
+        console.log("Non-UUID item detected, updating local array only:", updatedItem.id);
+        
+        // Update local inventory items array
+        const itemIndex = inventoryItems.findIndex(item => item.id === updatedItem.id);
+        if (itemIndex !== -1) {
+          inventoryItems[itemIndex] = updatedItem;
+        }
+        
+        return true;
+      }
+      
       const supabaseItem = mapInventoryItemToSupabaseItem(updatedItem);
       
       const { error } = await supabase
@@ -47,7 +64,15 @@ export function useInventoryOperations() {
   
   const addItem = useCallback(async (newItem: InventoryItem) => {
     try {
-      const supabaseItem = mapInventoryItemToSupabaseItem(newItem);
+      // Ensure item has a proper UUID for Supabase
+      const itemWithValidId = {
+        ...newItem,
+        id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newItem.id) 
+          ? newItem.id 
+          : uuidv4()
+      };
+      
+      const supabaseItem = mapInventoryItemToSupabaseItem(itemWithValidId);
       
       const { error } = await supabase
         .from('inventory_items')
@@ -59,9 +84,9 @@ export function useInventoryOperations() {
       }
       
       // Add to local inventory items array for fallback
-      inventoryItems.unshift(newItem);
+      inventoryItems.unshift(itemWithValidId);
       
-      console.log("Item added successfully:", newItem);
+      console.log("Item added successfully:", itemWithValidId);
       return true;
     } catch (error) {
       console.error("Failed to add item:", error);
@@ -76,6 +101,22 @@ export function useInventoryOperations() {
   
   const deleteItem = useCallback(async (itemId: string) => {
     try {
+      // Check if we have a valid UUID, if not, only update local array
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId);
+      
+      // For non-UUID items, update only the local array
+      if (!isValidUUID) {
+        console.log("Non-UUID item detected, updating local array only:", itemId);
+        
+        // Remove from local inventory items array
+        const itemIndex = inventoryItems.findIndex(item => item.id === itemId);
+        if (itemIndex !== -1) {
+          inventoryItems.splice(itemIndex, 1);
+        }
+        
+        return true;
+      }
+      
       const { error } = await supabase
         .from('inventory_items')
         .delete()

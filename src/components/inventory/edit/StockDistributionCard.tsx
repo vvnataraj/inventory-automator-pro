@@ -41,7 +41,7 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="text-sm font-medium flex justify-between mb-3">
-          <span>Total Stock: {totalStock} units</span>
+          <span className="text-base font-semibold">Total Stock: {totalStock} units</span>
         </div>
         <Separator className="my-2" />
         <div className="space-y-4 mt-3">
