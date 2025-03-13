@@ -12,14 +12,17 @@ import {
   ShoppingCart,
   Truck,
   Shield,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { 
   Collapsible, 
   CollapsibleContent, 
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
-import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Main navigation items
 const navigation = [
@@ -38,18 +41,33 @@ const adminItems = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean;
+  toggleCollapse: () => void;
+}
+
+export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const location = window.location;
   
   // Check if current location is in admin section
   const isAdminActive = adminItems.some(item => item.href === location.pathname);
+  
+  // Automatically open admin section if on an admin page
+  useEffect(() => {
+    if (isAdminActive && !isAdminOpen) {
+      setIsAdminOpen(true);
+    }
+  }, [location.pathname, isAdminActive, isAdminOpen]);
 
   return (
-    <div className="flex h-full flex-col bg-white border-r">
-      <div className="flex h-16 items-center gap-2 px-4 border-b">
-        <div className="flex items-center gap-2">
-          <div className="h-10 w-10 rounded flex items-center justify-center">
+    <div className={cn(
+      "flex h-full flex-col bg-white border-r transition-all duration-300",
+      collapsed ? "w-[70px]" : "w-64"
+    )}>
+      <div className="flex h-16 items-center gap-2 px-4 border-b justify-between">
+        <div className="flex items-center gap-2 overflow-hidden">
+          <div className="h-10 w-10 rounded flex-shrink-0 flex items-center justify-center">
             <img 
               src="/lovable-uploads/f849ba67-c0f4-4e4b-9f84-e91df8d9b64d.png" 
               alt="STOCKtopus Logo" 
@@ -87,13 +105,24 @@ export function Sidebar() {
               }}
             />
           </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-xl bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">STOCK<span className="text-purple-600">topus</span></span>
-            <span className="text-xs text-muted-foreground -mt-1">Inventory Management</span>
-          </div>
+          {!collapsed && (
+            <div className="flex flex-col overflow-hidden">
+              <span className="font-bold text-xl bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent whitespace-nowrap">STOCK<span className="text-purple-600">topus</span></span>
+              <span className="text-xs text-muted-foreground -mt-1 whitespace-nowrap">Inventory Management</span>
+            </div>
+          )}
         </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleCollapse} 
+          className="flex-shrink-0"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
       </div>
-      <nav className="flex-1 space-y-1 p-2">
+      <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
         {/* Main navigation items */}
         {navigation.map((item) => (
           <Link
@@ -105,9 +134,10 @@ export function Sidebar() {
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
+            title={collapsed ? item.name : undefined}
           >
-            <item.icon className="h-4 w-4" />
-            {item.name}
+            <item.icon className="h-4 w-4 flex-shrink-0" />
+            {!collapsed && <span>{item.name}</span>}
           </Link>
         ))}
         
@@ -124,17 +154,18 @@ export function Sidebar() {
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
+            title={collapsed ? "Admin" : undefined}
           >
             <div className="flex items-center gap-3">
-              <Shield className="h-4 w-4" />
-              <span>Admin</span>
+              <Shield className="h-4 w-4 flex-shrink-0" />
+              {!collapsed && <span>Admin</span>}
             </div>
-            {isAdminOpen || isAdminActive ? 
+            {!collapsed && (isAdminOpen || isAdminActive ? 
               <ChevronDown className="h-4 w-4" /> : 
               <ChevronRight className="h-4 w-4" />
-            }
+            )}
           </CollapsibleTrigger>
-          <CollapsibleContent className="pl-4 mt-1 space-y-1">
+          <CollapsibleContent className={cn("mt-1 space-y-1", collapsed ? "pl-1" : "pl-4")}>
             {adminItems.map((item) => (
               <Link
                 key={item.name}
@@ -145,9 +176,10 @@ export function Sidebar() {
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
+                title={collapsed ? item.name : undefined}
               >
-                <item.icon className="h-4 w-4" />
-                {item.name}
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                {!collapsed && <span>{item.name}</span>}
               </Link>
             ))}
           </CollapsibleContent>
