@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { inventoryItems } from "@/data/inventoryData";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { TopProfitableItems } from "@/components/dashboard/TopProfitableItems";
+import { LeastProfitableItems } from "@/components/dashboard/LeastProfitableItems";
 
 const getInitialStats = () => [
   {
@@ -225,6 +226,10 @@ export default function Index() {
       
       <div className="mt-6">
         <TopProfitableItems />
+      </div>
+
+      <div className="mt-6">
+        <LeastProfitableItems />
       </div>
     </MainLayout>
   );
