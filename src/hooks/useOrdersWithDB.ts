@@ -1,166 +1,137 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { Order, OrderStatus } from '@/types/order';
-import { supabase } from '@/integrations/supabase/client';
-import { generateOrders } from '@/data/orderData';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from "react";
+import { Order, OrderItem, OrderStatus } from "@/types/order";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from 'uuid';
 
-export function useOrdersWithDB(
-  page: number = 1,
-  pageSize: number = 20,
-  searchQuery: string = '',
-  statusFilter?: OrderStatus
-) {
+export function useOrdersWithDB() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Fetch orders from the database
   const fetchOrders = useCallback(async () => {
-    setIsLoading(true);
     try {
-      // First try to fetch from Supabase
-      let query = supabase
+      setLoading(true);
+      
+      // This fetch will now work correctly with our new tables
+      const { data: ordersData, error: ordersError, count } = await supabase
         .from('orders')
-        .select('*, items:order_items(*), customer:customers(*)', { count: 'exact' });
-
-      // Apply search filter
-      if (searchQuery) {
-        query = query.or(`orderNumber.ilike.%${searchQuery}%,customers.name.ilike.%${searchQuery}%,customers.email.ilike.%${searchQuery}%`);
-      }
-
-      // Apply status filter
-      if (statusFilter) {
-        query = query.eq('status', statusFilter);
-      }
-
-      // Apply pagination
-      const start = (page - 1) * pageSize;
-      query = query.range(start, start + pageSize - 1)
+        .select(`
+          *,
+          customer:customers(*),
+          items:order_items(*)
+        `)
         .order('createdAt', { ascending: false });
-
-      const { data, error: fetchError, count } = await query;
-
-      if (fetchError) {
-        console.error("Error fetching orders from Supabase:", fetchError);
-        throw new Error("Failed to fetch from database");
+      
+      if (ordersError) {
+        throw ordersError;
       }
-
-      if (data && data.length > 0) {
-        // Transform Supabase data to match our Order type
-        const dbOrders: Order[] = data.map(order => ({
+      
+      if (!ordersData) {
+        return;
+      }
+      
+      // Transform data to match our Order type
+      const transformedOrders: Order[] = ordersData.map(order => {
+        // Extract customer from the joined data
+        const customer = order.customer ? {
+          id: order.customer.id,
+          name: order.customer.name,
+          email: order.customer.email,
+          phone: order.customer.phone
+        } : null;
+        
+        // Extract items from the joined data
+        const items = Array.isArray(order.items) ? order.items.map(item => ({
+          id: item.id,
+          productId: item.productId,
+          name: item.productName,
+          sku: item.productSku,
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.subtotal,
+          imageUrl: item.productImageUrl
+        })) : [];
+        
+        return {
           id: order.id,
           orderNumber: order.orderNumber,
-          customer: {
-            id: order.customer.id,
-            name: order.customer.name,
-            email: order.customer.email,
-            phone: order.customer.phone
-          },
-          items: order.items.map(item => ({
-            id: item.id,
-            product: {
-              id: item.productId,
-              name: item.productName,
-              sku: item.productSku,
-              cost: item.productCost,
-              imageUrl: item.productImageUrl
-            },
-            quantity: item.quantity,
-            price: item.price,
-            subtotal: item.subtotal
-          })),
+          customer,
           status: order.status as OrderStatus,
           total: order.total,
           tax: order.tax,
           shipping: order.shipping,
-          discount: order.discount,
+          discount: order.discount || 0,
           grandTotal: order.grandTotal,
           paymentMethod: order.paymentMethod,
           shippingAddress: {
             line1: order.shippingAddressLine1,
-            line2: order.shippingAddressLine2,
+            line2: order.shippingAddressLine2 || '',
             city: order.shippingAddressCity,
             state: order.shippingAddressState,
             postalCode: order.shippingAddressPostalCode,
             country: order.shippingAddressCountry
           },
-          notes: order.notes,
+          notes: order.notes || '',
           createdAt: order.createdAt,
           updatedAt: order.updatedAt,
           shippedAt: order.shippedAt,
-          deliveredAt: order.deliveredAt
-        }));
-
-        setOrders(dbOrders);
-        setTotalOrders(count || dbOrders.length);
-      } else {
-        // If no data in Supabase, use local mock data
-        console.log("No orders data in database, using local data");
-        const { items, total } = generateOrders(page, pageSize, searchQuery, statusFilter);
-        setOrders(items);
-        setTotalOrders(total);
-
-        // Optionally seed the database with mock data
-        // Uncomment this to seed the database
-        /*
-        await seedOrdersData();
-        toast.success("Seeded database with mock orders data");
-        */
-      }
-
+          deliveredAt: order.deliveredAt,
+          items
+        };
+      });
+      
+      setOrders(transformedOrders);
+      setTotalOrders(count || transformedOrders.length);
       setError(null);
     } catch (err) {
+      console.error("Error fetching orders:", err);
       setError(err instanceof Error ? err : new Error("Failed to fetch orders"));
-      console.error("Failed to fetch orders:", err);
-      
-      // Fall back to mock data
-      const { items, total } = generateOrders(page, pageSize, searchQuery, statusFilter);
-      setOrders(items);
-      setTotalOrders(total);
-      
-      toast.error("Failed to fetch orders from database, using local data");
+      toast.error("Failed to fetch orders");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [page, pageSize, searchQuery, statusFilter]);
+  }, []);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  const addOrder = useCallback(async (newOrder: Order) => {
+  // Add a new order to the database
+  const addOrder = useCallback(async (newOrder: Omit<Order, "id">) => {
     try {
-      // First, ensure the customer exists
-      let customerId = newOrder.customer.id;
+      // First, make sure the customer exists
+      let customerId = newOrder.customer?.id;
       
-      if (!customerId.startsWith('cust-')) {
-        // Insert or retrieve the customer
-        const { data: customerData, error: customerError } = await supabase
+      if (!customerId && newOrder.customer) {
+        // Create a new customer record if one doesn't exist
+        const customerUuid = uuidv4();
+        const { error: customerError } = await supabase
           .from('customers')
-          .upsert({
-            id: newOrder.customer.id,
+          .insert({
+            id: customerUuid,
             name: newOrder.customer.name,
             email: newOrder.customer.email,
             phone: newOrder.customer.phone
-          })
-          .select()
-          .single();
-
-        if (customerError) {
-          throw customerError;
-        }
+          });
         
-        customerId = customerData.id;
+        if (customerError) throw customerError;
+        customerId = customerUuid;
       }
-
+      
+      // Generate a new UUID for the order
+      const orderId = uuidv4();
+      
       // Insert the order
-      const { data: orderData, error: orderError } = await supabase
+      const { error: orderError } = await supabase
         .from('orders')
         .insert({
-          id: newOrder.id,
+          id: orderId,
           orderNumber: newOrder.orderNumber,
-          customerId: customerId,
+          customerId,
           status: newOrder.status,
           total: newOrder.total,
           tax: newOrder.tax,
@@ -175,60 +146,69 @@ export function useOrdersWithDB(
           shippingAddressPostalCode: newOrder.shippingAddress.postalCode,
           shippingAddressCountry: newOrder.shippingAddress.country,
           notes: newOrder.notes,
-          createdAt: newOrder.createdAt,
-          updatedAt: newOrder.updatedAt,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           shippedAt: newOrder.shippedAt,
           deliveredAt: newOrder.deliveredAt
-        })
-        .select()
-        .single();
-
-      if (orderError) {
-        throw orderError;
-      }
-
-      // Insert order items
-      const orderItems = newOrder.items.map(item => ({
-        orderId: orderData.id,
-        productId: item.product.id,
-        productName: item.product.name,
-        productSku: item.product.sku,
-        productCost: item.product.cost,
-        productImageUrl: item.product.imageUrl,
-        quantity: item.quantity,
-        price: item.price,
-        subtotal: item.subtotal
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        throw itemsError;
-      }
-
-      // Update local state
-      setOrders(prev => [newOrder, ...prev]);
-      setTotalOrders(prev => prev + 1);
+        });
       
-      toast.success(`Order ${newOrder.orderNumber} created successfully`);
+      if (orderError) throw orderError;
+      
+      // Insert all the order items
+      if (newOrder.items && newOrder.items.length > 0) {
+        const orderItems = newOrder.items.map(item => ({
+          orderId,
+          productId: item.productId,
+          productName: item.name,
+          productSku: item.sku,
+          productCost: item.price, // Assuming cost is the same as price for simplicity
+          productImageUrl: item.imageUrl || '',
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.subtotal
+        }));
+        
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
+        
+        if (itemsError) throw itemsError;
+      }
+      
+      // Refresh orders after adding
+      await fetchOrders();
+      toast.success('Order created successfully');
       return true;
     } catch (error) {
-      console.error("Failed to add order:", error);
-      toast.error("Failed to add order to database");
+      console.error("Error adding order:", error);
+      toast.error("Failed to create order");
       return false;
     }
-  }, []);
+  }, [fetchOrders]);
 
+  // Update an existing order
   const updateOrder = useCallback(async (updatedOrder: Order) => {
     try {
-      // Update the order record
+      // Update the customer if needed
+      if (updatedOrder.customer) {
+        const { error: customerError } = await supabase
+          .from('customers')
+          .update({
+            name: updatedOrder.customer.name,
+            email: updatedOrder.customer.email,
+            phone: updatedOrder.customer.phone,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', updatedOrder.customer.id);
+        
+        if (customerError) throw customerError;
+      }
+      
+      // Update the order
       const { error: orderError } = await supabase
         .from('orders')
         .update({
           orderNumber: updatedOrder.orderNumber,
-          customerId: updatedOrder.customer.id,
           status: updatedOrder.status,
           total: updatedOrder.total,
           tax: updatedOrder.tax,
@@ -248,175 +228,69 @@ export function useOrdersWithDB(
           deliveredAt: updatedOrder.deliveredAt
         })
         .eq('id', updatedOrder.id);
-
-      if (orderError) {
-        throw orderError;
-      }
-
-      // Update customer information
-      const { error: customerError } = await supabase
-        .from('customers')
-        .update({
-          name: updatedOrder.customer.name,
-          email: updatedOrder.customer.email,
-          phone: updatedOrder.customer.phone
-        })
-        .eq('id', updatedOrder.customer.id);
-
-      if (customerError) {
-        throw customerError;
-      }
-
-      // Delete existing order items
-      const { error: deleteError } = await supabase
+      
+      if (orderError) throw orderError;
+      
+      // Delete existing order items and insert updated ones
+      const { error: deleteItemsError } = await supabase
         .from('order_items')
         .delete()
         .eq('orderId', updatedOrder.id);
-
-      if (deleteError) {
-        throw deleteError;
-      }
-
-      // Insert updated order items
-      const orderItems = updatedOrder.items.map(item => ({
-        orderId: updatedOrder.id,
-        productId: item.product.id,
-        productName: item.product.name,
-        productSku: item.product.sku,
-        productCost: item.product.cost,
-        productImageUrl: item.product.imageUrl,
-        quantity: item.quantity,
-        price: item.price,
-        subtotal: item.subtotal
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        throw itemsError;
-      }
-
-      // Update local state
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === updatedOrder.id ? updatedOrder : order
-        )
-      );
       
-      toast.success(`Order ${updatedOrder.orderNumber} updated successfully`);
-      return true;
-    } catch (error) {
-      console.error("Failed to update order:", error);
-      toast.error("Failed to update order in database");
-      return false;
-    }
-  }, []);
-
-  const deleteOrder = useCallback(async (orderId: string) => {
-    try {
-      // Delete the order (order items will be deleted via cascade)
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', orderId);
-
-      if (error) {
-        throw error;
-      }
-
-      // Update local state
-      setOrders(prev => prev.filter(order => order.id !== orderId));
-      setTotalOrders(prev => prev - 1);
+      if (deleteItemsError) throw deleteItemsError;
       
-      toast.success("Order deleted successfully");
-      return true;
-    } catch (error) {
-      console.error("Failed to delete order:", error);
-      toast.error("Failed to delete order from database");
-      return false;
-    }
-  }, []);
-
-  // Utility function to seed the database with mock data
-  const seedOrdersData = useCallback(async () => {
-    try {
-      const allOrders = generateOrders();
-      
-      for (const order of allOrders.slice(0, 20)) { // Only seed 20 orders for performance
-        // Ensure customer exists
-        const { error: customerError } = await supabase
-          .from('customers')
-          .upsert({
-            id: order.customer.id,
-            name: order.customer.name,
-            email: order.customer.email,
-            phone: order.customer.phone
-          });
-        
-        if (customerError) {
-          console.error("Error upserting customer:", customerError);
-          continue;
-        }
-        
-        // Insert order
-        const { error: orderError } = await supabase
-          .from('orders')
-          .insert({
-            id: order.id,
-            orderNumber: order.orderNumber,
-            customerId: order.customer.id,
-            status: order.status,
-            total: order.total,
-            tax: order.tax,
-            shipping: order.shipping,
-            discount: order.discount,
-            grandTotal: order.grandTotal,
-            paymentMethod: order.paymentMethod,
-            shippingAddressLine1: order.shippingAddress.line1,
-            shippingAddressLine2: order.shippingAddress.line2,
-            shippingAddressCity: order.shippingAddress.city,
-            shippingAddressState: order.shippingAddress.state,
-            shippingAddressPostalCode: order.shippingAddress.postalCode,
-            shippingAddressCountry: order.shippingAddress.country,
-            notes: order.notes,
-            createdAt: order.createdAt,
-            updatedAt: order.updatedAt,
-            shippedAt: order.shippedAt,
-            deliveredAt: order.deliveredAt
-          });
-        
-        if (orderError) {
-          console.error("Error inserting order:", orderError);
-          continue;
-        }
-        
-        // Insert order items
-        const orderItems = order.items.map(item => ({
-          orderId: order.id,
-          productId: item.product.id,
-          productName: item.product.name,
-          productSku: item.product.sku,
-          productCost: item.product.cost,
-          productImageUrl: item.product.imageUrl,
+      // Insert updated items
+      if (updatedOrder.items && updatedOrder.items.length > 0) {
+        const orderItems = updatedOrder.items.map(item => ({
+          orderId: updatedOrder.id,
+          productId: item.productId,
+          productName: item.name,
+          productSku: item.sku,
+          productCost: item.price,
+          productImageUrl: item.imageUrl || '',
           quantity: item.quantity,
           price: item.price,
           subtotal: item.subtotal
         }));
         
-        const { error: itemsError } = await supabase
+        const { error: insertItemsError } = await supabase
           .from('order_items')
           .insert(orderItems);
         
-        if (itemsError) {
-          console.error("Error inserting order items:", itemsError);
-        }
+        if (insertItemsError) throw insertItemsError;
       }
       
+      // Refresh orders after updating
+      await fetchOrders();
+      toast.success('Order updated successfully');
       return true;
     } catch (error) {
-      console.error("Failed to seed orders data:", error);
+      console.error("Error updating order:", error);
+      toast.error("Failed to update order");
+      return false;
+    }
+  }, [fetchOrders]);
+
+  // Delete an order from the database
+  const deleteOrder = useCallback(async (orderId: string) => {
+    try {
+      // Supabase will automatically delete the order_items due to ON DELETE CASCADE
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+      
+      if (error) throw error;
+      
+      // Update the local state
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+      setTotalOrders(prev => prev - 1);
+      
+      toast.success('Order deleted successfully');
+      return true;
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      toast.error("Failed to delete order");
       return false;
     }
   }, []);
@@ -424,12 +298,11 @@ export function useOrdersWithDB(
   return {
     orders,
     totalOrders,
-    isLoading,
+    loading,
     error,
     fetchOrders,
     addOrder,
     updateOrder,
-    deleteOrder,
-    seedOrdersData
+    deleteOrder
   };
 }

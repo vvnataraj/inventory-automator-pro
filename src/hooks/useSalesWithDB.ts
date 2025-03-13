@@ -1,109 +1,89 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { Sale, SaleStatus } from '@/types/sale';
-import { supabase } from '@/integrations/supabase/client';
-import { generateSales } from '@/data/salesData';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from "react";
+import { Sale, SaleItem, SaleStatus } from "@/types/sale";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from 'uuid';
 
-export function useSalesWithDB(
-  page: number = 1,
-  pageSize: number = 10,
-  searchQuery: string = ''
-) {
+export function useSalesWithDB() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [totalSales, setTotalSales] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Fetch sales from the database
   const fetchSales = useCallback(async () => {
-    setIsLoading(true);
     try {
-      // First try to fetch from Supabase
-      let query = supabase
+      setLoading(true);
+      
+      const { data: salesData, error: salesError, count } = await supabase
         .from('sales')
-        .select('*, items:sale_items(*)', { count: 'exact' });
-
-      // Apply search filter
-      if (searchQuery) {
-        query = query.or(`saleNumber.ilike.%${searchQuery}%,customerName.ilike.%${searchQuery}%`);
-      }
-
-      // Apply pagination
-      const start = (page - 1) * pageSize;
-      query = query.range(start, start + pageSize - 1)
+        .select(`
+          *,
+          items:sale_items(*)
+        `)
         .order('date', { ascending: false });
-
-      const { data, error: fetchError, count } = await query;
-
-      if (fetchError) {
-        console.error("Error fetching sales from Supabase:", fetchError);
-        throw new Error("Failed to fetch from database");
+      
+      if (salesError) {
+        throw salesError;
       }
-
-      if (data && data.length > 0) {
-        // Transform Supabase data to match our Sale type
-        const dbSales: Sale[] = data.map(sale => ({
+      
+      if (!salesData) {
+        return;
+      }
+      
+      // Transform data to match our Sale type
+      const transformedSales: Sale[] = salesData.map(sale => {
+        // Extract items from the joined data
+        const items = Array.isArray(sale.items) ? sale.items.map(item => ({
+          id: item.id,
+          inventoryItemId: item.inventoryItemId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.subtotal
+        })) : [];
+        
+        return {
           id: sale.id,
           saleNumber: sale.saleNumber,
           customerName: sale.customerName,
-          items: sale.items.map(item => ({
-            inventoryItemId: item.inventoryItemId,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-            subtotal: item.subtotal
-          })),
+          items: items,
           total: sale.total,
           date: sale.date,
           status: sale.status as SaleStatus,
           paymentMethod: sale.paymentMethod,
-          notes: sale.notes
-        }));
-
-        setSales(dbSales);
-        setTotalSales(count || dbSales.length);
-      } else {
-        // If no data in Supabase, use local mock data
-        console.log("No sales data in database, using local data");
-        const { items, total } = generateSales(page, pageSize, searchQuery);
-        setSales(items);
-        setTotalSales(total);
-
-        // Optionally seed the database with mock data
-        // Uncomment this to seed the database
-        /*
-        await seedSalesData();
-        toast.success("Seeded database with mock sales data");
-        */
-      }
-
+          notes: sale.notes || ''
+        };
+      });
+      
+      setSales(transformedSales);
+      setTotalSales(count || transformedSales.length);
       setError(null);
     } catch (err) {
+      console.error("Error fetching sales:", err);
       setError(err instanceof Error ? err : new Error("Failed to fetch sales"));
-      console.error("Failed to fetch sales:", err);
-      
-      // Fall back to mock data
-      const { items, total } = generateSales(page, pageSize, searchQuery);
-      setSales(items);
-      setTotalSales(total);
-      
-      toast.error("Failed to fetch sales from database, using local data");
+      toast.error("Failed to fetch sales");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [page, pageSize, searchQuery]);
+  }, []);
 
   useEffect(() => {
     fetchSales();
   }, [fetchSales]);
 
-  const addSale = useCallback(async (newSale: Sale) => {
+  // Add a new sale to the database
+  const addSale = useCallback(async (newSale: Omit<Sale, "id">) => {
     try {
-      // First insert the sale
-      const { data: saleData, error: saleError } = await supabase
+      // Generate a new UUID for the sale
+      const saleId = uuidv4();
+      
+      // Insert the sale
+      const { error: saleError } = await supabase
         .from('sales')
         .insert({
-          id: newSale.id,
+          id: saleId,
           saleNumber: newSale.saleNumber,
           customerName: newSale.customerName,
           total: newSale.total,
@@ -111,48 +91,43 @@ export function useSalesWithDB(
           status: newSale.status,
           paymentMethod: newSale.paymentMethod,
           notes: newSale.notes
-        })
-        .select()
-        .single();
-
-      if (saleError) {
-        throw saleError;
-      }
-
-      // Then insert the sale items
-      const saleItems = newSale.items.map(item => ({
-        saleId: saleData.id,
-        inventoryItemId: item.inventoryItemId,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        subtotal: item.subtotal
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('sale_items')
-        .insert(saleItems);
-
-      if (itemsError) {
-        throw itemsError;
-      }
-
-      // Update local state
-      setSales(prev => [newSale, ...prev]);
-      setTotalSales(prev => prev + 1);
+        });
       
-      toast.success(`Sale ${newSale.saleNumber} created successfully`);
-      return true;
+      if (saleError) throw saleError;
+      
+      // Insert all the sale items
+      if (newSale.items && newSale.items.length > 0) {
+        const saleItems = newSale.items.map(item => ({
+          saleId,
+          inventoryItemId: item.inventoryItemId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.subtotal
+        }));
+        
+        const { error: itemsError } = await supabase
+          .from('sale_items')
+          .insert(saleItems);
+        
+        if (itemsError) throw itemsError;
+      }
+      
+      // Refresh sales after adding
+      await fetchSales();
+      toast.success('Sale created successfully');
+      return { success: true, id: saleId };
     } catch (error) {
-      console.error("Failed to add sale:", error);
-      toast.error("Failed to add sale to database");
-      return false;
+      console.error("Error adding sale:", error);
+      toast.error("Failed to create sale");
+      return { success: false, id: null };
     }
-  }, []);
+  }, [fetchSales]);
 
+  // Update an existing sale
   const updateSale = useCallback(async (updatedSale: Sale) => {
     try {
-      // Update the sale record
+      // Update the sale
       const { error: saleError } = await supabase
         .from('sales')
         .update({
@@ -165,108 +140,21 @@ export function useSalesWithDB(
           notes: updatedSale.notes
         })
         .eq('id', updatedSale.id);
-
-      if (saleError) {
-        throw saleError;
-      }
-
-      // Delete existing sale items
-      const { error: deleteError } = await supabase
+      
+      if (saleError) throw saleError;
+      
+      // Delete existing sale items and insert updated ones
+      const { error: deleteItemsError } = await supabase
         .from('sale_items')
         .delete()
         .eq('saleId', updatedSale.id);
-
-      if (deleteError) {
-        throw deleteError;
-      }
-
-      // Insert updated sale items
-      const saleItems = updatedSale.items.map(item => ({
-        saleId: updatedSale.id,
-        inventoryItemId: item.inventoryItemId,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        subtotal: item.subtotal
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('sale_items')
-        .insert(saleItems);
-
-      if (itemsError) {
-        throw itemsError;
-      }
-
-      // Update local state
-      setSales(prev => 
-        prev.map(sale => 
-          sale.id === updatedSale.id ? updatedSale : sale
-        )
-      );
       
-      toast.success(`Sale ${updatedSale.saleNumber} updated successfully`);
-      return true;
-    } catch (error) {
-      console.error("Failed to update sale:", error);
-      toast.error("Failed to update sale in database");
-      return false;
-    }
-  }, []);
-
-  const deleteSale = useCallback(async (saleId: string) => {
-    try {
-      // Delete the sale (sale items will be deleted via cascade)
-      const { error } = await supabase
-        .from('sales')
-        .delete()
-        .eq('id', saleId);
-
-      if (error) {
-        throw error;
-      }
-
-      // Update local state
-      setSales(prev => prev.filter(sale => sale.id !== saleId));
-      setTotalSales(prev => prev - 1);
+      if (deleteItemsError) throw deleteItemsError;
       
-      toast.success("Sale deleted successfully");
-      return true;
-    } catch (error) {
-      console.error("Failed to delete sale:", error);
-      toast.error("Failed to delete sale from database");
-      return false;
-    }
-  }, []);
-
-  // Utility function to seed the database with mock data
-  const seedSalesData = useCallback(async () => {
-    try {
-      const allSales = generateSales(1, 50, "").items;
-      
-      // Insert sales
-      for (const sale of allSales) {
-        const { error: saleError } = await supabase
-          .from('sales')
-          .insert({
-            id: sale.id,
-            saleNumber: sale.saleNumber,
-            customerName: sale.customerName,
-            total: sale.total,
-            date: sale.date,
-            status: sale.status,
-            paymentMethod: sale.paymentMethod,
-            notes: sale.notes
-          });
-        
-        if (saleError) {
-          console.error("Error inserting sale:", saleError);
-          continue;
-        }
-        
-        // Insert sale items
-        const saleItems = sale.items.map(item => ({
-          saleId: sale.id,
+      // Insert updated items
+      if (updatedSale.items && updatedSale.items.length > 0) {
+        const saleItems = updatedSale.items.map(item => ({
+          saleId: updatedSale.id,
           inventoryItemId: item.inventoryItemId,
           name: item.name,
           quantity: item.quantity,
@@ -274,31 +162,70 @@ export function useSalesWithDB(
           subtotal: item.subtotal
         }));
         
-        const { error: itemsError } = await supabase
+        const { error: insertItemsError } = await supabase
           .from('sale_items')
           .insert(saleItems);
         
-        if (itemsError) {
-          console.error("Error inserting sale items:", itemsError);
-        }
+        if (insertItemsError) throw insertItemsError;
       }
       
+      // Refresh sales after updating
+      await fetchSales();
+      toast.success('Sale updated successfully');
       return true;
     } catch (error) {
-      console.error("Failed to seed sales data:", error);
+      console.error("Error updating sale:", error);
+      toast.error("Failed to update sale");
+      return false;
+    }
+  }, [fetchSales]);
+
+  // Delete a sale from the database
+  const deleteSale = useCallback(async (saleId: string) => {
+    try {
+      // Supabase will automatically delete the sale_items due to ON DELETE CASCADE
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', saleId);
+      
+      if (error) throw error;
+      
+      // Update the local state
+      setSales(prevSales => prevSales.filter(sale => sale.id !== saleId));
+      setTotalSales(prev => prev - 1);
+      
+      toast.success('Sale deleted successfully');
+      return true;
+    } catch (error) {
+      console.error("Error deleting sale:", error);
+      toast.error("Failed to delete sale");
       return false;
     }
   }, []);
 
+  // Get sales statistics: total sales, average sale value, etc.
+  const getSalesStatistics = useCallback(() => {
+    const total = sales.length;
+    const totalValue = sales.reduce((sum, sale) => sum + Number(sale.total), 0);
+    const averageValue = total > 0 ? totalValue / total : 0;
+    
+    return {
+      totalSales: total,
+      totalValue,
+      averageValue
+    };
+  }, [sales]);
+
   return {
     sales,
     totalSales,
-    isLoading,
+    loading,
     error,
     fetchSales,
     addSale,
     updateSale,
     deleteSale,
-    seedSalesData
+    getSalesStatistics
   };
 }

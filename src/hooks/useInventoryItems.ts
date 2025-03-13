@@ -63,7 +63,7 @@ export function useInventoryItems(
       if (data && data.length > 0) {
         // Transform Supabase data to match our InventoryItem type
         dbItems = data.map(item => {
-          // Safely access dimensions and weight as Record<string, any>
+          // Safely cast dimensions and weight to Record<string, any>
           const dimensionsObj = item.dimensions as Record<string, any> | null;
           const weightObj = item.weight as Record<string, any> | null;
           
@@ -404,7 +404,7 @@ export function useInventoryItems(
       toast.error("Failed to reorder stock");
       return item;
     }
-  }, [updateItem]);
+  }, []);
   
   return { 
     items, 
