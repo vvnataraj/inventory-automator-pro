@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -239,7 +240,7 @@ export const InventoryItemForm = ({
           />
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="minStockCount" className="text-right">Min Stock</Label>
+          <Label htmlFor="minStockCount" className="text-right">Reorder Quantity</Label>
           <Input
             id="minStockCount"
             name="minStockCount"

@@ -108,6 +108,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
             <StockDistributionCard
               locationStocks={locationStocks}
               totalStock={totalStock}
+              reorderQuantity={formData.minStockCount}
               onLocationStockChange={handleLocationStockChange}
             />
           </div>

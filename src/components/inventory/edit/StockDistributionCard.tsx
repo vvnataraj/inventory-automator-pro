@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 interface LocationStock {
   location: string;
@@ -14,12 +16,14 @@ interface LocationStock {
 interface StockDistributionCardProps {
   locationStocks: LocationStock[];
   totalStock: number;
+  reorderQuantity: number;
   onLocationStockChange: (location: string, newCount: number) => void;
 }
 
 export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({ 
   locationStocks, 
   totalStock,
+  reorderQuantity,
   onLocationStockChange
 }) => {
   // Calculate percentage for each location
@@ -34,6 +38,9 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
     }
   };
 
+  // Calculate if stock is at reorder level (10% of reorder quantity)
+  const isAtReorderLevel = totalStock <= (reorderQuantity * 0.1);
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -43,6 +50,17 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
         <div className="text-sm font-medium flex justify-between mb-3">
           <span className="text-base font-semibold">Total Stock: {totalStock} units</span>
         </div>
+        
+        {isAtReorderLevel && reorderQuantity > 0 && (
+          <Alert className="my-2 border-amber-500 bg-amber-50 text-amber-900">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertTitle>Reorder Alert</AlertTitle>
+            <AlertDescription>
+              Stock level is at or below 10% of the recommended reorder quantity.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Separator className="my-2" />
         <div className="space-y-4 mt-3">
           {locationStocks.map((locationStock, index) => (
