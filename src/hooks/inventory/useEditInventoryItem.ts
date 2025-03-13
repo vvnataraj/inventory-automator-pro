@@ -7,8 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocations } from "@/hooks/useLocations";
 
 export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => void) => {
+  // Fix: Create dummy arguments for useInventoryReordering since it expects 4 arguments
+  const mockSetItems = () => {};
+  const mockSetIsLoading = () => {};
+  const mockFetchItems = async () => {};
+  const { reorderStock } = useInventoryReordering([], mockSetItems, mockSetIsLoading, mockFetchItems);
+  
   const { updateItem } = useInventoryOperations();
-  const { reorderStock } = useInventoryReordering();
   const { locations } = useLocations();
   const { toast } = useToast();
   
@@ -93,21 +98,19 @@ export const useEditInventoryItem = (item: InventoryItem | null, onClose: () => 
     
     // Update the item with the new data
     try {
-      // Fix: Pass one argument (the updated item) to updateItem
-      updateItem({
+      // Fix: Pass only one argument to updateItem
+      const updatedItem = {
         ...item,
         ...updatedFormData,
         locations: updatedLocations,
         lastUpdated: new Date().toISOString()
-      });
+      };
+      updateItem(updatedItem);
       
       // Also update reorder quantity if changed
       if (reorderQuantity !== item.reorderQuantity) {
-        // Fix: Pass the updated item with the reorder quantity to reorderStock
-        reorderStock({
-          ...item,
-          reorderQuantity: reorderQuantity
-        });
+        // Fix: Pass the item and quantity separately to match function signature
+        reorderStock(updatedItem, reorderQuantity - item.reorderQuantity);
       }
       
       toast({
