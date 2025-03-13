@@ -10,6 +10,7 @@ import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
 import UserRoleBadge from "./UserRoleBadge";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { useAuth } from "@/contexts/AuthContext";
 
 type User = {
   id: string;
@@ -29,6 +30,10 @@ type UserRowProps = {
 export default function UserRow({ user, onUserUpdated }: UserRowProps) {
   const [isDisabled, setIsDisabled] = useState(user.is_disabled || false);
   const { isAdmin } = useUserRoles();
+  const { user: currentUser } = useAuth();
+  
+  // Check if viewing own profile
+  const isOwnProfile = currentUser?.id === user.id;
 
   const toggleUserStatus = (userId: string, currentStatus: boolean) => {
     if (!isAdmin()) {
@@ -52,7 +57,11 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
 
   // Format user display info
   const displayEmail = user.email || "No email";
-  const displayUsername = user.username || "—";
+  
+  // Only show username if it's the current user's profile or if the user is an admin
+  const displayUsername = isOwnProfile || isAdmin() 
+    ? (user.username || "—") 
+    : "•••••••";
   
   // Get the primary role (first in the array) or default to 'user'
   const primaryRole = user.roles.length > 0 ? user.roles[0] : 'user';
