@@ -11,7 +11,8 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Legend,
-  LabelList
+  LabelList,
+  Cell
 } from "recharts";
 import { Sale } from "@/types/sale";
 import { Badge } from "@/components/ui/badge";
@@ -78,10 +79,10 @@ export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales,
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'critical': return 'bg-red-500';
-      case 'warning': return 'bg-yellow-500';
-      case 'good': return 'bg-green-500';
-      default: return 'bg-blue-500';
+      case 'critical': return '#ef4444'; // Red
+      case 'warning': return '#f59e0b'; // Yellow/Amber
+      case 'good': return '#22c55e'; // Green
+      default: return '#3b82f6'; // Blue
     }
   };
 
@@ -104,14 +105,14 @@ export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales,
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[400px]"> {/* Increased height from 300px to 400px for better spacing */}
+        <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={stockPredictionData}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 150, bottom: 5 }} /* Increased left margin for product names */
-              barSize={20} /* Control bar height */
-              barGap={12} /* Control spacing between bars */
+              margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+              barSize={20}
+              barGap={12}
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis 
@@ -135,14 +136,13 @@ export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales,
                 labelFormatter={(label) => ""}
               />
               <Legend />
-              <ReferenceLine x={7} stroke="red" strokeDasharray="3 3" />
-              <ReferenceLine x={14} stroke="orange" strokeDasharray="3 3" />
+              <ReferenceLine x={7} stroke="#ef4444" strokeDasharray="3 3" />
+              <ReferenceLine x={14} stroke="#f59e0b" strokeDasharray="3 3" />
               <Bar 
                 dataKey="daysUntilRestock" 
-                fill="#8884d8" 
-                background={{ fill: '#eee' }}
                 name="Days Until Restock"
                 radius={[0, 4, 4, 0]}
+                background={{ fill: '#eee' }}
               >
                 <LabelList 
                   dataKey="daysUntilRestock" 
@@ -152,9 +152,9 @@ export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales,
                 />
                 {
                   stockPredictionData.map((entry, index) => (
-                    <rect 
-                      key={`rect-${index}`} 
-                      className={getStatusColor(entry.stockStatus)}
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={getStatusColor(entry.stockStatus)}
                     />
                   ))
                 }
