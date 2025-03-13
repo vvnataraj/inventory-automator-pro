@@ -364,33 +364,18 @@ export function useInventoryItems(
     try {
       setIsLoading(true);
       
-      const { data: discontinuedItems, error: fetchError } = await supabase
+      const { error: updateError } = await supabase
         .from('inventory_items')
-        .select('*')
+        .update({ 
+          is_active: true,
+          last_updated: new Date().toISOString()
+        })
         .eq('is_active', false);
       
-      if (fetchError) {
-        console.error("Error fetching discontinued items from Supabase:", fetchError);
-        throw new Error("Failed to fetch discontinued items");
+      if (updateError) {
+        console.error("Error updating items in Supabase:", updateError);
+        throw new Error("Failed to update items");
       }
-      
-      if (!discontinuedItems || discontinuedItems.length === 0) {
-        toast.info("No discontinued items found to reactivate");
-        setIsLoading(false);
-        return;
-      }
-      
-      const updatePromises = discontinuedItems.map(item => 
-        supabase
-          .from('inventory_items')
-          .update({ 
-            is_active: true,
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', item.id)
-      );
-      
-      await Promise.all(updatePromises);
       
       inventoryItems.forEach(item => {
         if (!item.isActive) {
@@ -401,10 +386,10 @@ export function useInventoryItems(
       
       await fetchItems();
       
-      toast.success(`Successfully reactivated ${discontinuedItems.length} discontinued items`);
+      return true;
     } catch (error) {
-      console.error("Failed to reactivate discontinued items:", error);
-      toast.error("Failed to reactivate discontinued items");
+      console.error("Failed to reactivate items:", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }

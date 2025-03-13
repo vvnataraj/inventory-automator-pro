@@ -93,7 +93,13 @@ export function useInventoryPage() {
   };
 
   const handleReactivateAllItems = async () => {
-    await reactivateAllItems();
+    try {
+      await reactivateAllItems();
+      toast.success("Successfully reactivated all inventory items");
+    } catch (error) {
+      console.error("Failed to reactivate all items:", error);
+      toast.error("Failed to reactivate all inventory items");
+    }
   };
 
   return {
