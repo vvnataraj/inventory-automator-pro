@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useLocation } from "react-router-dom";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const location = useLocation();
 
   // Check if redirected from another page
@@ -137,7 +139,16 @@ export default function Login() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                        <div className="flex justify-between items-center">
+                          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                          <button 
+                            type="button" 
+                            onClick={() => setForgotPasswordOpen(true)}
+                            className="text-xs text-purple-600 hover:text-purple-800 hover:underline"
+                          >
+                            Forgot password?
+                          </button>
+                        </div>
                         <Input 
                           id="password" 
                           type="password" 
@@ -232,6 +243,11 @@ export default function Login() {
           </div>
         </div>
       </div>
+      
+      <ForgotPasswordDialog
+        open={forgotPasswordOpen}
+        onOpenChange={setForgotPasswordOpen}
+      />
     </div>
   );
 }
