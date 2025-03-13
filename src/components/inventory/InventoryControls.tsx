@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ArrowUpDown, Grid, Table, ArrowUpAZ, ArrowDownAz } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Grid, Table, ArrowUpAZ, ArrowDownAz, X } from "lucide-react";
 import { SortField, SortDirection } from "@/types/inventory";
 import {
   DropdownMenu,
@@ -13,6 +13,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { inventoryItems } from "@/data/inventoryData";
 
 interface InventoryControlsProps {
   searchQuery: string;
@@ -23,6 +37,8 @@ interface InventoryControlsProps {
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
   onSortDirectionChange: (direction: SortDirection) => void;
+  categoryFilter?: string;
+  onCategoryFilterChange?: (category: string | undefined) => void;
 }
 
 export const InventoryControls: React.FC<InventoryControlsProps> = ({
@@ -34,7 +50,22 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
   sortDirection,
   onSort,
   onSortDirectionChange,
+  categoryFilter,
+  onCategoryFilterChange,
 }) => {
+  const [filterOpen, setFilterOpen] = useState(false);
+  
+  // Extract unique categories from inventory items
+  const categories = React.useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    inventoryItems.forEach(item => {
+      if (item.category) {
+        uniqueCategories.add(item.category);
+      }
+    });
+    return Array.from(uniqueCategories).sort();
+  }, []);
+
   const getSortIcon = (field: SortField) => {
     if (field !== sortField) return null;
     
@@ -76,10 +107,72 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
           <Table className="h-4 w-4" />
         </Button>
       </div>
-      <Button variant="outline" className="gap-2">
-        <Filter className="h-4 w-4" />
-        Filter
-      </Button>
+      
+      <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="gap-2">
+            <Filter className="h-4 w-4" />
+            {categoryFilter ? (
+              <span className="flex items-center">
+                Filter: {categoryFilter}
+              </span>
+            ) : (
+              "Filter"
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80" align="end">
+          <div className="space-y-4">
+            <h4 className="font-medium">Filter Inventory</h4>
+            
+            <div className="space-y-2">
+              <label htmlFor="category" className="text-sm font-medium">
+                Category
+              </label>
+              <Select 
+                value={categoryFilter || ""}
+                onValueChange={(value) => {
+                  onCategoryFilterChange?.(value === "" ? undefined : value);
+                  setFilterOpen(false);
+                }}
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex justify-between">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  onCategoryFilterChange?.(undefined);
+                  setFilterOpen(false);
+                }}
+                disabled={!categoryFilter}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear Filter
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => setFilterOpen(false)}
+              >
+                Apply
+              </Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -125,6 +218,22 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+      
+      {categoryFilter && (
+        <div className="flex items-center ml-2">
+          <Badge className="flex items-center gap-1">
+            {categoryFilter}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-4 w-4 p-0 ml-1" 
+              onClick={() => onCategoryFilterChange?.(undefined)}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </Badge>
+        </div>
+      )}
     </div>
   );
 };

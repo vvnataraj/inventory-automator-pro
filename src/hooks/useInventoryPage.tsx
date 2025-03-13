@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -11,6 +12,7 @@ export function useInventoryPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   
   const { 
     items, 
@@ -27,7 +29,8 @@ export function useInventoryPage() {
     currentPage, 
     searchQuery,
     sortField,
-    sortDirection
+    sortDirection,
+    categoryFilter
   );
   
   const itemsPerPage = 20;
@@ -114,7 +117,8 @@ export function useInventoryPage() {
       items,
       isLoading,
       totalItems,
-      itemsPerPage
+      itemsPerPage,
+      categoryFilter
     },
     actions: {
       setSearchQuery,
@@ -124,6 +128,7 @@ export function useInventoryPage() {
       setSortDirection,
       setReorderDialogOpen,
       setSelectedItem,
+      setCategoryFilter,
       handleSort,
       handleSaveItem,
       handleAddItem,

@@ -9,9 +9,31 @@ import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { InventoryPagination } from "@/components/inventory/InventoryPagination";
 import { InventoryItem } from "@/types/inventory";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Check for category in URL parameters
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam && categoryParam !== state.categoryFilter) {
+      actions.setCategoryFilter(categoryParam);
+    }
+  }, [searchParams]);
+  
+  // Update URL when category filter changes
+  useEffect(() => {
+    if (state.categoryFilter) {
+      searchParams.set('category', state.categoryFilter);
+      setSearchParams(searchParams);
+    } else if (searchParams.has('category')) {
+      searchParams.delete('category');
+      setSearchParams(searchParams);
+    }
+  }, [state.categoryFilter]);
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
     // Process each imported item
@@ -40,6 +62,12 @@ export default function Inventory() {
     toast.success(`Successfully imported ${importedItems.length} items`);
   };
   
+  const handleCategoryFilterChange = (category: string | undefined) => {
+    actions.setCategoryFilter(category);
+    // Reset to first page when changing filters
+    actions.setCurrentPage(1);
+  };
+  
   return (
     <MainLayout>
       <div className="flex flex-col gap-6">
@@ -60,6 +88,8 @@ export default function Inventory() {
           sortDirection={state.sortDirection}
           onSort={actions.handleSort}
           onSortDirectionChange={actions.setSortDirection}
+          categoryFilter={state.categoryFilter}
+          onCategoryFilterChange={handleCategoryFilterChange}
         />
 
         {state.isLoading ? (
