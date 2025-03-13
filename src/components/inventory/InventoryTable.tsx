@@ -97,7 +97,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               <SortHeader field="cost" label="Cost" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <SortHeader field="rrp" label="RRP" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <SortHeader field="stock" label="Stock" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
-              <SortHeader field="location" label="Location" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <th className="py-3 px-4 text-left font-medium text-muted-foreground">Status</th>
               <th className="py-3 px-4 text-left font-medium text-muted-foreground">Actions</th>
             </tr>
@@ -121,7 +120,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     {item.stock}
                   </span>
                 </td>
-                <td className="py-3 px-4">{item.location}</td>
                 <td className="py-3 px-4">
                   {item.isActive ? (
                     <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">

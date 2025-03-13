@@ -24,10 +24,6 @@ export const InventoryItemDetails: React.FC<InventoryItemDetailsProps> = ({ item
           <p className="font-medium">${item.cost.toFixed(2)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Location</p>
-          <p className="font-medium">{item.location}</p>
-        </div>
-        <div>
           <p className="text-muted-foreground">Total Units</p>
           <p className="font-medium">{item.stock}</p>
         </div>
