@@ -19,9 +19,19 @@ export function ProfileCard({ user }: ProfileCardProps) {
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
   
+  console.log("ProfileCard - Received user prop:", user ? {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    avatar_url: user.avatar_url
+  } : "null");
+  
   useEffect(() => {
     if (user) {
-      console.log("Setting initial profile data:", { username: user.username, avatarUrl: user.avatar_url });
+      console.log("ProfileCard - Setting initial profile data:", { 
+        username: user.username, 
+        avatarUrl: user.avatar_url 
+      });
       setUsername(user.username || "");
       setAvatarUrl(user.avatar_url || null);
     }

@@ -28,6 +28,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const fetchUserData = async () => {
           try {
             const updatedUser = await authOperations.fetchUserProfile(session.user);
+            console.log("AuthContext - Initial user fetch:", {
+              id: updatedUser.id,
+              email: updatedUser.email,
+              username: updatedUser.username,
+              avatar_url: updatedUser.avatar_url
+            });
             setUser(updatedUser);
           } catch (error) {
             console.error("Error fetching user data:", error);
@@ -51,6 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           try {
             const updatedUser = await authOperations.fetchUserProfile(session.user);
+            console.log("AuthContext - Auth state change:", {
+              id: updatedUser.id,
+              email: updatedUser.email,
+              username: updatedUser.username,
+              avatar_url: updatedUser.avatar_url
+            });
             setUser(updatedUser);
           } catch (error) {
             console.error("Error fetching user data on auth change:", error);

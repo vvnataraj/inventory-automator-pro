@@ -21,18 +21,33 @@ export const useAuthOperations = (
   const fetchUserProfile = async (user: User) => {
     try {
       console.log("Fetching user profile for:", user.id);
+      console.log("User object received:", {
+        id: user.id,
+        email: user.email,
+        username: user.username !== undefined ? user.username : "undefined",
+        avatar_url: user.avatar_url !== undefined ? user.avatar_url : "undefined"
+      });
       
       // The username and avatar_url should already be in the user object
       // from the Supabase SDK since we're using the direct column
       
       // If for some reason they aren't populated, ensure they're at least null
       if (user.username === undefined) {
+        console.log("Username was undefined, setting to null");
         user.username = null;
       }
       
       if (user.avatar_url === undefined) {
+        console.log("Avatar URL was undefined, setting to null");
         user.avatar_url = null;
       }
+      
+      console.log("Returning user object:", {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        avatar_url: user.avatar_url
+      });
       
       return user;
     } catch (error) {
