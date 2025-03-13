@@ -32,20 +32,28 @@ export function useInventoryCore(
     setIsLoading(true);
     
     try {
+      // Ensure categoryFilter is properly handled (not undefined string)
+      const sanitizedCategoryFilter = categoryFilter === "undefined" ? undefined : categoryFilter;
+      
       console.log("Fetching items with params:", {
-        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+        page, 
+        searchQuery, 
+        sortField, 
+        sortDirection, 
+        categoryFilter: sanitizedCategoryFilter, 
+        locationFilter
       });
       
       // Try to fetch from Supabase first
       const { items: dbItems, count, error: dbError } = await fetchFromSupabase(
-        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+        page, searchQuery, sortField, sortDirection, sanitizedCategoryFilter, locationFilter
       );
       
       if (dbError || dbItems.length === 0) {
         // Fallback to local data if Supabase fetch fails or returns no results
         console.log("Falling back to local data");
         const { items: localItems, total } = fetchFromLocal(
-          page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+          page, searchQuery, sortField, sortDirection, sanitizedCategoryFilter, locationFilter
         );
         
         setItems(localItems);
