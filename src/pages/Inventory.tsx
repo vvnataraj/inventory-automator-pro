@@ -8,6 +8,7 @@ import { InventoryGrid } from "@/components/inventory/InventoryGrid";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { InventoryPagination } from "@/components/inventory/InventoryPagination";
 import { InventoryItem } from "@/types/inventory";
+import { toast } from "sonner";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
@@ -30,6 +31,15 @@ export default function Inventory() {
       
       // Add the item to inventory
       actions.handleAddItem(item);
+    });
+    
+    // Refresh the inventory items
+    actions.fetchItems();
+    
+    // Show a success toast
+    toast({
+      title: "Import complete",
+      description: `Successfully imported ${importedItems.length} items`,
     });
   };
   

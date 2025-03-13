@@ -13,7 +13,17 @@ export function useInventoryPage() {
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   
-  const { items, isLoading, totalItems, updateItem, addItem, deleteItem, reorderItem, reorderStock } = useInventoryItems(
+  const { 
+    items, 
+    isLoading, 
+    totalItems, 
+    updateItem, 
+    addItem, 
+    deleteItem, 
+    reorderItem, 
+    reorderStock,
+    fetchItems
+  } = useInventoryItems(
     currentPage, 
     searchQuery,
     sortField,
@@ -134,7 +144,8 @@ export function useInventoryPage() {
       handleReorderItem,
       handleOpenReorderDialog,
       handleReorderStock,
-      handleTransferItem
+      handleTransferItem,
+      fetchItems
     }
   };
 }
