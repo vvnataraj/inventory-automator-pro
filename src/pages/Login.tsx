@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,9 +15,20 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const location = useLocation();
+
+  // Check if redirected from another page
+  useEffect(() => {
+    // Check if we were redirected with an error message
+    const state = location.state as { error?: string };
+    if (state?.error) {
+      // You could show this error in the UI if needed
+      console.error("Auth redirect error:", state.error);
+    }
+  }, [location]);
 
   // If already logged in, redirect to dashboard
-  if (user && !loading) {
+  if (!loading && user) {
     return <Navigate to="/" />;
   }
 
@@ -44,6 +55,15 @@ export default function Login() {
     await signUp(email, password);
     setIsLoading(false);
   };
+
+  // Don't render content until we know the auth state for sure
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center bg-gradient-to-br from-purple-50 to-indigo-50 p-4">
