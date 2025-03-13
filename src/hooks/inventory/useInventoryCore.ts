@@ -86,7 +86,7 @@ export function useInventoryCore(
     fetchItems(true);
   }, [fetchItems]);
 
-  // Add useEffect to fetch items when dependencies change
+  // Use effect to fetch items when dependencies change
   useEffect(() => {
     fetchItems();
   }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);

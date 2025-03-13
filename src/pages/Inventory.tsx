@@ -16,19 +16,23 @@ export default function Inventory() {
   const { state, actions } = useInventoryPage();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Check for category in URL parameters
+  // Check for category in URL parameters only once when component mounts
+  // or when searchParams change
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     if (categoryParam && categoryParam !== state.categoryFilter) {
       actions.setCategoryFilter(categoryParam);
     }
-  }, [searchParams, state.categoryFilter, actions]);
+  }, [searchParams, actions]); // Removed state.categoryFilter to prevent loop
   
-  // Update URL when category filter changes
+  // Update URL when category filter changes, but prevent infinite loop
   useEffect(() => {
     if (state.categoryFilter) {
-      searchParams.set('category', state.categoryFilter);
-      setSearchParams(searchParams);
+      // Only update if different
+      if (searchParams.get('category') !== state.categoryFilter) {
+        searchParams.set('category', state.categoryFilter);
+        setSearchParams(searchParams);
+      }
     } else if (searchParams.has('category')) {
       searchParams.delete('category');
       setSearchParams(searchParams);
@@ -39,7 +43,7 @@ export default function Inventory() {
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
     actions.fetchItems();
-  }, [actions]);
+  }, []); // Only run on initial mount
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
     // Process each imported item

@@ -28,11 +28,11 @@ export function useInventoryDatabase() {
         supabaseQuery = supabaseQuery.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
       }
       
-      if (categoryFilter) {
+      if (categoryFilter && categoryFilter !== "undefined") {
         supabaseQuery = supabaseQuery.eq('category', categoryFilter);
       }
       
-      if (locationFilter) {
+      if (locationFilter && locationFilter !== "undefined") {
         supabaseQuery = supabaseQuery.eq('location', locationFilter);
       }
       
@@ -87,13 +87,13 @@ export function useInventoryDatabase() {
       );
     }
     
-    if (categoryFilter) {
+    if (categoryFilter && categoryFilter !== "undefined") {
       filteredItems = filteredItems.filter(item => 
         item.category.toLowerCase() === categoryFilter.toLowerCase()
       );
     }
     
-    if (locationFilter) {
+    if (locationFilter && locationFilter !== "undefined") {
       filteredItems = filteredItems.filter(item => 
         item.location.toLowerCase() === locationFilter.toLowerCase()
       );
@@ -126,23 +126,23 @@ export function useInventoryDatabase() {
     const weightObj = item.weight as Record<string, any> | null;
     
     return {
-      id: item.id,
-      sku: item.sku,
-      name: item.name,
+      id: item.id || "",
+      sku: item.sku || "",
+      name: item.name || "",
       description: item.description || "",
       category: item.category || "",
       subcategory: item.subcategory || "",
       brand: item.brand || "",
-      rrp: item.price || 0,
-      cost: item.cost || 0,
-      stock: item.stock || 0,
-      lowStockThreshold: item.low_stock_threshold || 5,
-      minStockCount: item.min_stock_count || 1,
+      rrp: typeof item.price === 'number' ? item.price : 0,
+      cost: typeof item.cost === 'number' ? item.cost : 0,
+      stock: typeof item.stock === 'number' ? item.stock : 0,
+      lowStockThreshold: typeof item.low_stock_threshold === 'number' ? item.low_stock_threshold : 5,
+      minStockCount: typeof item.min_stock_count === 'number' ? item.min_stock_count : 1,
       location: item.location || "",
       barcode: item.barcode || "",
-      dateAdded: item.date_added,
-      lastUpdated: item.last_updated,
-      imageUrl: item.image_url,
+      dateAdded: item.date_added || new Date().toISOString(),
+      lastUpdated: item.last_updated || new Date().toISOString(),
+      imageUrl: item.image_url || "",
       dimensions: dimensionsObj ? {
         length: Number(dimensionsObj.length) || 0,
         width: Number(dimensionsObj.width) || 0,
@@ -155,8 +155,8 @@ export function useInventoryDatabase() {
       } : undefined,
       isActive: item.is_active !== false, // Default to true if undefined
       supplier: item.supplier || "",
-      tags: item.tags || []
-    } as InventoryItem;
+      tags: Array.isArray(item.tags) ? item.tags : []
+    };
   };
 
   const mapInventoryItemToSupabaseItem = (item: InventoryItem) => {
