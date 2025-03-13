@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { InventoryItem } from "@/types/inventory";
-import { InventoryItemForm, InventoryItemFormData } from "./InventoryItemForm";
+import { InventoryItemForm, InventoryItemFormData } from "./form/InventoryItemForm";
 import { generateInventoryItem } from "@/utils/inventoryItemGenerator";
 import { useUserRoles } from "@/hooks/useUserRoles";
 
