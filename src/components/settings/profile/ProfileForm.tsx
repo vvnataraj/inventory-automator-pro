@@ -40,6 +40,7 @@ export function ProfileForm({
       if (!sessionData.session) {
         toast.error("Your session has expired. Please log in again.");
         navigate("/login");
+        setLoading(false);
         return;
       }
       
@@ -67,6 +68,7 @@ export function ProfileForm({
         if (authError.message.includes("Auth session missing")) {
           toast.error("Your session has expired. Please log in again.");
           navigate("/login");
+          setLoading(false);
           return;
         }
         throw authError;
@@ -84,6 +86,7 @@ export function ProfileForm({
       
       if (profileError) {
         console.error("Error updating profiles table:", profileError);
+        setLoading(false);
         throw profileError;
       }
       
@@ -104,10 +107,10 @@ export function ProfileForm({
       }
       
       toast.success("Profile updated successfully");
+      setLoading(false);
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
-    } finally {
       setLoading(false);
     }
   }
