@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
@@ -27,7 +26,7 @@ export function useInventoryOperations() {
         lastUpdated: new Date().toISOString()
       };
       
-      // Check if we have a valid UUID, if not, create one
+      // Check if we have a valid UUID
       const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemToUpdate.id);
       
       // For non-UUID items, update only the local array

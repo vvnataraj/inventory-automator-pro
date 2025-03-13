@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileUp } from "lucide-react";
@@ -33,7 +32,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
   };
 
   const mapImportedItemToInventoryItem = (item: any): InventoryItem => {
-    // Parse boolean values that might be stored as strings
     const parseBoolean = (value: any): boolean => {
       if (typeof value === 'boolean') return value;
       if (typeof value === 'string') {
@@ -43,18 +41,15 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       return Boolean(value);
     };
 
-    // Parse numeric values that might be stored as strings
     const parseNumber = (value: any, defaultValue: number = 0): number => {
       if (value === null || value === undefined || value === '') return defaultValue;
       const parsed = Number(value);
       return isNaN(parsed) ? defaultValue : parsed;
     };
 
-    // Handle dimensions object
     const parseDimensions = () => {
       if (!item.dimensions) return undefined;
       
-      // If dimensions is a string (like from CSV), try to parse it
       if (typeof item.dimensions === 'string') {
         try {
           const parsed = JSON.parse(item.dimensions);
@@ -70,7 +65,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
         }
       }
       
-      // If dimensions is already an object
       if (typeof item.dimensions === 'object') {
         return {
           length: parseNumber(item.dimensions.length, 0),
@@ -83,11 +77,9 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       return undefined;
     };
 
-    // Handle weight object
     const parseWeight = () => {
       if (!item.weight) return undefined;
       
-      // If weight is a string (like from CSV), try to parse it
       if (typeof item.weight === 'string') {
         try {
           const parsed = JSON.parse(item.weight);
@@ -101,7 +93,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
         }
       }
       
-      // If weight is already an object
       if (typeof item.weight === 'object') {
         return {
           value: parseNumber(item.weight.value, 0),
@@ -112,11 +103,9 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       return undefined;
     };
 
-    // Handle tags array
     const parseTags = () => {
       if (!item.tags) return [];
       
-      // If tags is a string (like from CSV), try to parse it
       if (typeof item.tags === 'string') {
         try {
           return JSON.parse(item.tags);
@@ -126,7 +115,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
         }
       }
       
-      // If tags is already an array
       if (Array.isArray(item.tags)) {
         return item.tags;
       }
@@ -134,8 +122,8 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       return [];
     };
 
-    // Preserve original ID if it exists, otherwise generate a new one
-    const itemId = item.id || `item-${uuidv4()}`;
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id || '');
+    const itemId = isValidUUID ? item.id : uuidv4();
 
     return {
       id: itemId,
@@ -278,7 +266,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       let insideQuotes = false;
       let currentValue = '';
       
-      // Parse CSV considering quoted values that may contain commas
       for (let j = 0; j < currentLine.length; j++) {
         const char = currentLine[j];
         
@@ -292,18 +279,14 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
         }
       }
       
-      // Add the last value
       values.push(currentValue);
       
-      // Create the object using header keys
       const obj: Record<string, any> = {};
       headers.forEach((header, index) => {
         let value = (values[index] || '').trim();
         
-        // Remove quotes if present
         value = value.replace(/^"(.*)"$/, '$1');
         
-        // Parse booleans
         if (value.toLowerCase() === 'true') {
           obj[header] = true;
           return;
@@ -313,7 +296,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
           return;
         }
         
-        // Parse numbers if not empty
         if (!isNaN(Number(value)) && value !== '') {
           obj[header] = Number(value);
           return;
@@ -343,15 +325,12 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       const item = items[i];
       const obj: Record<string, any> = {};
       
-      // Process all child elements
       for (let j = 0; j < item.children.length; j++) {
         const child = item.children[j];
         const tagName = child.tagName;
         
-        // Skip empty nodes
         if (!tagName) continue;
         
-        // Handle complex objects like dimensions and weight
         if (tagName === "dimensions" || tagName === "weight") {
           obj[tagName] = {};
           for (let k = 0; k < child.children.length; k++) {
@@ -367,7 +346,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
             }
           }
         } 
-        // Handle tags array
         else if (tagName === "tags") {
           obj[tagName] = [];
           for (let k = 0; k < child.children.length; k++) {
@@ -377,7 +355,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
             }
           }
         }
-        // Simple string/number/boolean values
         else {
           const value = child.textContent || "";
           

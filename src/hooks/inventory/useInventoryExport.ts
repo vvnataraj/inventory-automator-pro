@@ -39,7 +39,7 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         const weightObj = item.weight as Record<string, any> | null;
         
         return {
-          // Ensure ID is preserved
+          // Ensure the UUID is always preserved as the primary ID
           id: item.id,
           sku: item.sku || "",
           name: item.name || "",
