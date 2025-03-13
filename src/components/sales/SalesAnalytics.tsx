@@ -13,42 +13,56 @@ interface SalesAnalyticsProps {
   sales: Sale[];
 }
 
+// Static data for analytics
+const staticTotalRevenue = 5432.78;
+const staticAvgOrderValue = 108.66;
+const staticCompletedSales = 42;
+const staticUniqueCustomers = 31;
+const staticGrowthRate = 12.5;
+
+// Static chart data
+const staticDailySalesData = [
+  { date: "07/12", revenue: 650.50, count: 5 },
+  { date: "07/13", revenue: 820.75, count: 7 },
+  { date: "07/14", revenue: 432.25, count: 4 },
+  { date: "07/15", revenue: 975.00, count: 8 },
+  { date: "07/16", revenue: 756.50, count: 6 },
+  { date: "07/17", revenue: 1250.25, count: 10 },
+  { date: "07/18", revenue: 875.50, count: 7 }
+];
+
+const staticMonthlySalesData = [
+  { month: "Feb 2024", revenue: 3250.75, count: 28 },
+  { month: "Mar 2024", revenue: 4150.50, count: 35 },
+  { month: "Apr 2024", revenue: 3875.25, count: 32 },
+  { month: "May 2024", revenue: 4325.00, count: 36 },
+  { month: "Jun 2024", revenue: 4850.50, count: 42 },
+  { month: "Jul 2024", revenue: 5432.78, count: 45 }
+];
+
+const staticStatusData = [
+  { status: "completed", count: 42 },
+  { status: "pending", count: 4 },
+  { status: "cancelled", count: 2 },
+  { status: "refunded", count: 2 }
+];
+
+const staticPaymentMethodData = [
+  { name: "Credit Card", value: 28 },
+  { name: "Cash", value: 10 },
+  { name: "Mobile Payment", value: 8 },
+  { name: "Debit Card", value: 4 }
+];
+
+const staticItemsPerSaleData = [
+  { itemCount: 1, saleCount: 12 },
+  { itemCount: 2, saleCount: 16 },
+  { itemCount: 3, saleCount: 10 },
+  { itemCount: 4, saleCount: 7 },
+  { itemCount: 5, saleCount: 5 }
+];
+
 export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
-  // Calculate total revenue
-  const totalRevenue = sales.reduce((total, sale) => total + sale.total, 0);
-  
-  // Calculate average order value
-  const avgOrderValue = sales.length > 0 ? totalRevenue / sales.length : 0;
-  
-  // Count completed sales
-  const completedSales = sales.filter(sale => sale.status === "completed").length;
-
-  // Calculate unique customers
-  const uniqueCustomers = new Set(sales.map(sale => sale.customerName)).size;
-
-  // Get sales from last 7 days
-  const last7Days = sales.filter(sale => 
-    isAfter(parseISO(sale.date), subDays(new Date(), 7))
-  );
-
-  // Calculate growth rate (comparing last 7 days with previous 7 days)
-  const last7DaysTotal = last7Days.reduce((sum, sale) => sum + sale.total, 0);
-  const previous7Days = sales.filter(sale => 
-    isAfter(parseISO(sale.date), subDays(new Date(), 14)) && 
-    !isAfter(parseISO(sale.date), subDays(new Date(), 7))
-  );
-  const previous7DaysTotal = previous7Days.reduce((sum, sale) => sum + sale.total, 0);
-  const growthRate = previous7DaysTotal > 0 
-    ? ((last7DaysTotal - previous7DaysTotal) / previous7DaysTotal) * 100 
-    : 100;
-
-  // Prepare data for various charts
-  const dailySalesData = getDailySalesData(sales);
-  const statusData = getStatusDistribution(sales);
-  const paymentMethodData = getPaymentMethodDistribution(sales);
-  const monthlySalesData = getMonthlySalesData(sales);
-  const itemsPerSaleData = getItemsPerSaleDistribution(sales);
-  
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
@@ -59,7 +73,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
             <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${staticTotalRevenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">For current period</p>
           </CardContent>
         </Card>
@@ -70,7 +84,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${avgOrderValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${staticAvgOrderValue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
         </Card>
@@ -81,8 +95,8 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
             <ReceiptText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedSales}</div>
-            <p className="text-xs text-muted-foreground">Out of {sales.length} total</p>
+            <div className="text-2xl font-bold">{staticCompletedSales}</div>
+            <p className="text-xs text-muted-foreground">Out of {staticCompletedSales + 8} total</p>
           </CardContent>
         </Card>
 
@@ -92,7 +106,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{uniqueCustomers}</div>
+            <div className="text-2xl font-bold">{staticUniqueCustomers}</div>
             <p className="text-xs text-muted-foreground">Across all sales</p>
           </CardContent>
         </Card>
@@ -105,8 +119,8 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center">
-            <div className={`text-2xl font-bold ${growthRate >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {growthRate >= 0 ? '+' : ''}{growthRate.toFixed(2)}%
+            <div className={`text-2xl font-bold ${staticGrowthRate >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {staticGrowthRate >= 0 ? '+' : ''}{staticGrowthRate.toFixed(2)}%
             </div>
             <div className="ml-2 text-xs text-muted-foreground">
               Compared to previous week
@@ -124,7 +138,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={dailySalesData}
+                data={staticDailySalesData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -162,7 +176,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={monthlySalesData}
+                data={staticMonthlySalesData}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -202,7 +216,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={paymentMethodData}
+                  data={staticPaymentMethodData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -211,7 +225,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {paymentMethodData.map((entry, index) => (
+                  {staticPaymentMethodData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -229,7 +243,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={statusData}
+                data={staticStatusData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 layout="vertical"
               >
@@ -251,7 +265,7 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={itemsPerSaleData}
+                data={staticItemsPerSaleData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -271,104 +285,6 @@ export const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({ sales }) => {
 
 // Helper functions
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
-
-const getDailySalesData = (sales: Sale[]) => {
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = subDays(new Date(), 6 - i);
-    return {
-      date: format(date, 'MM/dd'),
-      fullDate: date,
-      revenue: 0,
-      count: 0
-    };
-  });
-
-  sales.forEach(sale => {
-    const saleDate = parseISO(sale.date);
-    const dayIndex = last7Days.findIndex(day => 
-      format(day.fullDate, 'yyyy-MM-dd') === format(saleDate, 'yyyy-MM-dd')
-    );
-    
-    if (dayIndex !== -1) {
-      last7Days[dayIndex].revenue += sale.total;
-      last7Days[dayIndex].count += 1;
-    }
-  });
-
-  return last7Days.map(({ date, revenue, count }) => ({ date, revenue, count }));
-};
-
-const getStatusDistribution = (sales: Sale[]) => {
-  const statusCounts: Record<string, number> = {};
-  
-  sales.forEach(sale => {
-    statusCounts[sale.status] = (statusCounts[sale.status] || 0) + 1;
-  });
-  
-  return Object.entries(statusCounts).map(([status, count]) => ({
-    status,
-    count
-  }));
-};
-
-const getPaymentMethodDistribution = (sales: Sale[]) => {
-  const paymentMethods: Record<string, number> = {};
-  
-  sales.forEach(sale => {
-    const method = sale.paymentMethod || 'Unknown';
-    paymentMethods[method] = (paymentMethods[method] || 0) + 1;
-  });
-  
-  return Object.entries(paymentMethods).map(([name, value]) => ({
-    name,
-    value
-  }));
-};
-
-const getMonthlySalesData = (sales: Sale[]) => {
-  const monthlyData: Record<string, { revenue: number; count: number }> = {};
-  
-  // Initialize with last 6 months
-  for (let i = 5; i >= 0; i--) {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    const monthKey = format(date, 'MMM yyyy');
-    monthlyData[monthKey] = { revenue: 0, count: 0 };
-  }
-  
-  // Populate with sales data
-  sales.forEach(sale => {
-    const saleDate = parseISO(sale.date);
-    const monthKey = format(saleDate, 'MMM yyyy');
-    
-    if (monthlyData[monthKey]) {
-      monthlyData[monthKey].revenue += sale.total;
-      monthlyData[monthKey].count += 1;
-    }
-  });
-  
-  return Object.entries(monthlyData).map(([month, data]) => ({
-    month,
-    revenue: data.revenue,
-    count: data.count
-  }));
-};
-
-const getItemsPerSaleDistribution = (sales: Sale[]) => {
-  const itemCounts: Record<number, number> = {};
-  
-  sales.forEach(sale => {
-    const itemCount = sale.items.length;
-    itemCounts[itemCount] = (itemCounts[itemCount] || 0) + 1;
-  });
-  
-  return Object.entries(itemCounts)
-    .map(([itemCount, saleCount]) => ({
-      itemCount: Number(itemCount),
-      saleCount
-    }))
-    .sort((a, b) => a.itemCount - b.itemCount);
-};
 
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }: any) => {
   const RADIAN = Math.PI / 180;
