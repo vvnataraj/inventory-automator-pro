@@ -19,17 +19,27 @@ export function useInventoryItems(
   const fetchItems = useCallback(() => {
     setIsLoading(true);
     try {
-      const result = getInventoryItems(page, 20, searchQuery);
+      // Modified to use local filtering to ensure name and SKU search works correctly
+      let filteredItems = [...inventoryItems];
+
+      // Apply search query filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        filteredItems = filteredItems.filter(item =>
+          item.name.toLowerCase().includes(query) ||
+          item.sku.toLowerCase().includes(query) ||
+          item.category.toLowerCase().includes(query)
+        );
+      }
       
-      // Apply any additional filtering
-      let filteredItems = [...result.items];
-      
+      // Apply category filter if provided
       if (categoryFilter) {
         filteredItems = filteredItems.filter(item => 
           item.category.toLowerCase() === categoryFilter.toLowerCase()
         );
       }
       
+      // Apply location filter if provided
       if (locationFilter) {
         filteredItems = filteredItems.filter(item => 
           item.location.toLowerCase() === locationFilter.toLowerCase()
@@ -50,8 +60,14 @@ export function useInventoryItems(
         return sortDirection === 'asc' ? comparison : -comparison;
       });
       
-      setItems(sortedItems);
-      setTotalItems(result.total);
+      // Calculate pagination
+      const total = sortedItems.length;
+      const pageSize = 20;
+      const start = (page - 1) * pageSize;
+      const paginatedItems = sortedItems.slice(start, start + pageSize);
+      
+      setItems(paginatedItems);
+      setTotalItems(total);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to fetch inventory items"));
@@ -62,7 +78,7 @@ export function useInventoryItems(
   }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter]);
   
   useEffect(() => {
-    const timeoutId = setTimeout(fetchItems, 500);
+    const timeoutId = setTimeout(fetchItems, 300); // Reduced from 500ms to 300ms for faster response
     return () => clearTimeout(timeoutId);
   }, [fetchItems]);
   
