@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { InventoryItem } from "@/types/inventory";
-import { EditInventoryItem } from "../EditInventoryItem";
 import { TransferInventoryItem } from "../TransferInventoryItem";
 import { DeleteInventoryItem } from "../DeleteInventoryItem";
 import { ReorderInventoryItem } from "../ReorderInventoryItem";
@@ -109,7 +108,6 @@ export const InventoryItemActions: React.FC<InventoryItemActionsProps> = ({
           )}
           
           <TransferInventoryItem item={item} onTransfer={onTransfer} showLabel={false} />
-          <EditInventoryItem item={item} onSave={onSave} showLabel={false} />
           
           <TooltipProvider>
             <Tooltip>

@@ -29,7 +29,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
 }) => {
   return (
     <Card className={`h-full flex flex-col transition-all hover:shadow-md ${!item.isActive ? 'opacity-60' : ''}`}>
-      <InventoryItemImage item={item} />
+      <InventoryItemImage item={item} onSave={onSave} />
       
       <CardHeader className="pb-0">
         <InventoryItemDetails item={item} />

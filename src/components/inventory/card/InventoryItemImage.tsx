@@ -2,12 +2,16 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { InventoryItem } from "@/types/inventory";
+import { EditInventoryItem } from "../EditInventoryItem";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface InventoryItemImageProps {
   item: InventoryItem;
+  onSave?: (updatedItem: InventoryItem) => void;
 }
 
-export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item }) => {
+export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item, onSave }) => {
   return (
     <div className="relative pt-[100%] overflow-hidden bg-muted">
       <div className="absolute inset-0 flex items-center justify-center">
@@ -23,6 +27,13 @@ export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item }) 
           </div>
         )}
       </div>
+      
+      {onSave && (
+        <div className="absolute top-2 left-2 z-10 opacity-80 hover:opacity-100 transition-opacity">
+          <EditInventoryItem item={item} onSave={onSave} showLabel={false} />
+        </div>
+      )}
+      
       <Badge 
         className={`absolute top-2 right-2 ${
           item.stock <= item.lowStockThreshold
