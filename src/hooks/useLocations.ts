@@ -11,16 +11,10 @@ interface Location {
   totalUnits: number;
   stockValue: number;
   spaceUtilization: number;
-  address?: string; // Keeping address as it appears in locationsData
 }
 
 export function useLocations() {
-  // Initialize locations with the data
-  const [locations, setLocations] = useState<Location[]>(
-    locationsData.map(location => ({
-      ...location
-    }))
-  );
+  const [locations, setLocations] = useState<Location[]>(locationsData);
   const [isLoading, setIsLoading] = useState(false);
 
   const addLocation = useCallback((locationData: LocationFormData) => {
@@ -46,7 +40,7 @@ export function useLocations() {
               ...location, 
               name: locationData.name, 
               type: locationData.type, 
-              spaceUtilization: locationData.spaceUtilization,
+              spaceUtilization: locationData.spaceUtilization 
             } 
           : location
       )

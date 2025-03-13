@@ -18,13 +18,11 @@ import { InventoryItem } from "@/types/inventory";
 interface DeleteInventoryItemProps {
   item: InventoryItem;
   onDelete: (itemId: string) => void;
-  showLabel?: boolean;
 }
 
 export const DeleteInventoryItem: React.FC<DeleteInventoryItemProps> = ({ 
   item, 
-  onDelete,
-  showLabel = false
+  onDelete 
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -36,20 +34,9 @@ export const DeleteInventoryItem: React.FC<DeleteInventoryItemProps> = ({
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        {showLabel ? (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 flex gap-1 text-red-500 hover:bg-red-100 hover:text-red-600"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </Button>
-        ) : (
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-red-100 hover:text-red-600">
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
+        <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-100 hover:text-red-600">
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

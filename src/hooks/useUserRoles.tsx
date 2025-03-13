@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,25 +8,22 @@ type Role = 'admin' | 'manager' | 'user';
 
 export function useUserRoles() {
   const { user } = useAuth();
-  const [role, setRole] = useState<Role | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Check if user has a specific role
-  const hasRole = useCallback((checkRole: Role) => role === checkRole, [role]);
+  const hasRole = (role: Role) => roles.includes(role);
   
   // Check if user is admin
-  const isAdmin = useCallback(() => role === 'admin', [role]);
+  const isAdmin = () => hasRole('admin');
   
-  // Check if user is manager or admin (managers and admins both have elevated permissions)
-  const isManager = useCallback(() => role === 'manager' || role === 'admin', [role]);
+  // Check if user is manager
+  const isManager = () => hasRole('manager') || hasRole('admin');
   
-  // Check if user is a regular user with read-only access
-  const isReadOnly = useCallback(() => role === null || role === 'user', [role]);
-  
-  // Fetch user role with memoization to prevent recreation on each render
-  const fetchRoles = useCallback(async () => {
+  // Fetch user roles
+  const fetchRoles = async () => {
     if (!user) {
-      setRole(null);
+      setRoles([]);
       setLoading(false);
       return;
     }
@@ -34,82 +31,99 @@ export function useUserRoles() {
     try {
       setLoading(true);
       
-      console.log("Fetching roles for user ID:", user.id);
-      
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id);
       
-      if (error) {
-        console.error("Error fetching user roles:", error);
-        throw error;
-      }
+      if (error) throw error;
       
-      // Get the first role or default to null
-      const userRole = data && data.length > 0 ? data[0].role as Role : null;
-      console.log("Fetched role:", userRole);
-      setRole(userRole);
+      const userRoles = data ? data.map(r => r.role as Role) : [];
+      setRoles(userRoles);
     } catch (error) {
       console.error("Error fetching user roles:", error);
-      toast.error("Failed to load user permissions: " + error.message);
+      toast.error("Failed to load user permissions");
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  };
   
-  // Set a role for the current user (replacing any existing role)
-  const setUserRole = useCallback(async (newRole: Role) => {
+  // Add a role to the current user
+  const addRole = async (role: Role) => {
     if (!user) return false;
     
     try {
       setLoading(true);
       
-      // Delete all existing roles
-      const { error: deleteError } = await supabase
+      // Check if role already exists
+      const { data: existingRole, error: checkError } = await supabase
         .from('user_roles')
-        .delete()
-        .eq('user_id', user.id);
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('role', role);
       
-      if (deleteError) {
-        console.error("Error removing existing roles:", deleteError);
-        throw deleteError;
+      if (checkError) throw checkError;
+      
+      // If role doesn't exist, add it
+      if (!existingRole || existingRole.length === 0) {
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role });
+        
+        if (insertError) throw insertError;
+        
+        await fetchRoles();
+        return true;
       }
       
-      // Add the new role
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: user.id, role: newRole });
-      
-      if (insertError) {
-        console.error("Error adding role:", insertError);
-        throw insertError;
-      }
-      
-      await fetchRoles();
       return true;
     } catch (error) {
-      console.error("Error setting role:", error);
-      toast.error("Failed to set role: " + error.message);
+      console.error("Error adding role:", error);
+      toast.error("Failed to add role");
       return false;
     } finally {
       setLoading(false);
     }
-  }, [user, fetchRoles]);
+  };
   
-  // Only fetch roles when user changes, not on every render
+  // Remove a role from the current user
+  const removeRole = async (role: Role) => {
+    if (!user) return false;
+    
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('role', role);
+      
+      if (error) throw error;
+      
+      await fetchRoles();
+      return true;
+    } catch (error) {
+      console.error("Error removing role:", error);
+      toast.error("Failed to remove role");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   useEffect(() => {
     fetchRoles();
-  }, [user?.id]); // Only depend on user.id, not the entire user object
+  }, [user]);
   
   return {
-    role,
+    roles,
     loading,
     hasRole,
     isAdmin,
     isManager,
-    isReadOnly,
     fetchRoles,
-    setUserRole
+    addRole,
+    removeRole
   };
 }

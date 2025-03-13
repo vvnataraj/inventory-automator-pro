@@ -13,7 +13,6 @@ import {
 import { InventoryItem } from "@/types/inventory";
 import { InventoryItemForm, InventoryItemFormData } from "./InventoryItemForm";
 import { generateInventoryItem } from "@/utils/inventoryItemGenerator";
-import { useUserRoles } from "@/hooks/useUserRoles";
 
 interface AddInventoryItemProps {
   onAdd: (newItem: InventoryItem) => void;
@@ -21,7 +20,6 @@ interface AddInventoryItemProps {
 
 export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { isReadOnly } = useUserRoles();
   const [formData, setFormData] = React.useState<InventoryItemFormData>({
     name: "",
     sku: "",
@@ -72,11 +70,6 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
       location: value
     }));
   };
-
-  // Don't render the button for users with read-only access
-  if (isReadOnly()) {
-    return null;
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

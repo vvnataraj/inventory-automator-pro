@@ -13,8 +13,6 @@ export default function UserRoleBadge({ role }: UserRoleBadgeProps) {
         return <ShieldAlert className="h-4 w-4 mr-1" />;
       case 'manager':
         return <ShieldCheck className="h-4 w-4 mr-1" />;
-      case 'user':
-        return <Shield className="h-4 w-4 mr-1" />;
       default:
         return <Shield className="h-4 w-4 mr-1" />;
     }
@@ -26,8 +24,6 @@ export default function UserRoleBadge({ role }: UserRoleBadgeProps) {
         return 'destructive';
       case 'manager':
         return 'secondary';
-      case 'user':
-        return 'outline';
       default:
         return 'outline';
     }

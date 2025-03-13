@@ -24,13 +24,12 @@ import { InventoryItem } from "@/types/inventory";
 interface TransferInventoryItemProps {
   item: InventoryItem;
   onTransfer: (item: InventoryItem, quantity: number, newLocation: string) => void;
-  showLabel?: boolean;
 }
 
 // Available locations for transfer
 const locations = ["Main Floor", "Warehouse A", "Warehouse B", "Outdoor Storage", "Mezzanine"];
 
-export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: TransferInventoryItemProps) => {
+export const TransferInventoryItem = ({ item, onTransfer }: TransferInventoryItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [newLocation, setNewLocation] = useState("");
@@ -49,14 +48,8 @@ export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: T
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size={showLabel ? "sm" : "icon"} 
-          className={showLabel ? "h-8 flex gap-1" : ""}
-          title="Transfer Item"
-        >
+        <Button variant="ghost" size="icon" title="Transfer Item">
           <ArrowRightLeft className="h-4 w-4" />
-          {showLabel && "Transfer"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

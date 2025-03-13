@@ -27,31 +27,3 @@ export interface Purchase {
   receivedDate?: string;
   notes?: string;
 }
-
-// Database specific type used when dealing with Supabase
-export interface PurchaseItemDB {
-  id: string;
-  purchaseid: string;
-  itemid: string;
-  name: string;
-  sku: string;
-  quantity: number;
-  unitcost: number;
-  totalcost: number;
-  created_at: string;
-}
-
-// Database specific type used when dealing with Supabase
-export interface PurchaseDB {
-  id: string;
-  ponumber: string;
-  supplier: string;
-  status: string;
-  totalcost: number;
-  orderdate: string;
-  expecteddeliverydate: string;
-  receiveddate?: string | null;
-  notes?: string | null;
-  created_at: string;
-  items?: PurchaseItemDB[];
-}

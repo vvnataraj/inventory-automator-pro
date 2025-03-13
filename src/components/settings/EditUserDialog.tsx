@@ -20,14 +20,12 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
-import { useUserRoles } from "@/hooks/useUserRoles";
 
 type Role = 'admin' | 'manager' | 'user';
 
 type User = {
   id: string;
   email: string;
-  username: string | null;
   roles: string[];
 };
 
@@ -39,47 +37,39 @@ type EditUserDialogProps = {
 export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Get the primary role (first in the array) or default to "user"
   const [editUserRole, setEditUserRole] = useState<Role>((user.roles[0] as Role) || "user");
-  const { isAdmin } = useUserRoles();
   
-  async function updateUser() {
-    if (!isAdmin()) {
-      toast.error("Only admins can change user settings");
-      return;
-    }
-
+  async function updateUserRole() {
     try {
       setLoading(true);
       
-      // Delete all existing roles for this user
-      const { error: deleteError } = await supabase
+      // First check if the role already exists for this user
+      const { data: existingRole, error: checkError } = await supabase
         .from('user_roles')
-        .delete()
-        .eq('user_id', user.id);
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('role', editUserRole);
+      
+      if (checkError) throw checkError;
+      
+      // If role doesn't exist, add it
+      if (!existingRole || existingRole.length === 0) {
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role: editUserRole });
         
-      if (deleteError) throw deleteError;
-      
-      // Add the new role
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: user.id, role: editUserRole });
-      
-      if (insertError) throw insertError;
+        if (insertError) throw insertError;
+      }
       
       toast.success("User role updated successfully");
       onUserUpdated();
       setOpen(false);
     } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Failed to update user");
+      console.error("Error updating user role:", error);
+      toast.error("Failed to update user role");
     } finally {
       setLoading(false);
     }
-  };
-  
-  if (!isAdmin()) {
-    return null;
   }
   
   return (
@@ -99,33 +89,23 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <p className="text-sm font-medium">Username: {user.username || 'No username set'}</p>
-          </div>
-          
-          <div className="space-y-2">
             <label htmlFor="edit-role" className="text-sm font-medium">Role</label>
             <Select value={editUserRole} onValueChange={(value) => setEditUserRole(value as Role)}>
               <SelectTrigger id="edit-role">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin (Full Access)</SelectItem>
-                <SelectItem value="manager">Manager (No Settings Access)</SelectItem>
-                <SelectItem value="user">User (Read-Only)</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="user">User</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          
-          <div className="text-sm text-muted-foreground space-y-2">
-            <p><strong>Admin:</strong> Full access to all features and settings</p>
-            <p><strong>Manager:</strong> Can add/edit/delete items but cannot access settings</p>
-            <p><strong>User:</strong> Read-only access, cannot add/edit/delete</p>
           </div>
         </div>
         
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={updateUser} disabled={loading}>
+          <Button onClick={updateUserRole} disabled={loading}>
             {loading ? "Updating..." : "Update Role"}
           </Button>
         </DialogFooter>

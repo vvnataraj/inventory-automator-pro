@@ -10,157 +10,89 @@ import Orders from "@/pages/Orders";
 import Purchases from "@/pages/Purchases";
 import Locations from "@/pages/Locations";
 import Sales from "@/pages/Sales";
-import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
-import UserSettings from "@/pages/UserSettings";
-import Progress from "@/pages/Progress";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
-import Support from "@/pages/Support";
-import Training from "@/pages/Training";
-import Documentation from "@/pages/Documentation";
-import LowStock from "@/pages/LowStock";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="stocktopus-theme">
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              
-              {/* Protected Routes */}
-              <Route 
-                path="/" 
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/inventory" 
-                element={
-                  <ProtectedRoute readOnly={false}>
-                    <Inventory />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/low-stock" 
-                element={
-                  <ProtectedRoute readOnly={false}>
-                    <LowStock />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/orders" 
-                element={
-                  <ProtectedRoute readOnly={false}>
-                    <Orders />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/purchases" 
-                element={
-                  <ProtectedRoute readOnly={false}>
-                    <Purchases />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/progress" 
-                element={
-                  <ProtectedRoute requireManager={true}>
-                    <Progress />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/locations" 
-                element={
-                  <ProtectedRoute requireManager={true}>
-                    <Locations />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/sales" 
-                element={
-                  <ProtectedRoute readOnly={false}>
-                    <Sales />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/analytics" 
-                element={
-                  <ProtectedRoute>
-                    <Analytics />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/settings" 
-                element={
-                  <ProtectedRoute requireManager={true}>
-                    <Settings />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/user-settings" 
-                element={
-                  <ProtectedRoute>
-                    <UserSettings />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Help Section Routes */}
-              <Route 
-                path="/support" 
-                element={
-                  <ProtectedRoute>
-                    <Support />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/training" 
-                element={
-                  <ProtectedRoute>
-                    <Training />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/documentation" 
-                element={
-                  <ProtectedRoute>
-                    <Documentation />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Fallback Routes */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory" 
+              element={
+                <ProtectedRoute>
+                  <Inventory />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/orders" 
+              element={
+                <ProtectedRoute>
+                  <Orders />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/purchases" 
+              element={
+                <ProtectedRoute>
+                  <Purchases />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/locations" 
+              element={
+                <ProtectedRoute>
+                  <Locations />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/sales" 
+              element={
+                <ProtectedRoute>
+                  <Sales />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Fallback Routes */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

@@ -3,9 +3,16 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
-import { AuthContextType } from "./AuthContextTypes";
-import { useAuthOperations } from "@/hooks/useAuthOperations";
-import { checkPasswordStrength } from "@/utils/passwordUtils";
+import { toast } from "sonner";
+
+interface AuthContextType {
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -13,101 +20,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
   const navigate = useNavigate();
-  
-  // Initialize auth operations
-  const authOperations = useAuthOperations(setNeedsPasswordChange);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) {
-        console.log("AuthContext - Initial session user data:", {
-          id: session.user.id,
-          email: session.user.email,
-          user_metadata: session.user.user_metadata,
-          app_metadata: session.user.app_metadata
-        });
-        
-        // Fetch user data from the auth.users table to get the profile fields
-        const fetchUserData = async () => {
-          try {
-            const updatedUser = await authOperations.fetchUserProfile(session.user);
-            console.log("AuthContext - Initial user fetch:", {
-              id: updatedUser.id,
-              email: updatedUser.email,
-              username: updatedUser.username,
-              user_metadata: updatedUser.user_metadata,
-              avatar_url: updatedUser.avatar_url
-            });
-            setUser(updatedUser);
-          } catch (error) {
-            console.error("Error fetching user data:", error);
-          } finally {
-            setLoading(false);
-          }
-        };
-        
-        fetchUserData();
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
-        
-        if (session?.user) {
-          console.log("AuthContext - Auth state change - Session user data:", {
-            id: session.user.id,
-            email: session.user.email,
-            user_metadata: session.user.user_metadata,
-            app_metadata: session.user.app_metadata
-          });
-          
-          try {
-            const updatedUser = await authOperations.fetchUserProfile(session.user);
-            console.log("AuthContext - Auth state change:", {
-              id: updatedUser.id,
-              email: updatedUser.email,
-              username: updatedUser.username,
-              user_metadata: updatedUser.user_metadata,
-              avatar_url: updatedUser.avatar_url
-            });
-            setUser(updatedUser);
-          } catch (error) {
-            console.error("Error fetching user data on auth change:", error);
-          } finally {
-            setLoading(false);
-          }
-        } else {
-          setUser(null);
-          setLoading(false);
-        }
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      
+      navigate("/");
+      toast.success("Successfully signed in!");
+    } catch (error) {
+      console.error("Error signing in:", error);
+      toast.error("Failed to sign in. Please try again.");
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      
+      toast.success("Registration successful! Please check your email to confirm your account.");
+    } catch (error) {
+      console.error("Error signing up:", error);
+      toast.error("Failed to sign up. Please try again.");
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      navigate("/login");
+      toast.success("Successfully signed out!");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      session, 
-      user, 
-      loading: loading || authOperations.loading, 
-      signIn: authOperations.signIn, 
-      signUp: authOperations.signUp, 
-      signOut: authOperations.signOut, 
-      resetPassword: authOperations.resetPassword,
-      checkPasswordStrength,
-      needsPasswordChange,
-      setNeedsPasswordChange
-    }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
