@@ -45,6 +45,7 @@ export default function Users() {
         return {
           id: user.id,
           email: user.email || 'No email',
+          // Use the username directly from the users table
           username: user.username || user.email?.split('@')[0] || 'No username',
           created_at: user.created_at,
           last_sign_in_at: user.last_sign_in_at,
