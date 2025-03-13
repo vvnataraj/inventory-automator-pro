@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { getInventoryItems, inventoryItems } from "@/data/inventoryData";
@@ -22,7 +23,7 @@ export function useInventoryItems(
     try {
       // First attempt to fetch from Supabase
       let dbItems: InventoryItem[] = [];
-      let query = supabase
+      let supabaseQuery = supabase
         .from('inventory_items')
         .select('*');
       
@@ -30,29 +31,29 @@ export function useInventoryItems(
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.toLowerCase().trim();
         // Use ilike with multiple conditions
-        query = query.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+        supabaseQuery = supabaseQuery.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
       }
       
       // Apply category filter
       if (categoryFilter) {
-        query = query.eq('category', categoryFilter);
+        supabaseQuery = supabaseQuery.eq('category', categoryFilter);
       }
       
       // Apply location filter
       if (locationFilter) {
-        query = query.eq('location', locationFilter);
+        supabaseQuery = supabaseQuery.eq('location', locationFilter);
       }
       
       // Apply sorting
       const supabaseSortField = sortField === 'rrp' ? 'price' : sortField;
-      query = query.order(supabaseSortField, { ascending: sortDirection === 'asc' });
+      supabaseQuery = supabaseQuery.order(supabaseSortField, { ascending: sortDirection === 'asc' });
       
       // Apply pagination
       const pageSize = 20;
       const start = (page - 1) * pageSize;
-      query = query.range(start, start + pageSize - 1);
+      supabaseQuery = supabaseQuery.range(start, start + pageSize - 1);
       
-      const { data, error: fetchError, count } = await query;
+      const { data, error: fetchError, count } = await supabaseQuery;
       
       if (fetchError) {
         console.error("Error fetching from Supabase:", fetchError);
