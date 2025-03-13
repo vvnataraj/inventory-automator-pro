@@ -1,8 +1,17 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+
+// Add TypeScript extensions to the User type to include the profile fields
+declare module '@supabase/supabase-js' {
+  interface User {
+    username?: string | null;
+    avatar_url?: string | null;
+  }
+}
 
 interface AuthContextType {
   session: Session | null;
@@ -33,16 +42,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      if (session?.user) {
+        // Fetch user data from the auth.users table to get the profile fields
+        const fetchUserData = async () => {
+          try {
+            // Use the profiles view which maps to auth.users
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('username, avatar_url')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) throw error;
+            
+            // Merge profile data with user object
+            if (data) {
+              session.user.username = data.username;
+              session.user.avatar_url = data.avatar_url;
+            }
+          } catch (error) {
+            console.error("Error fetching user data:", error);
+          } finally {
+            setUser(session.user);
+            setLoading(false);
+          }
+        };
+        
+        fetchUserData();
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        
+        if (session?.user) {
+          try {
+            // Use the profiles view which maps to auth.users
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('username, avatar_url')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (!error && data) {
+              // Merge profile data with user object
+              session.user.username = data.username;
+              session.user.avatar_url = data.avatar_url;
+            }
+          } catch (error) {
+            console.error("Error fetching user data on auth change:", error);
+          } finally {
+            setUser(session.user);
+            setLoading(false);
+          }
+        } else {
+          setUser(null);
+          setLoading(false);
+        }
       }
     );
 
@@ -86,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -94,6 +155,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         toast.error(error.message);
         return;
+      }
+      
+      // If sign-in was successful, fetch and merge profile data
+      if (data.user) {
+        try {
+          // Use the profiles view which maps to auth.users
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', data.user.id)
+            .single();
+          
+          if (!profileError && profileData) {
+            data.user.username = profileData.username;
+            data.user.avatar_url = profileData.avatar_url;
+          }
+        } catch (profileFetchError) {
+          console.error("Error fetching profile after sign in:", profileFetchError);
+        }
       }
       
       // Check password strength after successful login

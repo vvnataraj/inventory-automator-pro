@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,52 +12,12 @@ import { Upload, Trash } from "lucide-react";
 import { ThemeSelector } from "@/components/theme/ThemeSelector";
 import { Separator } from "@/components/ui/separator";
 
-interface UserProfile {
-  id: string;
-  username: string | null;
-  avatar_url: string | null;
-}
-
 export default function ProfileTab() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [username, setUsername] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState(user?.username || "");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatar_url || null);
   const [uploading, setUploading] = useState(false);
-  
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
-  
-  async function fetchProfile() {
-    try {
-      setLoading(true);
-      
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-        
-      if (error) {
-        throw error;
-      }
-      
-      setProfile(data);
-      setUsername(data.username || "");
-      setAvatarUrl(data.avatar_url || null);
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      toast.error("Failed to load profile data");
-    } finally {
-      setLoading(false);
-    }
-  }
   
   async function updateProfile() {
     try {
@@ -65,24 +25,27 @@ export default function ProfileTab() {
       
       if (!user) return;
       
-      const updates = {
-        id: user.id,
-        username,
-        avatar_url: avatarUrl,
-        updated_at: new Date().toISOString(),
-      };
-      
+      // Using the profiles view for backward compatibility
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update({
+          username,
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', user.id);
         
       if (error) {
         throw error;
       }
       
+      // Update local user state
+      if (user) {
+        user.username = username;
+        user.avatar_url = avatarUrl;
+      }
+      
       toast.success("Profile updated successfully");
-      fetchProfile();
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
@@ -154,11 +117,16 @@ export default function ProfileTab() {
       // Update state with new avatar URL
       setAvatarUrl(publicUrl);
       
-      // Immediately update profile with new avatar
+      // Immediately update profile with new avatar using the profiles view
       await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
         .eq('id', user.id);
+      
+      // Update local user state
+      if (user) {
+        user.avatar_url = publicUrl;
+      }
       
       toast.success("Avatar uploaded successfully");
     } catch (error) {
@@ -194,7 +162,7 @@ export default function ProfileTab() {
         }
       }
       
-      // Update profile with null avatar URL
+      // Update profile with null avatar URL using the profiles view
       const { error } = await supabase
         .from('profiles')
         .update({ avatar_url: null })
@@ -204,7 +172,14 @@ export default function ProfileTab() {
         throw error;
       }
       
+      // Update local state
       setAvatarUrl(null);
+      
+      // Update local user state
+      if (user) {
+        user.avatar_url = null;
+      }
+      
       toast.success("Avatar removed successfully");
     } catch (error) {
       console.error("Error removing avatar:", error);

@@ -1,3 +1,4 @@
+
 import { Bell, LogOut, Menu, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,48 +11,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export function Header() {
   const { signOut, user } = useAuth();
   const { isAdmin } = useUserRoles();
   const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  
-  useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    }
-  }, [user]);
-  
-  async function fetchUserProfile() {
-    try {
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('avatar_url, username')
-        .eq('id', user.id)
-        .single();
-        
-      if (error) {
-        console.error("Error fetching user profile:", error);
-        return;
-      }
-      
-      setAvatarUrl(data.avatar_url);
-      setUsername(data.username);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  }
   
   const handleLogout = async () => {
     await signOut();
@@ -59,8 +28,8 @@ export function Header() {
   };
   
   const getUserInitials = () => {
-    if (username) {
-      return username.charAt(0).toUpperCase();
+    if (user?.username) {
+      return user.username.charAt(0).toUpperCase();
     }
     
     if (!user?.email) return '?';
@@ -150,7 +119,7 @@ export function Header() {
               <Button variant="ghost" className="relative h-9 w-9 p-0 rounded-full">
                 <Avatar className="h-9 w-9">
                   <AvatarImage
-                    src={avatarUrl || ""}
+                    src={user?.avatar_url || ""}
                     alt={user?.email || "User"}
                   />
                   <AvatarFallback className="bg-primary/10 text-primary">
@@ -162,7 +131,7 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{username || user?.email}</p>
+                  <p className="text-sm font-medium leading-none">{user?.username || user?.email}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {isAdmin() ? 'Administrator' : 'User'}
                   </p>
