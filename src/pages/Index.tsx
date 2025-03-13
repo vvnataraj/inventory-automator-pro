@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Box, DollarSign, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -6,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { inventoryItems } from "@/data/inventoryData";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { TopProfitableItems } from "@/components/dashboard/TopProfitableItems";
 
 const getInitialStats = () => [
   {
@@ -81,19 +81,15 @@ export default function Index() {
     };
 
     const calculateLowStockItems = () => {
-      // Count items with low stock (including 10% buffer)
       const lowStockItems = inventoryItems.filter(item => {
-        // Find all items with the same SKU to calculate total stock
         const sameSkuItems = inventoryItems.filter(invItem => invItem.sku === item.sku);
         const totalStock = sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
         
-        // Add 10% buffer to the low stock threshold
         const bufferedThreshold = item.lowStockThreshold * 1.1;
         
         return totalStock <= bufferedThreshold;
       });
       
-      // Get unique items (by SKU) to avoid counting the same product multiple times
       const uniqueLowStockItems = Array.from(
         new Set(lowStockItems.map(item => item.sku))
       ).map(sku => lowStockItems.find(item => item.sku === sku));
@@ -101,7 +97,6 @@ export default function Index() {
       const count = uniqueLowStockItems.length;
       setLowStockCount(count);
       
-      // Update the stats with the count
       setStats(prevStats => prevStats.map(stat => 
         stat.name === "Low Stock Items" 
           ? { ...stat, value: count.toString() } 
@@ -226,6 +221,10 @@ export default function Index() {
             </div>
           </CardContent>
         </Card>
+      </div>
+      
+      <div className="mt-6">
+        <TopProfitableItems />
       </div>
     </MainLayout>
   );
