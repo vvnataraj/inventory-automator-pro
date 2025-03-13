@@ -83,24 +83,42 @@ export function useInventoryPage() {
   }, [reorderStock]);
 
   const handleTransferItem = useCallback(async (item: InventoryItem, quantity: number, newLocation: string) => {
-    const sourceItem = { ...item, stock: item.stock - quantity };
+    console.log(`Transferring ${quantity} units of ${item.name} from ${item.location} to ${newLocation}`);
     
+    // Update source item (reduce stock)
+    const sourceItem = { ...item, stock: item.stock - quantity };
+    await updateItem(sourceItem);
+    
+    // Find or create destination item
     const existingDestItem = items.find(i => 
       i.sku === item.sku && i.location === newLocation
     );
     
     if (existingDestItem) {
+      // Update destination item (increase stock)
       const destinationItem = { 
         ...existingDestItem, 
         stock: existingDestItem.stock + quantity 
       };
       await updateItem(destinationItem);
+      console.log(`Updated existing item at ${newLocation}, new stock: ${destinationItem.stock}`);
+    } else {
+      // Create new item at destination
+      const newDestinationItem = {
+        ...item,
+        id: `${item.id}-${Date.now()}`, // Create a new unique ID
+        location: newLocation,
+        stock: quantity
+      };
+      await addItem(newDestinationItem);
+      console.log(`Created new item at ${newLocation} with stock: ${quantity}`);
     }
     
-    await updateItem(sourceItem);
+    // Refresh inventory to reflect changes
+    refresh();
     
     toast.success(`Successfully transferred ${quantity} units of ${item.name} to ${newLocation}`);
-  }, [items, updateItem]);
+  }, [items, updateItem, addItem, refresh]);
 
   const handleReactivateAllItems = useCallback(async () => {
     try {

@@ -52,15 +52,12 @@ export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: T
         referenceNumber: `TR-${Date.now().toString().substring(8)}`
       };
       
-      // Set transferData state and show packing slip BEFORE performing the transfer
+      // Set transferData state and show packing slip
       setTransferData(transferData);
       setShowPackingSlip(true);
       
       // Close the main transfer dialog
       setIsOpen(false);
-      
-      // Don't perform the actual transfer yet - we'll do it after they close the packing slip
-      // onTransfer will be called when the packing slip dialog is closed
     }
   };
 
@@ -74,17 +71,19 @@ export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: T
   
   const handlePackingSlipClose = () => {
     setShowPackingSlip(false);
-    
-    // Now perform the actual transfer after they've seen the packing slip
-    if (transferData) {
-      onTransfer(item, transferData.quantity, transferData.toLocation);
-    }
+    setTransferData(null);
     
     // Reset the form
     setQuantity(1);
     setFromLocation(item.location);
     setToLocation("");
-    setTransferData(null);
+  };
+  
+  const handleCompleteTransfer = () => {
+    // Now perform the actual transfer when they click the Complete Transfer button
+    if (transferData) {
+      onTransfer(item, transferData.quantity, transferData.toLocation);
+    }
   };
   
   const availableLocations = locations.map(loc => loc.name);
@@ -190,6 +189,7 @@ export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: T
           open={showPackingSlip}
           onClose={handlePackingSlipClose}
           transferData={transferData}
+          onCompleteTransfer={handleCompleteTransfer}
         />
       )}
     </>
