@@ -14,6 +14,7 @@ import {
   Headphones,
   GraduationCap,
   FileText,
+  User,
 } from "lucide-react";
 
 // Main navigation items
@@ -33,6 +34,11 @@ export const adminItems = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
+// User section items
+export const userItems = [
+  { name: "User Settings", href: "/user-settings", icon: User },
+];
+
 // Help section items
 export const helpItems = [
   { name: "Contact Support", href: "/support", icon: Headphones },
@@ -42,6 +48,11 @@ export const helpItems = [
 
 // Section configurations
 export const sections = [
+  { 
+    title: "User", 
+    icon: User, 
+    items: userItems 
+  },
   { 
     title: "Admin", 
     icon: Shield, 
