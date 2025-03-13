@@ -24,7 +24,7 @@ import {
 
 export default function RolesManagement() {
   const { user } = useAuth();
-  const { roles, loading, isAdmin, addRole } = useUserRoles();
+  const { role, loading, isAdmin, setUserRole } = useUserRoles();
   const [isPromoting, setIsPromoting] = useState(false);
   
   const makeAdmin = async () => {
@@ -32,7 +32,7 @@ export default function RolesManagement() {
     
     try {
       setIsPromoting(true);
-      const success = await addRole('admin');
+      const success = await setUserRole('admin');
       
       if (success) {
         toast.success("You now have admin privileges");
@@ -96,44 +96,39 @@ export default function RolesManagement() {
       <CardContent>
         <div className="space-y-6">
           <div>
-            <h3 className="text-sm font-medium mb-2">Current roles:</h3>
+            <h3 className="text-sm font-medium mb-2">Current role:</h3>
             {loading ? (
               <div className="flex items-center space-x-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <span className="text-sm">Loading roles...</span>
+                <span className="text-sm">Loading role...</span>
               </div>
-            ) : roles.length > 0 ? (
+            ) : role ? (
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  {roles.map((role, index) => (
-                    <Badge 
-                      key={index}
-                      variant={
-                        role === 'admin' 
-                          ? 'default' 
-                          : role === 'manager' 
-                            ? 'secondary' 
-                            : 'outline'
-                      }
-                      className="flex items-center"
-                    >
-                      {getRoleIcon(role)}
-                      {role}
-                    </Badge>
-                  ))}
+                  <Badge 
+                    variant={
+                      role === 'admin' 
+                        ? 'default' 
+                        : role === 'manager' 
+                          ? 'secondary' 
+                          : 'outline'
+                    }
+                    className="flex items-center"
+                  >
+                    {getRoleIcon(role)}
+                    {role}
+                  </Badge>
                 </div>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  {roles.map((role, index) => (
-                    <div key={index} className="flex items-start gap-2 mt-1">
-                      <div className="w-4">{getRoleIcon(role)}</div>
-                      <div>{getRoleDescription(role)}</div>
-                    </div>
-                  ))}
+                  <div className="flex items-start gap-2 mt-1">
+                    <div className="w-4">{getRoleIcon(role)}</div>
+                    <div>{getRoleDescription(role)}</div>
+                  </div>
                 </div>
               </div>
             ) : (
               <div>
-                <p className="text-sm text-muted-foreground">No roles assigned. You have read-only access.</p>
+                <p className="text-sm text-muted-foreground">No role assigned. You have read-only access.</p>
                 <div className="flex items-start gap-2 mt-2">
                   <div className="w-4"><Shield className="h-4 w-4" /></div>
                   <div className="text-sm text-muted-foreground">{getRoleDescription('user')}</div>
