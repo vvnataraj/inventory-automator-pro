@@ -35,8 +35,8 @@ export const PackingSlipDialog = ({ open, onClose, transferData }: PackingSlipDi
     onPrintError: (error) => console.error('Print failed', error),
     pageStyle: "@page { size: auto; margin: 10mm; }",
     onAfterPrint: () => console.log('Print completed'),
-    // Fix: Use content instead of contentRef and provide the ref directly
-    content: () => printRef.current,
+    // Fix: The property should be 'contentRef' not 'content'
+    contentRef: printRef,
   });
   
   const generatePDF = () => {
