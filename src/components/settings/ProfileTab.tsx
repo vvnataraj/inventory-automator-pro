@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,19 @@ import { useNavigate } from "react-router-dom";
 export default function ProfileTab() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [username, setUsername] = useState(user?.username || "");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatar_url || null);
+  const [username, setUsername] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
   
+  useEffect(() => {
+    if (user) {
+      console.log("Setting initial profile data:", { username: user.username, avatarUrl: user.avatar_url });
+      setUsername(user.username || "");
+      setAvatarUrl(user.avatar_url || null);
+    }
+  }, [user]);
+
   async function updateProfile() {
     try {
       setLoading(true);
