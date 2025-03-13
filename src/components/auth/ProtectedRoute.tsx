@@ -50,7 +50,7 @@ export const ProtectedRoute = ({
     }} replace />;
   }
 
-  // Check for read-only access
+  // Check for read-only access - only redirect if readOnly is false AND user is read-only
   if (readOnly === false && isReadOnly()) {
     return <Navigate to="/" state={{ 
       from: location,

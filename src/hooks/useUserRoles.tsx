@@ -21,7 +21,8 @@ export function useUserRoles() {
   const isManager = useCallback(() => role === 'manager' || role === 'admin', [role]);
   
   // Check if user is a regular user with read-only access
-  const isReadOnly = useCallback(() => role === null || role === 'user', [role]);
+  // Now correctly identifies 'user' role as NOT read-only
+  const isReadOnly = useCallback(() => role === null, [role]);
   
   // Fetch user role with memoization to prevent recreation on each render
   const fetchRoles = useCallback(async () => {
