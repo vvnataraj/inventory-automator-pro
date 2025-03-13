@@ -20,12 +20,12 @@ export default function Users() {
     try {
       setLoading(true);
       
-      // Get all profiles
-      const { data: profiles, error } = await supabase
+      // Get all users using the auth.users view (via profiles)
+      const { data: authUsers, error: authError } = await supabase
         .from('profiles')
-        .select('*');
+        .select('id, username, email, avatar_url, created_at, updated_at');
       
-      if (error) throw error;
+      if (authError) throw authError;
       
       // Get all user roles
       const { data: userRoles, error: rolesError } = await supabase
@@ -35,16 +35,16 @@ export default function Users() {
       if (rolesError) throw rolesError;
       
       // Map roles to profiles
-      const usersWithRoles = profiles.map(profile => {
+      const usersWithRoles = authUsers.map(user => {
         const roles = userRoles
-          .filter(role => role.user_id === profile.id)
+          .filter(role => role.user_id === user.id)
           .map(role => role.role);
         
         return {
-          id: profile.id,
-          email: profile.username || 'No email',
-          username: profile.username,
-          created_at: profile.created_at,
+          id: user.id,
+          email: user.email || 'No email', // Use the actual email from profiles view
+          username: user.username,
+          created_at: user.created_at,
           last_sign_in_at: null, // Not available with current permissions
           roles: roles.length > 0 ? roles : ['user'], // Default to user if no roles
           is_disabled: false // Not available with current permissions
