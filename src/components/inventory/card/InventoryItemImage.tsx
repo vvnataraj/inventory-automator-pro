@@ -23,7 +23,7 @@ export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item, on
   // Determine stock level for badge color
   const stockLevel = React.useMemo(() => {
     if (totalStock <= item.lowStockThreshold) {
-      return "bg-red-500";
+      return "bg-red-600 text-white font-bold";
     } else if (totalStock <= item.lowStockThreshold * 2) {
       return "bg-yellow-500";
     } else {

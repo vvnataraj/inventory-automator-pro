@@ -73,17 +73,24 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
                     min="0"
                     value={locationStock.count}
                     onChange={(e) => handleStockChange(locationStock.location, e.target.value)}
-                    className="w-20 h-7 text-right"
+                    className={cn(
+                      "w-20 h-7 text-right",
+                      locationStock.count <= 5 ? "text-red-600 font-semibold" : ""
+                    )}
                   />
                   <span className="text-sm">units</span>
                 </div>
               </div>
               <Progress 
                 value={getStockPercentage(locationStock.count)} 
-                className={cn("h-2", locationStock.count <= 5 ? "bg-red-100" : "")}
+                className={cn(
+                  "h-2", 
+                  locationStock.count <= 5 ? "bg-red-100" : ""
+                )}
+                indicatorClassName={locationStock.count <= 5 ? "bg-red-500" : undefined}
               />
               {locationStock.count <= 5 && (
-                <p className="text-xs text-destructive">Low stock warning</p>
+                <p className="text-xs text-red-600 font-medium">Low stock warning</p>
               )}
             </div>
           ))}

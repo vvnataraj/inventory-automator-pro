@@ -71,7 +71,7 @@ export const InventoryItemDetails: React.FC<InventoryItemDetailsProps> = ({ item
             <span className={cn(
               "px-1.5 py-0.5 rounded-md text-xs inline-flex items-center justify-center",
               totalStock <= item.lowStockThreshold
-                ? "bg-red-100 text-red-800"
+                ? "bg-red-100 text-red-800 font-bold"
                 : totalStock <= item.lowStockThreshold * 2
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-green-100 text-green-800"
