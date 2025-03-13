@@ -22,7 +22,7 @@ export const generateInventoryItem = (formData: InventoryItemFormData): Inventor
     barcode: faker.string.numeric(13),
     dateAdded: new Date().toISOString(),
     lastUpdated: new Date().toISOString(),
-    imageUrl: faker.image.url(),
+    imageUrl: formData.imageUrl || faker.image.url(),
     dimensions: {
       length: parseFloat(faker.number.float({ min: 1, max: 100 }).toFixed(2)),
       width: parseFloat(faker.number.float({ min: 1, max: 100 }).toFixed(2)),

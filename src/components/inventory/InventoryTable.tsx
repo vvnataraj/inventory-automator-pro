@@ -4,7 +4,7 @@ import { EditInventoryItem } from "./EditInventoryItem";
 import { TransferInventoryItem } from "./TransferInventoryItem";
 import { DeleteInventoryItem } from "./DeleteInventoryItem";
 import { ReorderInventoryItem } from "./ReorderInventoryItem";
-import { ShoppingCart, CircleSlash } from "lucide-react";
+import { ShoppingCart, CircleSlash, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface SortHeaderProps {
   field: SortField;
@@ -91,6 +92,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/50">
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Image</th>
               <SortHeader field="sku" label="SKU" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <SortHeader field="name" label="Name" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <SortHeader field="category" label="Category" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
@@ -104,6 +106,16 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
           <tbody>
             {items.map((item, index) => (
               <tr key={item.id} className={`border-b hover:bg-muted/50 ${!item.isActive ? 'opacity-60' : ''}`}>
+                <td className="py-3 px-4">
+                  <Avatar className="h-10 w-10">
+                    {item.imageUrl ? (
+                      <AvatarImage src={item.imageUrl} alt={item.name} />
+                    ) : null}
+                    <AvatarFallback className="bg-secondary/20">
+                      {item.imageUrl ? <ImageOff className="h-4 w-4" /> : item.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </td>
                 <td className="py-3 px-4">{item.sku}</td>
                 <td className="py-3 px-4 font-medium break-words max-w-[200px]">{item.name}</td>
                 <td className="py-3 px-4">{item.category}</td>
