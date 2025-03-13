@@ -1,379 +1,441 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Order, OrderDB, OrderItem, OrderItemDB, OrderStatus } from "@/types/order";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
+import { Order, OrderStatus, OrderDB, OrderItemDB, CustomerDB } from "@/types/order";
+import { InventoryItem } from "@/types/inventory";
 
-export function useOrdersWithDB(
-  page = 1,
-  pageSize = 10,
-  searchQuery = "",
-  statusFilter?: OrderStatus
-) {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export const useOrders = (page = 1, pageSize = 10, searchQuery = "", statusFilter?: OrderStatus) => {
+  const [currentPage, setCurrentPage] = useState(page);
+  const [itemsPerPage, setItemsPerPage] = useState(pageSize);
 
   // Fetch orders from the database
-  const fetchOrders = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      
-      let query = supabase
-        .from('orders')
-        .select(`
-          *,
-          items:order_items(*)
-        `, { count: 'exact' })
-        .order('createdat', { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize - 1);
+  const fetchOrders = async (): Promise<Order[]> => {
+    // First, fetch the orders
+    let query = supabase
+      .from('orders')
+      .select(`
+        *,
+        items:order_items(*)
+      `)
+      .order('createdat', { ascending: false });
 
-      if (searchQuery) {
-        query = query.or(`ordernumber.ilike.%${searchQuery}%`);
-      }
+    // Apply search filter if provided
+    if (searchQuery) {
+      query = query.or(`ordernumber.ilike.%${searchQuery}%,customerid.ilike.%${searchQuery}%`);
+    }
 
-      if (statusFilter) {
-        query = query.eq('status', statusFilter);
-      }
+    // Apply status filter if provided
+    if (statusFilter) {
+      query = query.eq('status', statusFilter);
+    }
+
+    // Apply pagination
+    const from = (currentPage - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
+    query = query.range(from, to);
+
+    const { data: ordersData, error } = await query;
+
+    if (error) {
+      console.error("Error fetching orders:", error);
+      throw error;
+    }
+
+    if (!ordersData || ordersData.length === 0) {
+      return [];
+    }
+
+    // Get all customer IDs from orders
+    const customerIds = [...new Set(ordersData.map(order => order.customerid))];
+
+    // Fetch customer data for these orders
+    const { data: customersData, error: customersError } = await supabase
+      .from('customers')
+      .select('*')
+      .in('id', customerIds);
+
+    if (customersError) {
+      console.error("Error fetching customers:", customersError);
+      throw customersError;
+    }
+
+    // Create a map of customer IDs to customer data for easy lookup
+    const customerMap: {[key: string]: CustomerDB} = {};
+    customersData?.forEach(customer => {
+      customerMap[customer.id] = customer;
+    });
+
+    // Transform the database orders to the application order format
+    const orders: Order[] = ordersData.map((order: OrderDB) => {
+      const customer = customerMap[order.customerid];
       
-      const { data: ordersData, error: ordersError, count } = await query;
-      
-      if (ordersError) {
-        throw ordersError;
-      }
-      
-      if (!ordersData) {
-        setOrders([]);
-        setTotalOrders(0);
-        return;
-      }
-      
-      // Transform data to match our Order type
-      const transformedOrders: Order[] = ordersData.map((orderDB: OrderDB) => {
-        // Extract items from the joined data
-        const items = Array.isArray(orderDB.items) ? orderDB.items.map((item: OrderItemDB) => ({
+      return {
+        id: order.id,
+        orderNumber: order.ordernumber,
+        customer: {
+          id: customer?.id || order.customerid,
+          name: customer?.name || "Unknown Customer",
+          email: customer?.email || "unknown@example.com",
+          phone: customer?.phone || undefined,
+        },
+        items: order.items?.map((item: OrderItemDB) => ({
           id: item.id,
           product: {
             id: item.productid,
             name: item.productname,
             sku: item.productsku,
             cost: item.productcost,
-            image_url: item.productimageurl,
+            imageUrl: item.productimageurl || undefined,
           },
           quantity: item.quantity,
           price: item.price,
-          subtotal: item.subtotal
-        })) : [];
-        
-        return {
-          id: orderDB.id,
-          orderNumber: orderDB.ordernumber,
-          customer: {
-            id: orderDB.customerid,
-            name: "", // This needs to be fetched separately or included in the join
-            email: "",
-            phone: ""
-          },
-          items,
-          status: orderDB.status as OrderStatus,
-          total: orderDB.total,
-          tax: orderDB.tax,
-          shipping: orderDB.shipping,
-          discount: orderDB.discount || 0,
-          grandTotal: orderDB.grandtotal,
-          paymentMethod: orderDB.paymentmethod,
-          shippingAddress: {
-            line1: orderDB.shippingaddressline1,
-            line2: orderDB.shippingaddressline2 || undefined,
-            city: orderDB.shippingaddresscity,
-            state: orderDB.shippingaddressstate,
-            postalCode: orderDB.shippingaddresspostalcode,
-            country: orderDB.shippingaddresscountry,
-          },
-          notes: orderDB.notes || '',
-          createdAt: orderDB.createdat,
-          updatedAt: orderDB.updatedat,
-          shippedAt: orderDB.shippedat,
-          deliveredAt: orderDB.deliveredat,
-        };
-      });
-      
-      // Now we need to get the customer information
-      for (const order of transformedOrders) {
-        const { data: customerData } = await supabase
-          .from('customers')
-          .select('*')
-          .eq('id', order.customer.id)
-          .single();
-          
-        if (customerData) {
-          order.customer.name = customerData.name;
-          order.customer.email = customerData.email || '';
-          order.customer.phone = customerData.phone || '';
-        }
-      }
-      
-      setOrders(transformedOrders);
-      setTotalOrders(count || transformedOrders.length);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching orders:", err);
-      setError(err instanceof Error ? err : new Error("Failed to fetch orders"));
-      toast.error("Failed to fetch orders");
-    } finally {
-      setIsLoading(false);
+          subtotal: item.subtotal,
+        })) || [],
+        status: order.status as OrderStatus,
+        total: order.total,
+        tax: order.tax,
+        shipping: order.shipping,
+        discount: order.discount || undefined,
+        grandTotal: order.grandtotal,
+        paymentMethod: order.paymentmethod,
+        shippingAddress: {
+          line1: order.shippingaddressline1,
+          line2: order.shippingaddressline2 || undefined,
+          city: order.shippingaddresscity,
+          state: order.shippingaddressstate,
+          postalCode: order.shippingaddresspostalcode,
+          country: order.shippingaddresscountry,
+        },
+        notes: order.notes || undefined,
+        createdAt: order.createdat,
+        updatedAt: order.updatedat,
+        shippedAt: order.shippedat || undefined,
+        deliveredAt: order.deliveredat || undefined,
+      };
+    });
+
+    return orders;
+  };
+
+  // Count total orders
+  const fetchTotalOrders = async (): Promise<number> => {
+    let query = supabase
+      .from('orders')
+      .select('id', { count: 'exact' });
+
+    // Apply search filter if provided
+    if (searchQuery) {
+      query = query.or(`ordernumber.ilike.%${searchQuery}%,customerid.ilike.%${searchQuery}%`);
     }
-  }, [page, pageSize, searchQuery, statusFilter]);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    // Apply status filter if provided
+    if (statusFilter) {
+      query = query.eq('status', statusFilter);
+    }
 
-  // Add a new order to the database
-  const addOrder = useCallback(async (newOrder: Omit<Order, "id">) => {
-    try {
-      // First, ensure we have a customer id
-      let customerId = newOrder.customer.id;
+    const { count, error } = await query;
+
+    if (error) {
+      console.error("Error counting orders:", error);
+      throw error;
+    }
+
+    return count || 0;
+  };
+
+  // Add a new order
+  const addOrder = async (newOrder: Omit<Order, "id">): Promise<Order> => {
+    const orderId = uuidv4();
+    
+    // First, check if the customer exists
+    const { data: existingCustomer, error: customerCheckError } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('email', newOrder.customer.email)
+      .maybeSingle();
+
+    if (customerCheckError) {
+      console.error("Error checking customer:", customerCheckError);
+      throw customerCheckError;
+    }
+
+    // Generate a customer ID or use existing
+    let customerId = existingCustomer?.id;
+    
+    // If customer doesn't exist, create a new one
+    if (!customerId) {
+      customerId = uuidv4();
       
-      if (!customerId) {
-        // Create a new customer if needed
-        const { data: customerData, error: customerError } = await supabase
-          .from('customers')
-          .insert({
-            name: newOrder.customer.name,
-            email: newOrder.customer.email,
-            phone: newOrder.customer.phone
-          })
-          .select('id')
-          .single();
-          
-        if (customerError) throw customerError;
-        customerId = customerData?.id;
-      }
-      
-      // Generate a new UUID for the order
-      const orderId = uuidv4();
-      
-      // Insert the order
-      const { error: orderError } = await supabase
-        .from('orders')
+      const { error: customerInsertError } = await supabase
+        .from('customers')
         .insert({
-          id: orderId,
-          ordernumber: newOrder.orderNumber,
-          customerid: customerId,
-          status: newOrder.status,
-          total: newOrder.total,
-          tax: newOrder.tax,
-          shipping: newOrder.shipping,
-          discount: newOrder.discount,
-          grandtotal: newOrder.grandTotal,
-          paymentmethod: newOrder.paymentMethod,
-          shippingaddressline1: newOrder.shippingAddress.line1,
-          shippingaddressline2: newOrder.shippingAddress.line2,
-          shippingaddresscity: newOrder.shippingAddress.city,
-          shippingaddressstate: newOrder.shippingAddress.state,
-          shippingaddresspostalcode: newOrder.shippingAddress.postalCode,
-          shippingaddresscountry: newOrder.shippingAddress.country,
-          notes: newOrder.notes,
-          createdat: newOrder.createdAt,
-          updatedat: newOrder.updatedAt,
-          shippedat: newOrder.shippedAt,
-          deliveredat: newOrder.deliveredAt
+          id: customerId,
+          name: newOrder.customer.name,
+          email: newOrder.customer.email,
+          phone: newOrder.customer.phone
         });
-      
-      if (orderError) throw orderError;
-      
-      // Insert all the order items
-      if (newOrder.items && newOrder.items.length > 0) {
-        const orderItems = newOrder.items.map(item => ({
-          orderid: orderId,
-          productid: item.product.id || "",
-          productname: item.product.name || "",
-          productsku: item.product.sku || "",
-          productcost: item.product.cost || 0,
-          productimageurl: item.product.image_url || "",
-          quantity: item.quantity,
-          price: item.price,
-          subtotal: item.subtotal
-        }));
-        
-        const { error: itemsError } = await supabase
-          .from('order_items')
-          .insert(orderItems);
-        
-        if (itemsError) throw itemsError;
+
+      if (customerInsertError) {
+        console.error("Error creating customer:", customerInsertError);
+        throw customerInsertError;
       }
-      
-      // Refresh orders after adding
-      await fetchOrders();
-      toast.success('Order created successfully');
-      return { success: true, id: orderId };
-    } catch (error) {
-      console.error("Error adding order:", error);
-      toast.error("Failed to create order");
-      return { success: false, id: null };
     }
-  }, [fetchOrders]);
+
+    // Create order
+    const { error: orderInsertError } = await supabase
+      .from('orders')
+      .insert({
+        id: orderId,
+        ordernumber: newOrder.orderNumber,
+        customerid: customerId,
+        status: newOrder.status,
+        total: newOrder.total,
+        tax: newOrder.tax,
+        shipping: newOrder.shipping,
+        discount: newOrder.discount,
+        grandtotal: newOrder.grandTotal,
+        paymentmethod: newOrder.paymentMethod,
+        shippingaddressline1: newOrder.shippingAddress.line1,
+        shippingaddressline2: newOrder.shippingAddress.line2,
+        shippingaddresscity: newOrder.shippingAddress.city,
+        shippingaddressstate: newOrder.shippingAddress.state,
+        shippingaddresspostalcode: newOrder.shippingAddress.postalCode,
+        shippingaddresscountry: newOrder.shippingAddress.country,
+        notes: newOrder.notes,
+        createdat: newOrder.createdAt || new Date().toISOString(),
+        updatedat: newOrder.updatedAt || new Date().toISOString(),
+        shippedat: newOrder.shippedAt,
+        deliveredat: newOrder.deliveredAt
+      });
+
+    if (orderInsertError) {
+      console.error("Error creating order:", orderInsertError);
+      throw orderInsertError;
+    }
+
+    // Create order items
+    const orderItems = newOrder.items.map(item => ({
+      orderid: orderId,
+      productid: item.product.id || "",
+      productname: item.product.name || "",
+      productsku: item.product.sku || "",
+      productcost: item.product.cost || 0,
+      productimageurl: item.product.imageUrl || null,
+      quantity: item.quantity,
+      price: item.price,
+      subtotal: item.subtotal
+    }));
+
+    const { error: itemsInsertError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+
+    if (itemsInsertError) {
+      console.error("Error creating order items:", itemsInsertError);
+      throw itemsInsertError;
+    }
+
+    // Return the created order with ID
+    return {
+      ...newOrder,
+      id: orderId,
+      customer: {
+        ...newOrder.customer,
+        id: customerId
+      }
+    };
+  };
 
   // Update an existing order
-  const updateOrder = useCallback(async (updatedOrder: Order) => {
-    try {
-      // Update the order
-      const { error: orderError } = await supabase
-        .from('orders')
-        .update({
-          ordernumber: updatedOrder.orderNumber,
-          customerid: updatedOrder.customer.id,
-          status: updatedOrder.status,
-          total: updatedOrder.total,
-          tax: updatedOrder.tax,
-          shipping: updatedOrder.shipping,
-          discount: updatedOrder.discount,
-          grandtotal: updatedOrder.grandTotal,
-          paymentmethod: updatedOrder.paymentMethod,
-          shippingaddressline1: updatedOrder.shippingAddress.line1,
-          shippingaddressline2: updatedOrder.shippingAddress.line2,
-          shippingaddresscity: updatedOrder.shippingAddress.city,
-          shippingaddressstate: updatedOrder.shippingAddress.state,
-          shippingaddresspostalcode: updatedOrder.shippingAddress.postalCode,
-          shippingaddresscountry: updatedOrder.shippingAddress.country,
-          notes: updatedOrder.notes,
-          updatedat: new Date().toISOString(),
-          shippedat: updatedOrder.shippedAt,
-          deliveredat: updatedOrder.deliveredAt
-        })
-        .eq('id', updatedOrder.id);
-      
-      if (orderError) throw orderError;
-      
-      // Delete existing order items and insert updated ones
-      const { error: deleteItemsError } = await supabase
-        .from('order_items')
-        .delete()
-        .eq('orderid', updatedOrder.id);
-      
-      if (deleteItemsError) throw deleteItemsError;
-      
-      // Insert updated items
-      if (updatedOrder.items && updatedOrder.items.length > 0) {
-        const orderItems = updatedOrder.items.map(item => ({
-          orderid: updatedOrder.id,
-          productid: item.product.id || "",
-          productname: item.product.name || "",
-          productsku: item.product.sku || "",
-          productcost: item.product.cost || 0,
-          productimageurl: item.product.image_url || "",
-          quantity: item.quantity,
-          price: item.price,
-          subtotal: item.subtotal
-        }));
-        
-        const { error: insertItemsError } = await supabase
-          .from('order_items')
-          .insert(orderItems);
-        
-        if (insertItemsError) throw insertItemsError;
-      }
-      
-      // Refresh orders after updating
-      await fetchOrders();
-      toast.success('Order updated successfully');
-      return true;
-    } catch (error) {
-      console.error("Error updating order:", error);
-      toast.error("Failed to update order");
-      return false;
-    }
-  }, [fetchOrders]);
+  const updateOrder = async (updatedOrder: Order): Promise<Order> => {
+    // Update order
+    const { error: orderUpdateError } = await supabase
+      .from('orders')
+      .update({
+        ordernumber: updatedOrder.orderNumber,
+        status: updatedOrder.status,
+        total: updatedOrder.total,
+        tax: updatedOrder.tax,
+        shipping: updatedOrder.shipping,
+        discount: updatedOrder.discount,
+        grandtotal: updatedOrder.grandTotal,
+        paymentmethod: updatedOrder.paymentMethod,
+        shippingaddressline1: updatedOrder.shippingAddress.line1,
+        shippingaddressline2: updatedOrder.shippingAddress.line2,
+        shippingaddresscity: updatedOrder.shippingAddress.city,
+        shippingaddressstate: updatedOrder.shippingAddress.state,
+        shippingaddresspostalcode: updatedOrder.shippingAddress.postalCode,
+        shippingaddresscountry: updatedOrder.shippingAddress.country,
+        notes: updatedOrder.notes,
+        updatedat: new Date().toISOString(),
+        shippedat: updatedOrder.shippedAt,
+        deliveredat: updatedOrder.deliveredAt
+      })
+      .eq('id', updatedOrder.id);
 
-  // Delete an order from the database
-  const deleteOrder = useCallback(async (orderId: string) => {
-    try {
-      // Supabase will automatically delete the order_items due to ON DELETE CASCADE
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', orderId);
-      
-      if (error) throw error;
-      
-      // Update the local state
-      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
-      setTotalOrders(prev => prev - 1);
-      
-      toast.success('Order deleted successfully');
-      return true;
-    } catch (error) {
-      console.error("Error deleting order:", error);
-      toast.error("Failed to delete order");
-      return false;
+    if (orderUpdateError) {
+      console.error("Error updating order:", orderUpdateError);
+      throw orderUpdateError;
     }
-  }, []);
 
-  // Update the status of an order
-  const updateOrderStatus = useCallback(async (orderId: string, status: OrderStatus) => {
-    try {
-      const updateData: Partial<OrderDB> = { status };
-      
-      // Add timestamp for shipment or delivery
-      if (status === 'shipped') {
-        updateData.shippedat = new Date().toISOString();
-      } else if (status === 'delivered') {
-        updateData.deliveredat = new Date().toISOString();
-      }
-      
-      const { error } = await supabase
-        .from('orders')
-        .update(updateData)
-        .eq('id', orderId);
-      
-      if (error) throw error;
-      
-      // Update the local state
-      setOrders(prevOrders => 
-        prevOrders.map(order => {
-          if (order.id === orderId) {
-            return {
-              ...order,
-              status,
-              shippedAt: status === 'shipped' ? new Date().toISOString() : order.shippedAt,
-              deliveredAt: status === 'delivered' ? new Date().toISOString() : order.deliveredAt
-            };
-          }
-          return order;
-        })
-      );
-      
-      toast.success(`Order marked as ${status}`);
-      return true;
-    } catch (error) {
+    // First, delete existing order items
+    const { error: deleteError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('orderid', updatedOrder.id);
+
+    if (deleteError) {
+      console.error("Error deleting order items:", deleteError);
+      throw deleteError;
+    }
+
+    // Then insert updated items
+    const orderItems = updatedOrder.items.map(item => ({
+      orderid: updatedOrder.id,
+      productid: item.product.id || "",
+      productname: item.product.name || "",
+      productsku: item.product.sku || "",
+      productcost: item.product.cost || 0,
+      productimageurl: item.product.imageUrl || null,
+      quantity: item.quantity,
+      price: item.price,
+      subtotal: item.subtotal
+    }));
+
+    const { error: itemsInsertError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+
+    if (itemsInsertError) {
+      console.error("Error updating order items:", itemsInsertError);
+      throw itemsInsertError;
+    }
+
+    return updatedOrder;
+  };
+
+  // Delete an order
+  const deleteOrder = async (orderId: string): Promise<void> => {
+    // First delete order items
+    const { error: itemsDeleteError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('orderid', orderId);
+
+    if (itemsDeleteError) {
+      console.error("Error deleting order items:", itemsDeleteError);
+      throw itemsDeleteError;
+    }
+
+    // Then delete the order
+    const { error: orderDeleteError } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId);
+
+    if (orderDeleteError) {
+      console.error("Error deleting order:", orderDeleteError);
+      throw orderDeleteError;
+    }
+  };
+
+  // Update order status
+  const updateOrderStatus = async (orderId: string, status: OrderStatus): Promise<void> => {
+    const updates: any = { 
+      status,
+      updatedat: new Date().toISOString()
+    };
+
+    // Add date for specific statuses
+    if (status === 'shipped') {
+      updates.shippedat = new Date().toISOString();
+    } else if (status === 'delivered') {
+      updates.deliveredat = new Date().toISOString();
+    }
+
+    const { error } = await supabase
+      .from('orders')
+      .update(updates)
+      .eq('id', orderId);
+
+    if (error) {
       console.error("Error updating order status:", error);
-      toast.error("Failed to update order status");
-      return false;
+      throw error;
     }
-  }, []);
+  };
+
+  // Query for orders
+  const { data: orders = [], isLoading, error } = useQuery({
+    queryKey: ['orders', currentPage, itemsPerPage, searchQuery, statusFilter],
+    queryFn: fetchOrders,
+  });
+
+  // Query for total orders count
+  const { data: totalOrders = 0 } = useQuery({
+    queryKey: ['ordersCount', searchQuery, statusFilter],
+    queryFn: fetchTotalOrders,
+  });
+
+  // Mutation for adding an order
+  const queryClient = useQueryClient();
+  const { mutateAsync: addOrderMutation } = useMutation({
+    mutationFn: addOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['ordersCount'] });
+    },
+  });
+
+  // Mutation for updating an order
+  const { mutateAsync: updateOrderMutation } = useMutation({
+    mutationFn: updateOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+
+  // Mutation for deleting an order
+  const { mutateAsync: deleteOrderMutation } = useMutation({
+    mutationFn: deleteOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['ordersCount'] });
+    },
+  });
+
+  // Mutation for updating order status
+  const { mutateAsync: updateOrderStatusMutation } = useMutation({
+    mutationFn: (params: { orderId: string, status: OrderStatus }) => 
+      updateOrderStatus(params.orderId, params.status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setItemsPerPage(newPageSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
 
   return {
     orders,
     totalOrders,
     isLoading,
     error,
-    page,
-    setPage: (newPage: number) => {
-      if (newPage > 0) setIsLoading(true);
-      setPage(newPage);
-    },
-    pageSize,
-    setPageSize: (newPageSize: number) => {
-      setIsLoading(true);
-      setPageSize(newPageSize);
-    },
-    fetchOrders,
-    addOrder,
-    updateOrder,
-    deleteOrder,
-    updateOrderStatus
+    page: currentPage,
+    pageSize: itemsPerPage,
+    setPage: handlePageChange,
+    setPageSize: handlePageSizeChange,
+    addOrder: addOrderMutation,
+    updateOrder: updateOrderMutation,
+    deleteOrder: deleteOrderMutation,
+    updateOrderStatus: (orderId: string, status: OrderStatus) => 
+      updateOrderStatusMutation({ orderId, status }),
   };
-}
+};

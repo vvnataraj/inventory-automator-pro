@@ -1,278 +1,305 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Purchase, PurchaseDB, PurchaseItem, PurchaseItemDB, PurchaseStatus } from "@/types/purchase";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
+import { Purchase, PurchaseStatus, PurchaseDB, PurchaseItemDB } from "@/types/purchase";
 
-export function usePurchasesWithDB(page = 1, searchQuery = "") {
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [totalPurchases, setTotalPurchases] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const pageSize = 12; // Fixed page size for purchases
+export const usePurchases = (page = 1, searchQuery = "") => {
+  const [currentPage, setCurrentPage] = useState(page);
+  const pageSize = 12; // Fixed page size
 
   // Fetch purchases from the database
-  const fetchPurchases = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      let query = supabase
-        .from('purchases')
-        .select(`
-          *,
-          items:purchase_items(*)
-        `, { count: 'exact' })
-        .order('orderdate', { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize - 1);
+  const fetchPurchases = async (): Promise<Purchase[]> => {
+    let query = supabase
+      .from('purchases')
+      .select(`
+        *,
+        items:purchase_items(*)
+      `)
+      .order('orderdate', { ascending: false });
 
-      if (searchQuery) {
-        query = query.or(`ponumber.ilike.%${searchQuery}%,supplier.ilike.%${searchQuery}%`);
-      }
-      
-      const { data: purchasesData, error: purchasesError, count } = await query;
-      
-      if (purchasesError) {
-        throw purchasesError;
-      }
-      
-      if (!purchasesData) {
-        setPurchases([]);
-        setTotalPurchases(0);
-        return;
-      }
-      
-      // Transform data to match our Purchase type
-      const transformedPurchases: Purchase[] = purchasesData.map((purchaseDB: PurchaseDB) => {
-        // Extract items from the joined data
-        const items = Array.isArray(purchaseDB.items) ? purchaseDB.items.map((item: PurchaseItemDB) => ({
+    // Apply search filter if provided
+    if (searchQuery) {
+      query = query.or(`ponumber.ilike.%${searchQuery}%,supplier.ilike.%${searchQuery}%`);
+    }
+
+    // Apply pagination
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+    query = query.range(from, to);
+
+    const { data: purchasesData, error } = await query;
+
+    if (error) {
+      console.error("Error fetching purchases:", error);
+      throw error;
+    }
+
+    if (!purchasesData || purchasesData.length === 0) {
+      return [];
+    }
+
+    // Transform the database purchases to the application purchase format
+    const purchases: Purchase[] = purchasesData.map((purchase: PurchaseDB) => {
+      return {
+        id: purchase.id,
+        poNumber: purchase.ponumber,
+        supplier: purchase.supplier,
+        items: purchase.items?.map((item: PurchaseItemDB) => ({
           itemId: item.itemid,
           name: item.name,
           sku: item.sku,
           quantity: item.quantity,
           unitCost: item.unitcost,
-          totalCost: item.totalcost
-        })) : [];
-        
-        return {
-          id: purchaseDB.id,
-          poNumber: purchaseDB.ponumber,
-          supplier: purchaseDB.supplier,
-          items: items,
-          status: purchaseDB.status as PurchaseStatus,
-          totalCost: purchaseDB.totalcost,
-          orderDate: purchaseDB.orderdate,
-          expectedDeliveryDate: purchaseDB.expecteddeliverydate,
-          receivedDate: purchaseDB.receiveddate,
-          notes: purchaseDB.notes || ''
-        };
+          totalCost: item.totalcost,
+        })) || [],
+        status: purchase.status as PurchaseStatus,
+        totalCost: purchase.totalcost,
+        orderDate: purchase.orderdate,
+        expectedDeliveryDate: purchase.expecteddeliverydate,
+        receivedDate: purchase.receiveddate || undefined,
+        notes: purchase.notes || undefined,
+      };
+    });
+
+    return purchases;
+  };
+
+  // Count total purchases
+  const fetchTotalPurchases = async (): Promise<number> => {
+    let query = supabase
+      .from('purchases')
+      .select('id', { count: 'exact' });
+
+    // Apply search filter if provided
+    if (searchQuery) {
+      query = query.or(`ponumber.ilike.%${searchQuery}%,supplier.ilike.%${searchQuery}%`);
+    }
+
+    const { count, error } = await query;
+
+    if (error) {
+      console.error("Error counting purchases:", error);
+      throw error;
+    }
+
+    return count || 0;
+  };
+
+  // Add a new purchase
+  const addPurchase = async (newPurchase: Omit<Purchase, "id">): Promise<Purchase> => {
+    const purchaseId = uuidv4();
+    
+    // Create purchase
+    const { error: purchaseInsertError } = await supabase
+      .from('purchases')
+      .insert({
+        id: purchaseId,
+        ponumber: newPurchase.poNumber,
+        supplier: newPurchase.supplier,
+        status: newPurchase.status,
+        totalcost: newPurchase.totalCost,
+        orderdate: newPurchase.orderDate,
+        expecteddeliverydate: newPurchase.expectedDeliveryDate,
+        receiveddate: newPurchase.receivedDate,
+        notes: newPurchase.notes
       });
-      
-      setPurchases(transformedPurchases);
-      setTotalPurchases(count || transformedPurchases.length);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching purchases:", err);
-      setError(err instanceof Error ? err : new Error("Failed to fetch purchases"));
-      toast.error("Failed to fetch purchases");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, searchQuery, pageSize]);
 
-  useEffect(() => {
-    fetchPurchases();
-  }, [fetchPurchases]);
-
-  // Add a new purchase to the database
-  const addPurchase = useCallback(async (newPurchase: Omit<Purchase, "id">) => {
-    try {
-      // Generate a new UUID for the purchase
-      const purchaseId = uuidv4();
-      
-      // Insert the purchase
-      const { error: purchaseError } = await supabase
-        .from('purchases')
-        .insert({
-          id: purchaseId,
-          ponumber: newPurchase.poNumber,
-          supplier: newPurchase.supplier,
-          status: newPurchase.status,
-          totalcost: newPurchase.totalCost,
-          orderdate: newPurchase.orderDate,
-          expecteddeliverydate: newPurchase.expectedDeliveryDate,
-          receiveddate: newPurchase.receivedDate,
-          notes: newPurchase.notes
-        });
-      
-      if (purchaseError) throw purchaseError;
-      
-      // Insert all the purchase items
-      if (newPurchase.items && newPurchase.items.length > 0) {
-        const purchaseItems = newPurchase.items.map(item => ({
-          purchaseid: purchaseId,
-          itemid: item.itemId,
-          name: item.name,
-          sku: item.sku,
-          quantity: item.quantity,
-          unitcost: item.unitCost,
-          totalcost: item.totalCost
-        }));
-        
-        const { error: itemsError } = await supabase
-          .from('purchase_items')
-          .insert(purchaseItems);
-        
-        if (itemsError) throw itemsError;
-      }
-      
-      // Refresh purchases after adding
-      await fetchPurchases();
-      toast.success('Purchase order created successfully');
-      return true;
-    } catch (error) {
-      console.error("Error adding purchase:", error);
-      toast.error("Failed to create purchase order");
-      return false;
+    if (purchaseInsertError) {
+      console.error("Error creating purchase:", purchaseInsertError);
+      throw purchaseInsertError;
     }
-  }, [fetchPurchases]);
+
+    // Create purchase items
+    const purchaseItems = newPurchase.items.map(item => ({
+      purchaseid: purchaseId,
+      itemid: item.itemId,
+      name: item.name,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitcost: item.unitCost,
+      totalcost: item.totalCost
+    }));
+
+    const { error: itemsInsertError } = await supabase
+      .from('purchase_items')
+      .insert(purchaseItems);
+
+    if (itemsInsertError) {
+      console.error("Error creating purchase items:", itemsInsertError);
+      throw itemsInsertError;
+    }
+
+    // Return the created purchase with ID
+    return {
+      ...newPurchase,
+      id: purchaseId
+    };
+  };
 
   // Update an existing purchase
-  const updatePurchase = useCallback(async (updatedPurchase: Purchase) => {
-    try {
-      // Update the purchase
-      const { error: purchaseError } = await supabase
-        .from('purchases')
-        .update({
-          ponumber: updatedPurchase.poNumber,
-          supplier: updatedPurchase.supplier,
-          status: updatedPurchase.status,
-          totalcost: updatedPurchase.totalCost,
-          orderdate: updatedPurchase.orderDate,
-          expecteddeliverydate: updatedPurchase.expectedDeliveryDate,
-          receiveddate: updatedPurchase.receivedDate,
-          notes: updatedPurchase.notes
-        })
-        .eq('id', updatedPurchase.id);
-      
-      if (purchaseError) throw purchaseError;
-      
-      // Delete existing purchase items and insert updated ones
-      const { error: deleteItemsError } = await supabase
-        .from('purchase_items')
-        .delete()
-        .eq('purchaseid', updatedPurchase.id);
-      
-      if (deleteItemsError) throw deleteItemsError;
-      
-      // Insert updated items
-      if (updatedPurchase.items && updatedPurchase.items.length > 0) {
-        const purchaseItems = updatedPurchase.items.map(item => ({
-          purchaseid: updatedPurchase.id,
-          itemid: item.itemId,
-          name: item.name,
-          sku: item.sku,
-          quantity: item.quantity,
-          unitcost: item.unitCost,
-          totalcost: item.totalCost
-        }));
-        
-        const { error: insertItemsError } = await supabase
-          .from('purchase_items')
-          .insert(purchaseItems);
-        
-        if (insertItemsError) throw insertItemsError;
-      }
-      
-      // Refresh purchases after updating
-      await fetchPurchases();
-      toast.success('Purchase order updated successfully');
-      return true;
-    } catch (error) {
-      console.error("Error updating purchase:", error);
-      toast.error("Failed to update purchase order");
-      return false;
-    }
-  }, [fetchPurchases]);
+  const updatePurchase = async (updatedPurchase: Purchase): Promise<Purchase> => {
+    // Update purchase
+    const { error: purchaseUpdateError } = await supabase
+      .from('purchases')
+      .update({
+        ponumber: updatedPurchase.poNumber,
+        supplier: updatedPurchase.supplier,
+        status: updatedPurchase.status,
+        totalcost: updatedPurchase.totalCost,
+        orderdate: updatedPurchase.orderDate,
+        expecteddeliverydate: updatedPurchase.expectedDeliveryDate,
+        receiveddate: updatedPurchase.receivedDate,
+        notes: updatedPurchase.notes
+      })
+      .eq('id', updatedPurchase.id);
 
-  // Delete a purchase from the database
-  const deletePurchase = useCallback(async (purchaseId: string) => {
-    try {
-      // Supabase will automatically delete the purchase_items due to ON DELETE CASCADE
-      const { error } = await supabase
-        .from('purchases')
-        .delete()
-        .eq('id', purchaseId);
-      
-      if (error) throw error;
-      
-      // Update the local state
-      setPurchases(prevPurchases => prevPurchases.filter(purchase => purchase.id !== purchaseId));
-      setTotalPurchases(prev => prev - 1);
-      
-      toast.success('Purchase order deleted successfully');
-      return true;
-    } catch (error) {
-      console.error("Error deleting purchase:", error);
-      toast.error("Failed to delete purchase order");
-      return false;
+    if (purchaseUpdateError) {
+      console.error("Error updating purchase:", purchaseUpdateError);
+      throw purchaseUpdateError;
     }
-  }, []);
 
-  // Update the status of a purchase
-  const updatePurchaseStatus = useCallback(async (purchaseId: string, status: PurchaseStatus) => {
-    try {
-      const updateData: Partial<PurchaseDB> = { status };
-      
-      // Add received date when status is "delivered"
-      if (status === 'delivered') {
-        updateData.receiveddate = new Date().toISOString();
-      }
-      
-      const { error } = await supabase
-        .from('purchases')
-        .update(updateData)
-        .eq('id', purchaseId);
-      
-      if (error) throw error;
-      
-      // Update the local state
-      setPurchases(prevPurchases => 
-        prevPurchases.map(purchase => {
-          if (purchase.id === purchaseId) {
-            return {
-              ...purchase,
-              status,
-              receivedDate: status === 'delivered' ? new Date().toISOString() : purchase.receivedDate
-            };
-          }
-          return purchase;
-        })
-      );
-      
-      toast.success(`Purchase order marked as ${status}`);
-      return true;
-    } catch (error) {
+    // First, delete existing purchase items
+    const { error: deleteError } = await supabase
+      .from('purchase_items')
+      .delete()
+      .eq('purchaseid', updatedPurchase.id);
+
+    if (deleteError) {
+      console.error("Error deleting purchase items:", deleteError);
+      throw deleteError;
+    }
+
+    // Then insert updated items
+    const purchaseItems = updatedPurchase.items.map(item => ({
+      purchaseid: updatedPurchase.id,
+      itemid: item.itemId,
+      name: item.name,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitcost: item.unitCost,
+      totalcost: item.totalCost
+    }));
+
+    const { error: itemsInsertError } = await supabase
+      .from('purchase_items')
+      .insert(purchaseItems);
+
+    if (itemsInsertError) {
+      console.error("Error updating purchase items:", itemsInsertError);
+      throw itemsInsertError;
+    }
+
+    return updatedPurchase;
+  };
+
+  // Delete a purchase
+  const deletePurchase = async (purchaseId: string): Promise<void> => {
+    // First delete purchase items
+    const { error: itemsDeleteError } = await supabase
+      .from('purchase_items')
+      .delete()
+      .eq('purchaseid', purchaseId);
+
+    if (itemsDeleteError) {
+      console.error("Error deleting purchase items:", itemsDeleteError);
+      throw itemsDeleteError;
+    }
+
+    // Then delete the purchase
+    const { error: purchaseDeleteError } = await supabase
+      .from('purchases')
+      .delete()
+      .eq('id', purchaseId);
+
+    if (purchaseDeleteError) {
+      console.error("Error deleting purchase:", purchaseDeleteError);
+      throw purchaseDeleteError;
+    }
+  };
+
+  // Update purchase status
+  const updatePurchaseStatus = async (purchaseId: string, status: PurchaseStatus): Promise<void> => {
+    const updates: any = { status };
+
+    // Add date for specific statuses
+    if (status === 'delivered') {
+      updates.receiveddate = new Date().toISOString();
+    }
+
+    const { error } = await supabase
+      .from('purchases')
+      .update(updates)
+      .eq('id', purchaseId);
+
+    if (error) {
       console.error("Error updating purchase status:", error);
-      toast.error("Failed to update purchase status");
-      return false;
+      throw error;
     }
-  }, []);
+  };
+
+  // Query for purchases
+  const { data: purchases = [], isLoading, error } = useQuery({
+    queryKey: ['purchases', currentPage, pageSize, searchQuery],
+    queryFn: fetchPurchases,
+  });
+
+  // Query for total purchases count
+  const { data: totalPurchases = 0 } = useQuery({
+    queryKey: ['purchasesCount', searchQuery],
+    queryFn: fetchTotalPurchases,
+  });
+
+  // Mutations
+  const queryClient = useQueryClient();
+  
+  const { mutateAsync: addPurchaseMutation } = useMutation({
+    mutationFn: addPurchase,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['purchasesCount'] });
+    },
+  });
+
+  const { mutateAsync: updatePurchaseMutation } = useMutation({
+    mutationFn: updatePurchase,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+    },
+  });
+
+  const { mutateAsync: deletePurchaseMutation } = useMutation({
+    mutationFn: deletePurchase,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['purchasesCount'] });
+    },
+  });
+
+  const { mutateAsync: updatePurchaseStatusMutation } = useMutation({
+    mutationFn: (params: { purchaseId: string, status: PurchaseStatus }) => 
+      updatePurchaseStatus(params.purchaseId, params.status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+    },
+  });
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   return {
     purchases,
     totalPurchases,
-    loading,
+    isLoading,
     error,
-    page,
-    setPage: (newPage: number) => {
-      if (newPage > 0) setLoading(true);
-      setPage(newPage);
-    },
-    fetchPurchases,
-    addPurchase,
-    updatePurchase,
-    deletePurchase,
-    updatePurchaseStatus
+    page: currentPage,
+    setPage: handlePageChange,
+    addPurchase: addPurchaseMutation,
+    updatePurchase: updatePurchaseMutation,
+    deletePurchase: deletePurchaseMutation,
+    updatePurchaseStatus: (purchaseId: string, status: PurchaseStatus) => 
+      updatePurchaseStatusMutation({ purchaseId, status }),
   };
-}
+};

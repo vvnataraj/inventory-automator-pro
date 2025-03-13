@@ -90,3 +90,13 @@ export interface OrderDB {
   created_at: string;
   items?: OrderItemDB[];
 }
+
+// Type for customers table in database
+export interface CustomerDB {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  created_at: string;
+  updated_at: string;
+}
