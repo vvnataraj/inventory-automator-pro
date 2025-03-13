@@ -1,5 +1,5 @@
 
-import { Bell, LogOut, Menu, Clock, Search, UserCog, User } from "lucide-react";
+import { Bell, LogOut, Menu, Clock, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -149,13 +149,6 @@ export function Header() {
                 <Link to="/user-settings" className="flex items-center cursor-pointer">
                   <User className="mr-2 h-4 w-4" />
                   User Settings
-                </Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex items-center cursor-pointer">
-                  <UserCog className="mr-2 h-4 w-4" />
-                  Account Settings
                 </Link>
               </DropdownMenuItem>
               
