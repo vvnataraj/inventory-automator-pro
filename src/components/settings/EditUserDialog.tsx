@@ -83,7 +83,7 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
       setOpen(false);
     } catch (error) {
       console.error("Error updating user:", error);
-      toast.error("Failed to update user");
+      toast.error("Failed to update user: " + error.message);
     } finally {
       setLoading(false);
     }
