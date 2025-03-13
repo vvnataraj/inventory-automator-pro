@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Box, DollarSign, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { inventoryItems } from "@/data/inventoryData";
 
-const stats = [
+const getInitialStats = () => [
   {
     name: "Total Inventory",
-    value: "12,345",
+    value: "Loading...",
     change: "+4.75%",
     icon: Box,
     link: "/inventory"
@@ -37,6 +39,33 @@ const stats = [
 
 export default function Index() {
   const navigate = useNavigate();
+  const [stats, setStats] = useState(getInitialStats());
+
+  useEffect(() => {
+    // Calculate total inventory value based on RRP
+    const calculateTotalInventoryValue = () => {
+      const totalValue = inventoryItems.reduce((sum, item) => {
+        // Use RRP if available, or price as fallback
+        const itemValue = (item.rrp || item.price || 0) * item.stock;
+        return sum + itemValue;
+      }, 0);
+      
+      // Format the value with commas for thousands and 2 decimal places
+      const formattedValue = `$${totalValue.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+      })}`;
+      
+      // Update the stats array with the calculated value
+      setStats(prevStats => prevStats.map(stat => 
+        stat.name === "Total Inventory" 
+          ? { ...stat, value: formattedValue } 
+          : stat
+      ));
+    };
+
+    calculateTotalInventoryValue();
+  }, []);
 
   const handleCardClick = (link: string | null) => {
     if (link) {
