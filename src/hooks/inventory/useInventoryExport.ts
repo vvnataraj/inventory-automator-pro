@@ -136,7 +136,7 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         
         setTimeout(() => {
           document.body.removeChild(a);
-          URL.revoObjectURL(url);
+          URL.revokeObjectURL(url);
           setIsExporting(false);
           setIsExportDialogOpen(false);
           toast.success(`Inventory exported as ${exportFormat?.toUpperCase()} successfully!`);
