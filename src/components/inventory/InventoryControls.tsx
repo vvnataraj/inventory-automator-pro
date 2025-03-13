@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, ArrowUpDown, Grid, Table, ArrowUpAZ, ArrowDownAz, X } from "lucide-react";
@@ -78,6 +78,11 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
     }
   };
 
+  // Log when category filter changes 
+  useEffect(() => {
+    console.log("Current category filter:", categoryFilter);
+  }, [categoryFilter]);
+
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
       <div className="relative flex-1">
@@ -110,7 +115,10 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
       
       <Popover open={filterOpen} onOpenChange={setFilterOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="gap-2">
+          <Button 
+            variant="outline" 
+            className={`gap-2 ${categoryFilter ? "bg-primary/10" : ""}`}
+          >
             <Filter className="h-4 w-4" />
             {categoryFilter ? (
               <span className="flex items-center">
@@ -132,6 +140,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
               <Select 
                 value={categoryFilter || ""}
                 onValueChange={(value) => {
+                  console.log("Select changed to:", value);
                   onCategoryFilterChange?.(value === "" ? undefined : value);
                   setFilterOpen(false);
                 }}
@@ -155,6 +164,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
                 variant="outline" 
                 size="sm" 
                 onClick={() => {
+                  console.log("Clearing filter");
                   onCategoryFilterChange?.(undefined);
                   setFilterOpen(false);
                 }}
@@ -221,13 +231,16 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
       
       {categoryFilter && (
         <div className="flex items-center ml-2">
-          <Badge className="flex items-center gap-1">
+          <Badge variant="secondary" className="flex items-center gap-1">
             {categoryFilter}
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-4 w-4 p-0 ml-1" 
-              onClick={() => onCategoryFilterChange?.(undefined)}
+              className="h-4 w-4 p-0 ml-1 rounded-full" 
+              onClick={() => {
+                console.log("Badge clear button clicked");
+                onCategoryFilterChange?.(undefined);
+              }}
             >
               <X className="h-3 w-3" />
             </Button>

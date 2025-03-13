@@ -29,7 +29,8 @@ export function useInventoryDatabase() {
       }
       
       if (categoryFilter && categoryFilter !== "undefined") {
-        supabaseQuery = supabaseQuery.eq('category', categoryFilter);
+        // Use an exact match for category filtering - fix case sensitivity
+        supabaseQuery = supabaseQuery.ilike('category', categoryFilter);
       }
       
       if (locationFilter && locationFilter !== "undefined") {
@@ -88,6 +89,7 @@ export function useInventoryDatabase() {
     }
     
     if (categoryFilter && categoryFilter !== "undefined") {
+      console.log(`Filtering by category: "${categoryFilter}"`);
       filteredItems = filteredItems.filter(item => 
         item.category.toLowerCase() === categoryFilter.toLowerCase()
       );

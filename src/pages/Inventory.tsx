@@ -16,34 +16,36 @@ export default function Inventory() {
   const { state, actions } = useInventoryPage();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Check for category in URL parameters only once when component mounts
-  // or when searchParams change
+  // Handle category filter from URL when component mounts
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     if (categoryParam && categoryParam !== state.categoryFilter) {
       actions.setCategoryFilter(categoryParam);
     }
-  }, [searchParams, actions]); // Removed state.categoryFilter to prevent loop
+  }, [searchParams]); // Only depend on searchParams to prevent loops
   
-  // Update URL when category filter changes, but prevent infinite loop
+  // Update URL when category filter changes
   useEffect(() => {
+    // Create a new searchParams object to avoid modifying the current one directly
+    const newParams = new URLSearchParams(searchParams);
+    
     if (state.categoryFilter) {
-      // Only update if different
-      if (searchParams.get('category') !== state.categoryFilter) {
-        searchParams.set('category', state.categoryFilter);
-        setSearchParams(searchParams);
-      }
-    } else if (searchParams.has('category')) {
-      searchParams.delete('category');
-      setSearchParams(searchParams);
+      newParams.set('category', state.categoryFilter);
+    } else {
+      newParams.delete('category');
     }
-  }, [state.categoryFilter, searchParams, setSearchParams]);
+    
+    // Only update if the params have actually changed
+    if (newParams.toString() !== searchParams.toString()) {
+      setSearchParams(newParams);
+    }
+  }, [state.categoryFilter, setSearchParams]);
 
   // Add specific effect to manually trigger data fetch when the page loads
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
     actions.fetchItems();
-  }, []); // Only run on initial mount
+  }, []); 
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
     // Process each imported item
@@ -73,6 +75,7 @@ export default function Inventory() {
   };
   
   const handleCategoryFilterChange = (category: string | undefined) => {
+    console.log("Setting category filter to:", category);
     actions.setCategoryFilter(category);
     // Reset to first page when changing filters
     actions.setCurrentPage(1);
