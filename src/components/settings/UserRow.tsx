@@ -57,8 +57,14 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
   // Get the primary role (first in the array) or default to 'user'
   const primaryRole = user.roles.length > 0 ? user.roles[0] : 'user';
 
+  // Display a shorter version of the ID
+  const shortId = user.id.substring(0, 8);
+
   return (
     <TableRow>
+      <TableCell>
+        <span className="text-xs font-mono" title={user.id}>{shortId}...</span>
+      </TableCell>
       <TableCell>
         <span className="font-medium">{displayEmail}</span>
       </TableCell>
