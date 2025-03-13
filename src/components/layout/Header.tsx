@@ -1,4 +1,3 @@
-
 import { Bell, LogOut, Menu, Clock, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +16,7 @@ import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export function Header() {
   const { signOut, user } = useAuth();
@@ -76,7 +76,7 @@ export function Header() {
   };
   
   return (
-    <header className="border-b bg-white w-full">
+    <header className="border-b bg-card w-full">
       <div className="flex h-16 items-center px-4 gap-4">
         <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-5 w-5" />
@@ -88,7 +88,6 @@ export function Header() {
               src="/lovable-uploads/f849ba67-c0f4-4e4b-9f84-e91df8d9b64d.png" 
               alt="STOCKtopus Logo" 
               className="h-10 w-10 object-contain"
-              style={{ mixBlendMode: 'multiply' }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 const parent = e.currentTarget.parentElement;
@@ -139,6 +138,8 @@ export function Header() {
           </form>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
+          
           <Button 
             variant="outline" 
             size="sm" 
@@ -168,7 +169,7 @@ export function Header() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-white">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{username || user?.email}</p>

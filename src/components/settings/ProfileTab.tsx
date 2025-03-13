@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Upload, Trash } from "lucide-react";
+import { ThemeSelector } from "@/components/theme/ThemeSelector";
+import { Separator } from "@/components/ui/separator";
 
 interface UserProfile {
   id: string;
@@ -290,6 +292,10 @@ export default function ProfileTab() {
             </div>
           )}
         </div>
+
+        <Separator className="my-6" />
+        
+        <ThemeSelector />
       </CardContent>
       <CardFooter>
         <Button 
