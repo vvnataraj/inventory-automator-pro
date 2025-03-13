@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
+import { useLocation } from "react-router-dom";
 
 interface NavItem {
   name: string;
@@ -37,7 +38,7 @@ export function SidebarSection({
   onOpenChange,
   className 
 }: SidebarSectionProps) {
-  const location = window.location;
+  const location = useLocation();
   
   return (
     <Collapsible 
