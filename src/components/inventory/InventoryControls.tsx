@@ -5,6 +5,7 @@ import { SearchInput } from "./controls/SearchInput";
 import { ViewModeToggle } from "./controls/ViewModeToggle";
 import { SortControl } from "./controls/SortControl";
 import { LocationFilter } from "./controls/LocationFilter";
+import { CategoryFilter } from "./controls/CategoryFilter";
 
 interface InventoryControlsProps {
   searchQuery: string;
@@ -17,6 +18,8 @@ interface InventoryControlsProps {
   onSortDirectionChange: (direction: SortDirection) => void;
   locationFilter: string | undefined;
   onLocationFilterChange: (location: string | undefined) => void;
+  categoryFilter: string | undefined;
+  onCategoryFilterChange: (category: string | undefined) => void;
 }
 
 export const InventoryControls: React.FC<InventoryControlsProps> = ({
@@ -30,12 +33,19 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
   onSortDirectionChange,
   locationFilter,
   onLocationFilterChange,
+  categoryFilter,
+  onCategoryFilterChange,
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
       <SearchInput 
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 
+      />
+      
+      <CategoryFilter
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={onCategoryFilterChange}
       />
       
       <LocationFilter

@@ -69,6 +69,8 @@ export default function Inventory() {
           onSortDirectionChange={actions.setSortDirection}
           locationFilter={state.locationFilter}
           onLocationFilterChange={actions.setLocationFilter}
+          categoryFilter={state.categoryFilter}
+          onCategoryFilterChange={actions.setCategoryFilter}
         />
 
         {state.isLoading ? (

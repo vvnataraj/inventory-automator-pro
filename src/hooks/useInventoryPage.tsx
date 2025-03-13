@@ -11,12 +11,13 @@ export function useInventoryPage() {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [locationFilter, setLocationFilter] = useState<string | undefined>(undefined);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, locationFilter]);
+  }, [searchQuery, locationFilter, categoryFilter]);
   
   const { 
     items, 
@@ -35,6 +36,7 @@ export function useInventoryPage() {
     searchQuery,
     sortField,
     sortDirection,
+    categoryFilter,
     locationFilter
   );
   
@@ -137,6 +139,7 @@ export function useInventoryPage() {
       sortField,
       sortDirection,
       locationFilter,
+      categoryFilter,
       reorderDialogOpen,
       selectedItem,
       items,
@@ -151,6 +154,7 @@ export function useInventoryPage() {
       setSortField,
       setSortDirection,
       setLocationFilter,
+      setCategoryFilter,
       setReorderDialogOpen,
       setSelectedItem,
       handleSort,
