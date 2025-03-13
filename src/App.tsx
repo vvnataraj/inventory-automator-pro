@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -9,7 +10,7 @@ import Sales from "./pages/Sales";
 import Progress from "./pages/Progress";
 import Locations from "./pages/Locations";
 import UserSettings from "./pages/UserSettings";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import Support from "./pages/Support";
