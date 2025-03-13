@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 type Role = 'admin' | 'manager' | 'user';
 
@@ -38,8 +39,14 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editUserRole, setEditUserRole] = useState<Role>((user.roles[0] as Role) || "user");
+  const { isAdmin } = useUserRoles();
   
   async function updateUserRole() {
+    if (!isAdmin()) {
+      toast.error("Only admins can change user roles");
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -54,6 +61,15 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
       
       // If role doesn't exist, add it
       if (!existingRole || existingRole.length === 0) {
+        // Delete all existing roles for this user first
+        const { error: deleteError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', user.id);
+          
+        if (deleteError) throw deleteError;
+        
+        // Add the new role
         const { error: insertError } = await supabase
           .from('user_roles')
           .insert({ user_id: user.id, role: editUserRole });
@@ -70,6 +86,10 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
     } finally {
       setLoading(false);
     }
+  };
+  
+  if (!isAdmin()) {
+    return null;
   }
   
   return (
@@ -95,11 +115,17 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin (Full Access)</SelectItem>
+                <SelectItem value="manager">Manager (No Settings Access)</SelectItem>
+                <SelectItem value="user">User (Read-Only)</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p><strong>Admin:</strong> Full access to all features and settings</p>
+            <p><strong>Manager:</strong> Can add/edit/delete items but cannot access settings</p>
+            <p><strong>User:</strong> Read-only access, cannot add/edit/delete</p>
           </div>
         </div>
         

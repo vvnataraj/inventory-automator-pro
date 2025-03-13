@@ -96,7 +96,7 @@ export default function UserManagement() {
     return (
       <div className="space-y-4">
         <h3 className="text-lg font-medium">User Management</h3>
-        <p>You need admin privileges to access this section.</p>
+        <p className="text-muted-foreground">You need admin privileges to access this section.</p>
       </div>
     );
   }

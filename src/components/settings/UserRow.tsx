@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
 import UserRoleBadge from "./UserRoleBadge";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 type User = {
   id: string;
@@ -26,8 +27,14 @@ type UserRowProps = {
 
 export default function UserRow({ user, onUserUpdated }: UserRowProps) {
   const [isDisabled, setIsDisabled] = useState(user.is_disabled || false);
+  const { isAdmin } = useUserRoles();
 
   const toggleUserStatus = (userId: string, currentStatus: boolean) => {
+    if (!isAdmin()) {
+      toast.error("Only admins can change user status");
+      return;
+    }
+
     try {
       // In a real application, this would need to be handled by a server function
       // as client-side code doesn't have direct access to modify auth.users
@@ -52,7 +59,7 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
               <UserRoleBadge key={index} role={role} />
             ))
           ) : (
-            <UserRoleBadge role="No Role" />
+            <UserRoleBadge role="user" />
           )}
         </div>
       </TableCell>
@@ -62,15 +69,18 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
           <Switch
             checked={!isDisabled}
             onCheckedChange={() => toggleUserStatus(user.id, isDisabled)}
+            disabled={!isAdmin()}
           />
           <span>{isDisabled ? "Disabled" : "Active"}</span>
         </div>
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end gap-2">
-          <EditUserDialog user={user} onUserUpdated={onUserUpdated} />
-          <DeleteUserDialog userId={user.id} userEmail={user.email} onUserDeleted={onUserUpdated} />
-        </div>
+        {isAdmin() && (
+          <div className="flex justify-end gap-2">
+            <EditUserDialog user={user} onUserUpdated={onUserUpdated} />
+            <DeleteUserDialog userId={user.id} userEmail={user.email} onUserDeleted={onUserUpdated} />
+          </div>
+        )}
       </TableCell>
     </TableRow>
   );

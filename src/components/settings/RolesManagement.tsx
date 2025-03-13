@@ -41,6 +41,19 @@ export default function RolesManagement() {
         return <Shield className="h-4 w-4 mr-1" />;
     }
   };
+
+  const getRoleDescription = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return "Full access to all features and settings";
+      case 'manager':
+        return "Can add/edit/delete items but cannot access settings";
+      case 'user':
+        return "Read-only access, cannot add/edit/delete";
+      default:
+        return "Basic access";
+    }
+  };
   
   return (
     <Card>
@@ -60,26 +73,42 @@ export default function RolesManagement() {
                 <span className="text-sm">Loading roles...</span>
               </div>
             ) : roles.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {roles.map((role, index) => (
-                  <Badge 
-                    key={index}
-                    variant={
-                      role === 'admin' 
-                        ? 'default' 
-                        : role === 'manager' 
-                          ? 'secondary' 
-                          : 'outline'
-                    }
-                    className="flex items-center"
-                  >
-                    {getRoleIcon(role)}
-                    {role}
-                  </Badge>
-                ))}
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {roles.map((role, index) => (
+                    <Badge 
+                      key={index}
+                      variant={
+                        role === 'admin' 
+                          ? 'default' 
+                          : role === 'manager' 
+                            ? 'secondary' 
+                            : 'outline'
+                      }
+                      className="flex items-center"
+                    >
+                      {getRoleIcon(role)}
+                      {role}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="mt-2 text-sm text-muted-foreground">
+                  {roles.map((role, index) => (
+                    <div key={index} className="flex items-start gap-2 mt-1">
+                      <div className="w-4">{getRoleIcon(role)}</div>
+                      <div>{getRoleDescription(role)}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No roles assigned</p>
+              <div>
+                <p className="text-sm text-muted-foreground">No roles assigned. You have read-only access.</p>
+                <div className="flex items-start gap-2 mt-2">
+                  <div className="w-4"><Shield className="h-4 w-4" /></div>
+                  <div className="text-sm text-muted-foreground">{getRoleDescription('user')}</div>
+                </div>
+              </div>
             )}
           </div>
           

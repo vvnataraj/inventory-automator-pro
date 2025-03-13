@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 type Role = 'admin' | 'manager' | 'user';
 
@@ -34,8 +35,14 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState<Role>("user");
+  const { isAdmin } = useUserRoles();
   
   async function addUser() {
+    if (!isAdmin()) {
+      toast.error("Only admins can add users");
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -74,6 +81,10 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
     } finally {
       setLoading(false);
     }
+  }
+  
+  if (!isAdmin()) {
+    return null;
   }
   
   return (
@@ -124,11 +135,17 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin (Full Access)</SelectItem>
+                <SelectItem value="manager">Manager (No Settings Access)</SelectItem>
+                <SelectItem value="user">User (Read-Only)</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p><strong>Admin:</strong> Full access to all features and settings</p>
+            <p><strong>Manager:</strong> Can add/edit/delete items but cannot access settings</p>
+            <p><strong>User:</strong> Read-only access, cannot add/edit/delete</p>
           </div>
         </div>
         

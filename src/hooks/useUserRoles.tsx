@@ -17,8 +17,11 @@ export function useUserRoles() {
   // Check if user is admin
   const isAdmin = () => hasRole('admin');
   
-  // Check if user is manager
+  // Check if user is manager or admin (managers and admins both have elevated permissions)
   const isManager = () => hasRole('manager') || hasRole('admin');
+  
+  // Check if user is a regular user with read-only access
+  const isReadOnly = () => roles.length === 0 || (roles.length === 1 && hasRole('user'));
   
   // Fetch user roles
   const fetchRoles = async () => {
@@ -122,6 +125,7 @@ export function useUserRoles() {
     hasRole,
     isAdmin,
     isManager,
+    isReadOnly,
     fetchRoles,
     addRole,
     removeRole
