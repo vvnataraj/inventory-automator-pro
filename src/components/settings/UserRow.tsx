@@ -14,6 +14,7 @@ import { useUserRoles } from "@/hooks/useUserRoles";
 type User = {
   id: string;
   email: string;
+  username: string | null;
   last_sign_in_at: string | null;
   created_at: string;
   roles: string[];
@@ -49,15 +50,21 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
     }
   };
 
-  // Display the email if available, otherwise show a placeholder with the user ID
+  // Format user display info
   const displayEmail = user.email || `User ${user.id.substring(0, 8)}...`;
+  const displayUsername = user.username || "";
   
   // Get the primary role (first in the array) or default to 'user'
   const primaryRole = user.roles.length > 0 ? user.roles[0] : 'user';
 
   return (
     <TableRow>
-      <TableCell>{displayEmail}</TableCell>
+      <TableCell>
+        <div className="flex flex-col">
+          <span className="font-medium">{displayEmail}</span>
+          {displayUsername && <span className="text-xs text-gray-500">@{displayUsername}</span>}
+        </div>
+      </TableCell>
       <TableCell>
         <UserRoleBadge role={primaryRole} />
       </TableCell>

@@ -12,6 +12,7 @@ import UserRow from "./UserRow";
 type User = {
   id: string;
   email: string;
+  username: string | null;
   last_sign_in_at: string | null;
   created_at: string;
   roles: string[];
@@ -29,8 +30,8 @@ export default function UserTable({ users, loading, onUserUpdated }: UserTablePr
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Roles</TableHead>
+          <TableHead>User</TableHead>
+          <TableHead>Role</TableHead>
           <TableHead>Created</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right">Actions</TableHead>

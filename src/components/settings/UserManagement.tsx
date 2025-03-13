@@ -9,10 +9,12 @@ import UserTable from "./UserTable";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { ListControls } from "@/components/common/ListControls";
 
 type User = {
   id: string;
   email: string;
+  username: string | null;
   last_sign_in_at: string | null;
   created_at: string;
   roles: string[];
@@ -24,6 +26,7 @@ export default function UserManagement() {
   const { isAdmin } = useUserRoles();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (currentUser) {
@@ -51,6 +54,7 @@ export default function UserManagement() {
             userRolesMap.set(role.user_id, {
               id: role.user_id,
               email: "", // Will be populated later
+              username: null, // Will be populated later
               roles: [role.role],
               created_at: new Date().toISOString(),
               last_sign_in_at: null,
@@ -62,18 +66,33 @@ export default function UserManagement() {
           }
         });
         
-        // Get profile information including email/username
+        // Get profile information including username and creation date
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, created_at');
+        
+        // Get user emails from auth - note: this requires admin access via server function in production
+        // For demonstration, we're using direct auth queries which will work in development
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
         
         // Update user information with profile data
         if (profiles && !profilesError) {
           profiles.forEach(profile => {
             if (userRolesMap.has(profile.id)) {
               const user = userRolesMap.get(profile.id);
-              user.email = profile.username || "";
+              user.username = profile.username;
               user.created_at = profile.created_at;
+            }
+          });
+        }
+        
+        // Update user information with auth data
+        if (authUsers?.users && !authError) {
+          authUsers.users.forEach(authUser => {
+            if (userRolesMap.has(authUser.id)) {
+              const user = userRolesMap.get(authUser.id);
+              user.email = authUser.email || "";
+              user.last_sign_in_at = authUser.last_sign_in_at;
             }
           });
         }
@@ -91,6 +110,17 @@ export default function UserManagement() {
       setLoading(false);
     }
   }
+
+  // Filter users based on search term
+  const filteredUsers = users.filter(user => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (user.email && user.email.toLowerCase().includes(searchLower)) ||
+      (user.username && user.username.toLowerCase().includes(searchLower)) ||
+      user.roles.some(role => role.toLowerCase().includes(searchLower))
+    );
+  });
   
   if (!isAdmin()) {
     return (
@@ -126,13 +156,20 @@ export default function UserManagement() {
             </div>
           </div>
           
+          <ListControls
+            searchPlaceholder="Search users..."
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            showFilter={false}
+          />
+          
           {loading ? (
             <div className="py-8 text-center">
               <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
               <p>Loading users...</p>
             </div>
           ) : (
-            <UserTable users={users} loading={loading} onUserUpdated={fetchUsers} />
+            <UserTable users={filteredUsers} loading={loading} onUserUpdated={fetchUsers} />
           )}
         </div>
       </CardContent>
