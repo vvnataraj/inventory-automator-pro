@@ -11,8 +11,17 @@ import {
   Settings,
   ShoppingCart,
   Truck,
+  Shield,
 } from "lucide-react";
+import { 
+  Collapsible, 
+  CollapsibleContent, 
+  CollapsibleTrigger 
+} from "@/components/ui/collapsible";
+import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
+// Main navigation items
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Inventory", href: "/inventory", icon: Box },
@@ -20,12 +29,22 @@ const navigation = [
   { name: "Purchases", href: "/purchases", icon: Truck },
   { name: "Progress", href: "/progress", icon: Clock },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Locations", href: "/locations", icon: Building2 },
   { name: "Sales", href: "/sales", icon: CircleDollarSign },
+];
+
+// Admin section items
+const adminItems = [
+  { name: "Locations", href: "/locations", icon: Building2 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const location = window.location;
+  
+  // Check if current location is in admin section
+  const isAdminActive = adminItems.some(item => item.href === location.pathname);
+
   return (
     <div className="flex h-full flex-col bg-white border-r">
       <div className="flex h-16 items-center gap-2 px-4 border-b">
@@ -75,6 +94,7 @@ export function Sidebar() {
         </div>
       </div>
       <nav className="flex-1 space-y-1 p-2">
+        {/* Main navigation items */}
         {navigation.map((item) => (
           <Link
             key={item.name}
@@ -90,6 +110,48 @@ export function Sidebar() {
             {item.name}
           </Link>
         ))}
+        
+        {/* Admin section with collapsible content */}
+        <Collapsible 
+          open={isAdminOpen || isAdminActive} 
+          onOpenChange={setIsAdminOpen} 
+          className="mt-4"
+        >
+          <CollapsibleTrigger 
+            className={cn(
+              "w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              isAdminActive
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <Shield className="h-4 w-4" />
+              <span>Admin</span>
+            </div>
+            {isAdminOpen || isAdminActive ? 
+              <ChevronDown className="h-4 w-4" /> : 
+              <ChevronRight className="h-4 w-4" />
+            }
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pl-4 mt-1 space-y-1">
+            {adminItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  location.pathname === item.href
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.name}
+              </Link>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
       </nav>
     </div>
   );
