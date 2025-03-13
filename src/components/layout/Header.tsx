@@ -1,20 +1,24 @@
 
-import { Bell, LogOut, Menu, Clock, Search, UserCog } from "lucide-react";
+import { Bell, LogOut, Menu, Clock, Search, UserCog, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ProgressEntryDialog } from "@/components/progress/ProgressEntryDialog";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 export function Header() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { isAdmin } = useUserRoles();
   const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
   
   const handleLogout = async () => {
@@ -103,38 +107,49 @@ export function Header() {
             <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
           </Button>
           
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="gap-2" 
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Logout</span>
-          </Button>
-          
+          {/* User profile dropdown - replacing the previous logout button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                 <img
                   alt="Avatar"
                   className="rounded-full"
                   src="/lovable-uploads/349248b6-96b7-485d-98af-8d8bfaca1b38.png"
                   style={{ aspectRatio: "32/32", objectFit: "cover", mixBlendMode: 'multiply' }}
                   onError={(e) => {
-                    e.currentTarget.src = "https://avatar.vercel.sh/inventory";
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<div class="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center"><User className="h-5 w-5 text-primary" /></div>`;
+                    }
                   }}
                 />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56 bg-white">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user?.email}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {isAdmin() ? 'Administrator' : 'User'}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
               <DropdownMenuItem asChild>
                 <Link to="/settings" className="flex items-center cursor-pointer">
                   <UserCog className="mr-2 h-4 w-4" />
                   Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => signOut()}>Sign out</DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
