@@ -106,25 +106,23 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                       isLast={index === items.length - 1}
                       onReorder={onReorderItem}
                     />
-                    {item.stock <= item.lowStockThreshold && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="icon" 
-                              className="h-8 w-8" 
-                              onClick={() => onOpenReorderDialog(item)}
-                            >
-                              <ShoppingCart className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Reorder stock</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-8 w-8" 
+                            onClick={() => onOpenReorderDialog(item)}
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Reorder stock</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </td>
                 <td className="py-3 px-4">

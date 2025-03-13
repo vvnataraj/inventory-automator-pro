@@ -39,7 +39,6 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   isFirst = false,
   isLast = false
 }) => {
-  const isLowStock = item.stock <= item.lowStockThreshold;
   const { isReadOnly } = useUserRoles();
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   
@@ -113,7 +112,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
                 onReorder={onReorder}
               />
             )}
-            {onReorderStock && isLowStock && (
+            {onReorderStock && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
