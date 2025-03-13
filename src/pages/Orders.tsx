@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ChevronUp, ChevronDown } from "lucide-react";
@@ -17,6 +18,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { ListControls, ViewMode } from "@/components/common/ListControls";
+import { OrderDetailsDialog } from "@/components/orders/OrderDetailsDialog";
 
 type SortField = "orderNumber" | "customerName" | "createdAt" | "total" | "status";
 type SortDirection = "asc" | "desc";
@@ -29,6 +31,8 @@ export default function Orders() {
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | undefined>(undefined);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
   
   const { orders, totalOrders, isLoading, page, setPage, pageSize, setPageSize } = useOrders(
     currentPage, 
@@ -38,7 +42,12 @@ export default function Orders() {
   );
   
   const handleViewDetails = (order: Order) => {
-    console.log("Viewing details for order:", order);
+    setSelectedOrder(order);
+    setIsOrderDetailsOpen(true);
+  };
+
+  const handleCloseOrderDetails = () => {
+    setIsOrderDetailsOpen(false);
   };
 
   const itemsPerPage = 12;
@@ -249,6 +258,12 @@ export default function Orders() {
           </div>
         </>
       )}
+
+      <OrderDetailsDialog 
+        order={selectedOrder} 
+        isOpen={isOrderDetailsOpen} 
+        onClose={handleCloseOrderDetails} 
+      />
     </MainLayout>
   );
 }
