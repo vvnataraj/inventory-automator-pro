@@ -38,7 +38,7 @@ export default function UserSettings() {
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
+              <TabsTrigger value="security">Password</TabsTrigger>
             </TabsList>
             
             <TabsContent value="profile">
