@@ -21,6 +21,12 @@ type User = {
   is_disabled?: boolean;
 };
 
+type UserManagementProps = {
+  initialUsers?: User[];
+  loading?: boolean;
+  onRefresh?: () => void;
+};
+
 // Define type for Supabase auth users response
 type AuthUser = {
   id: string;
@@ -29,22 +35,31 @@ type AuthUser = {
   created_at?: string;
 };
 
-export default function UserManagement() {
+export default function UserManagement({ initialUsers = [], loading = false, onRefresh }: UserManagementProps) {
   const { user: currentUser } = useAuth();
   const { isAdmin } = useUserRoles();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [innerLoading, setInnerLoading] = useState(loading);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (currentUser) {
+    // Update users when initialUsers prop changes
+    if (initialUsers.length > 0) {
+      setUsers(initialUsers);
+    } else if (currentUser && users.length === 0) {
+      // If no initial users provided but we're logged in, fetch users
       fetchUsers();
     }
-  }, [currentUser]);
+  }, [currentUser, initialUsers]);
 
   async function fetchUsers() {
+    if (onRefresh) {
+      onRefresh();
+      return;
+    }
+    
     try {
-      setLoading(true);
+      setInnerLoading(true);
       
       console.log("Fetching users data as admin");
       
@@ -129,7 +144,7 @@ export default function UserManagement() {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
     } finally {
-      setLoading(false);
+      setInnerLoading(false);
     }
   }
 
@@ -154,47 +169,43 @@ export default function UserManagement() {
   }
   
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium">User Management</h3>
-              <p className="text-sm text-muted-foreground">
-                {users.length} {users.length === 1 ? 'user' : 'users'} in the system
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={fetchUsers}
-                disabled={loading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-              <AddUserDialog onUserAdded={fetchUsers} />
-            </div>
-          </div>
-          
-          <ListControls
-            searchPlaceholder="Search users..."
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            showFilter={false}
-          />
-          
-          {loading ? (
-            <div className="py-8 text-center">
-              <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-              <p>Loading users...</p>
-            </div>
-          ) : (
-            <UserTable users={filteredUsers} loading={loading} onUserUpdated={fetchUsers} />
-          )}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium">User Management</h3>
+          <p className="text-sm text-muted-foreground">
+            {users.length} {users.length === 1 ? 'user' : 'users'} in the system
+          </p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh || fetchUsers}
+            disabled={innerLoading || loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${(innerLoading || loading) ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <AddUserDialog onUserAdded={onRefresh || fetchUsers} />
+        </div>
+      </div>
+      
+      <ListControls
+        searchPlaceholder="Search users..."
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        showFilter={false}
+      />
+      
+      {(innerLoading || loading) ? (
+        <div className="py-8 text-center">
+          <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+          <p>Loading users...</p>
+        </div>
+      ) : (
+        <UserTable users={filteredUsers} loading={innerLoading || loading} onUserUpdated={onRefresh || fetchUsers} />
+      )}
+    </div>
   );
 }
