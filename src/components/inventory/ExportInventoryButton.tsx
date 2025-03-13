@@ -1,12 +1,13 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, FileDown, X } from "lucide-react";
+import { Download, FileDown, Upload, X } from "lucide-react";
 import { InventoryItem } from "@/types/inventory";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -17,19 +18,33 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
-interface ExportInventoryButtonProps {
+interface InventoryDataActionsProps {
   items: InventoryItem[];
+  onImport?: (items: InventoryItem[]) => void;
 }
 
-export const ExportInventoryButton: React.FC<ExportInventoryButtonProps> = ({ items }) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({ 
+  items, 
+  onImport 
+}) => {
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = (format: string) => {
     setExportFormat(format);
-    setIsDialogOpen(true);
+    setIsExportDialogOpen(true);
+  };
+
+  const handleImport = (format: string) => {
+    setExportFormat(format);
+    setIsImportDialogOpen(true);
   };
 
   const generateExport = () => {
@@ -90,9 +105,159 @@ export const ExportInventoryButton: React.FC<ExportInventoryButtonProps> = ({ it
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         setIsExporting(false);
-        setIsDialogOpen(false);
+        setIsExportDialogOpen(false);
       }, 100);
     }, 500); // Simulating processing time
+  };
+
+  const handleFileImport = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const processImportedFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    
+    if (!file) {
+      toast.error("No file selected");
+      return;
+    }
+
+    setIsImporting(true);
+
+    // Check file type
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    let isValidFileType = false;
+
+    // Validate file type matches selected import format
+    if (exportFormat === 'csv' && fileExtension === 'csv') isValidFileType = true;
+    if (exportFormat === 'json' && fileExtension === 'json') isValidFileType = true;
+    if (exportFormat === 'xml' && fileExtension === 'xml') isValidFileType = true;
+    if (exportFormat === 'xlsx' && (fileExtension === 'xlsx' || fileExtension === 'csv')) isValidFileType = true;
+    if (exportFormat === 'pdf' && (fileExtension === 'pdf' || fileExtension === 'csv')) isValidFileType = true;
+
+    if (!isValidFileType) {
+      toast.error(`Invalid file type. Expected ${exportFormat}`);
+      setIsImporting(false);
+      setIsImportDialogOpen(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    
+    reader.onload = async (e) => {
+      const content = e.target?.result as string;
+      let importedItems: InventoryItem[] = [];
+      
+      try {
+        switch (exportFormat) {
+          case "csv":
+            importedItems = parseCSV(content);
+            break;
+          case "json":
+            importedItems = JSON.parse(content);
+            break;
+          case "xml":
+            importedItems = parseXML(content);
+            break;
+          case "xlsx":
+          case "pdf":
+            // For these formats, we're currently supporting CSV as fallback
+            importedItems = parseCSV(content);
+            break;
+        }
+        
+        if (onImport && importedItems.length > 0) {
+          onImport(importedItems);
+          toast.success(`Successfully imported ${importedItems.length} items`);
+        } else {
+          toast.error("No valid items found in the import file");
+        }
+      } catch (error) {
+        console.error("Import error:", error);
+        toast.error("Failed to import data. Please check the file format.");
+      } finally {
+        setIsImporting(false);
+        setIsImportDialogOpen(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    
+    reader.onerror = () => {
+      toast.error("Error reading file");
+      setIsImporting(false);
+      setIsImportDialogOpen(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    
+    if (fileExtension === 'csv' || fileExtension === 'json' || fileExtension === 'xml') {
+      reader.readAsText(file);
+    } else {
+      toast.error("Unsupported file format");
+      setIsImporting(false);
+      setIsImportDialogOpen(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+  
+  const parseCSV = (content: string): InventoryItem[] => {
+    const lines = content.split('\n');
+    const headers = lines[0].split(',').map(header => 
+      header.trim().replace(/^"(.+)"$/, '$1')
+    );
+    
+    return lines.slice(1)
+      .filter(line => line.trim().length > 0)
+      .map(line => {
+        const values = line.split(',').map(value => 
+          value.trim().replace(/^"(.+)"$/, '$1')
+        );
+        
+        const item: Record<string, any> = {};
+        headers.forEach((header, index) => {
+          // Handle special types like numbers and booleans
+          const value = values[index];
+          if (value === undefined) return;
+          
+          if (value === "true") item[header] = true;
+          else if (value === "false") item[header] = false;
+          else if (!isNaN(Number(value)) && value !== "") item[header] = Number(value);
+          else item[header] = value;
+        });
+        
+        return item as InventoryItem;
+      });
+  };
+  
+  const parseXML = (content: string): InventoryItem[] => {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(content, "text/xml");
+    const items: InventoryItem[] = [];
+    
+    const itemElements = xmlDoc.getElementsByTagName("item");
+    for (let i = 0; i < itemElements.length; i++) {
+      const itemEl = itemElements[i];
+      const item: Record<string, any> = {};
+      
+      // Get all child elements
+      for (let j = 0; j < itemEl.children.length; j++) {
+        const child = itemEl.children[j];
+        const key = child.tagName;
+        const value = child.textContent || "";
+        
+        // Handle special types like numbers and booleans
+        if (value === "true") item[key] = true;
+        else if (value === "false") item[key] = false;
+        else if (!isNaN(Number(value)) && value !== "") item[key] = Number(value);
+        else item[key] = value;
+      }
+      
+      items.push(item as InventoryItem);
+    }
+    
+    return items;
   };
   
   const generateCSV = (data: InventoryItem[]): string => {
@@ -146,19 +311,44 @@ export const ExportInventoryButton: React.FC<ExportInventoryButtonProps> = ({ it
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="gap-2">
             <FileDown className="h-4 w-4" />
-            Export
+            Import / Export
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem className="text-primary font-medium" disabled>Export Data</DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleExport("pdf")}>Export as PDF</DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleExport("xlsx")}>Export as XLSX</DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleExport("csv")}>Export as CSV</DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleExport("json")}>Export as JSON</DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleExport("xml")}>Export as XML</DropdownMenuItem>
+          
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuItem className="text-primary font-medium" disabled>Import Data</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleImport("csv")}>Import from CSV</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleImport("json")}>Import from JSON</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleImport("xml")}>Import from XML</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleImport("xlsx")}>Import from XLSX</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Hidden file input for import */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={processImportedFile}
+        style={{ display: 'none' }}
+        accept={
+          exportFormat === 'csv' ? '.csv' :
+          exportFormat === 'json' ? '.json' :
+          exportFormat === 'xml' ? '.xml' :
+          exportFormat === 'xlsx' ? '.xlsx,.csv' :
+          exportFormat === 'pdf' ? '.pdf,.csv' : ''
+        }
+      />
+      
+      {/* Export Dialog */}
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Export Inventory</DialogTitle>
@@ -181,6 +371,37 @@ export const ExportInventoryButton: React.FC<ExportInventoryButtonProps> = ({ it
                 <>
                   <Download className="h-4 w-4 mr-2" />
                   Export
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Import Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Inventory</DialogTitle>
+            <DialogDescription>
+              Select a {exportFormat?.toUpperCase()} file to import inventory items.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex justify-end gap-2 mt-4">
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleFileImport} disabled={isImporting}>
+              {isImporting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Select File
                 </>
               )}
             </Button>

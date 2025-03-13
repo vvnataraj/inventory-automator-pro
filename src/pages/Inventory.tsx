@@ -7,15 +7,38 @@ import { InventoryControls } from "@/components/inventory/InventoryControls";
 import { InventoryGrid } from "@/components/inventory/InventoryGrid";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { InventoryPagination } from "@/components/inventory/InventoryPagination";
+import { InventoryItem } from "@/types/inventory";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
+  
+  const handleImportItems = (importedItems: InventoryItem[]) => {
+    // Process each imported item
+    importedItems.forEach(item => {
+      // Generate a new ID if needed
+      if (!item.id) {
+        item.id = `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      }
+      
+      // Add timestamps if missing
+      if (!item.dateAdded) {
+        item.dateAdded = new Date().toISOString();
+      }
+      if (!item.lastUpdated) {
+        item.lastUpdated = new Date().toISOString();
+      }
+      
+      // Add the item to inventory
+      actions.handleAddItem(item);
+    });
+  };
   
   return (
     <MainLayout>
       <InventoryHeader 
         onAddItem={actions.handleAddItem} 
         items={state.items}
+        onImportItems={handleImportItems}
       />
       
       <InventoryControls 
