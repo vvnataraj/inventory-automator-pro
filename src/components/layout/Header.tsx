@@ -1,4 +1,4 @@
-import { Bell, LogOut, Menu, Clock, Search, User } from "lucide-react";
+import { Bell, LogOut, Menu, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -125,18 +125,8 @@ export function Header() {
           </div>
         </div>
         
-        <div className="flex-1 ml-4">
-          <form className="hidden md:block">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Search inventory..."
-                className="w-96 bg-muted pl-8 pr-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-          </form>
-        </div>
+        <div className="flex-1"></div>
+        
         <div className="flex items-center gap-4">
           <ThemeToggle />
           
