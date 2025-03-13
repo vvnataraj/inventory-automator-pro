@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileUp } from "lucide-react";
@@ -107,7 +106,8 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
           category: item.category,
           subcategory: item.subcategory,
           brand: item.brand,
-          price: item.rrp,
+          price: item.price,
+          rrp: item.rrp,
           cost: item.cost,
           stock: item.stock,
           low_stock_threshold: item.lowStockThreshold,
