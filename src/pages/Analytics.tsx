@@ -28,6 +28,8 @@ export default function Analytics() {
       setActiveTab("predictive");
     } else if (tabParam === "shrinkage") {
       setActiveTab("shrinkage");
+    } else if (tabParam === "theft") {
+      setActiveTab("theft");
     }
   }, [location]);
 

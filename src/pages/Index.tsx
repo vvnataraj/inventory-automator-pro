@@ -7,6 +7,7 @@ import { CategoryPieChart } from "@/components/dashboard/CategoryPieChart";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
 import { LeastProfitableItems } from "@/components/dashboard/LeastProfitableItems";
 import { RestockAlerts } from "@/components/dashboard/RestockAlerts"; 
+import { TheftAlerts } from "@/components/dashboard/TheftAlerts";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useSales } from "@/hooks/useSales";
 
@@ -74,7 +75,10 @@ export default function Index() {
           <RestockAlerts sales={sales} />
         </div>
         <div className="lg:col-span-2">
-          <RecentActivities />
+          <div className="grid grid-cols-1 gap-6">
+            <TheftAlerts />
+            <RecentActivities />
+          </div>
         </div>
       </div>
       
