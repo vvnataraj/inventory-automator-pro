@@ -16,9 +16,9 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   onImportItems 
 }) => {
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
       <h1 className="text-3xl font-semibold tracking-tight">Inventory</h1>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2 w-full sm:w-auto">
         <ExportInventoryButton items={items} onImport={onImportItems} />
         <AddInventoryItem onAdd={onAddItem} />
       </div>

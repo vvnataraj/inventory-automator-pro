@@ -80,14 +80,14 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
           content = generateCSV(dataToExport);
           filename += ".csv"; // Using CSV as fallback
           mimeType = "text/csv";
-          console.log("XLSX export would require additional libraries");
+          toast.info("XLSX export is simplified as CSV format");
           break;
         case "pdf":
           // For PDF, we'd need a library like jspdf
           content = generateCSV(dataToExport);
           filename += ".csv"; // Using CSV as fallback
           mimeType = "text/csv";
-          console.log("PDF export would require additional libraries");
+          toast.info("PDF export is simplified as CSV format");
           break;
       }
       
@@ -106,6 +106,7 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
         URL.revokeObjectURL(url);
         setIsExporting(false);
         setIsExportDialogOpen(false);
+        toast.success(`Inventory exported as ${exportFormat.toUpperCase()} successfully!`);
       }, 100);
     }, 500); // Simulating processing time
   };
@@ -314,21 +315,48 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
             Import / Export
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="text-primary font-medium" disabled>Export Data</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport("pdf")}>Export as PDF</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport("xlsx")}>Export as XLSX</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport("csv")}>Export as CSV</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport("json")}>Export as JSON</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport("xml")}>Export as XML</DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem className="text-primary font-medium cursor-default" disabled>Export Data</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport("pdf")} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export as PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport("xlsx")} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export as XLSX
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport("csv")} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export as CSV
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport("json")} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export as JSON
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport("xml")} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export as XML
+          </DropdownMenuItem>
           
           <DropdownMenuSeparator />
           
-          <DropdownMenuItem className="text-primary font-medium" disabled>Import Data</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleImport("csv")}>Import from CSV</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleImport("json")}>Import from JSON</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleImport("xml")}>Import from XML</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleImport("xlsx")}>Import from XLSX</DropdownMenuItem>
+          <DropdownMenuItem className="text-primary font-medium cursor-default" disabled>Import Data</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleImport("csv")} className="gap-2">
+            <Upload className="h-4 w-4" />
+            Import from CSV
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleImport("json")} className="gap-2">
+            <Upload className="h-4 w-4" />
+            Import from JSON
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleImport("xml")} className="gap-2">
+            <Upload className="h-4 w-4" />
+            Import from XML
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleImport("xlsx")} className="gap-2">
+            <Upload className="h-4 w-4" />
+            Import from XLSX
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       
@@ -385,6 +413,9 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
             <DialogTitle>Import Inventory</DialogTitle>
             <DialogDescription>
               Select a {exportFormat?.toUpperCase()} file to import inventory items.
+              <p className="text-muted-foreground text-sm mt-2">
+                Note: This will add new items to your inventory. Duplicate SKUs will be handled automatically.
+              </p>
             </DialogDescription>
           </DialogHeader>
           
@@ -411,3 +442,4 @@ export const ExportInventoryButton: React.FC<InventoryDataActionsProps> = ({
     </>
   );
 };
+
