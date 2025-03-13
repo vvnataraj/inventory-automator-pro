@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -21,7 +20,7 @@ interface AddInventoryItemProps {
 
 export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { isReadOnly } = useUserRoles();
+  const { role } = useUserRoles();
   const [formData, setFormData] = React.useState<InventoryItemFormData>({
     name: "",
     sku: "",
@@ -73,8 +72,8 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
     }));
   };
 
-  // Don't render the button for users with read-only access
-  if (isReadOnly()) {
+  // Don't render the button for users with 'user' role
+  if (role === 'user') {
     return null;
   }
 

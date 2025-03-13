@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { InventoryItem } from "@/types/inventory";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 interface ImportInventoryButtonProps {
   onImport?: (items: InventoryItem[]) => void;
@@ -25,6 +26,11 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
   const [isImporting, setIsImporting] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { role } = useUserRoles();
+  
+  if (role === 'user') {
+    return null;
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;

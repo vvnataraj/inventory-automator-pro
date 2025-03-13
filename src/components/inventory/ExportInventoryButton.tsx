@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ExportDialog } from "./ExportDialog";
 import { useInventoryExport } from "@/hooks/inventory/useInventoryExport";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 interface ExportInventoryButtonProps {
   items: InventoryItem[];
@@ -25,6 +26,13 @@ export const ExportInventoryButton: React.FC<ExportInventoryButtonProps> = ({ it
     handleExport,
     generateExport
   } = useInventoryExport(items);
+  
+  const { role } = useUserRoles();
+  
+  // If user role is 'user', don't render the button
+  if (role === 'user') {
+    return null;
+  }
 
   return (
     <>
