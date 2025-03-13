@@ -57,8 +57,8 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       imageUrl: item.imageUrl || item.image_url || "",
       dimensions: item.dimensions,
       weight: item.weight,
-      isActive: item.isActive !== undefined ? item.isActive : 
-               (item.is_active !== undefined ? item.is_active : true),
+      isActive: item.isActive !== undefined ? Boolean(item.isActive) : 
+               (item.is_active !== undefined ? Boolean(item.is_active) : true),
       supplier: item.supplier || "",
       tags: Array.isArray(item.tags) ? item.tags : []
     };

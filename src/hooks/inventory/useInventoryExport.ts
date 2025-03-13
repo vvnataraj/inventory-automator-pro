@@ -66,7 +66,7 @@ export const useInventoryExport = (items: InventoryItem[]) => {
             value: Number(weightObj.value) || 0,
             unit: (weightObj.unit as 'kg' | 'g' | 'lb') || 'kg'
           } : undefined,
-          isActive: item.is_active !== false, // Default to true if undefined
+          isActive: Boolean(item.is_active !== false), // Default to true if undefined
           supplier: item.supplier || "",
           tags: Array.isArray(item.tags) ? item.tags : []
         };
