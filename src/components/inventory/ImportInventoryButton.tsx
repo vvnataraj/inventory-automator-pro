@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileUp } from "lucide-react";
@@ -77,7 +76,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       const fileContent = await importFile.text();
       let importedItems: any[] = [];
       
-      // Parse file based on format
       if (importFile.name.endsWith('.json')) {
         importedItems = JSON.parse(fileContent);
       } else if (importFile.name.endsWith('.csv')) {
@@ -92,14 +90,11 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
         importedItems = [importedItems];
       }
       
-      // Convert all items to proper InventoryItem format
       const properInventoryItems: InventoryItem[] = processImportedData(importedItems);
       
-      // Check if we should use Supabase
       const shouldUseSupabase = await checkSupabaseConnection();
       
       if (shouldUseSupabase) {
-        // Insert to Supabase
         const supabaseItems = properInventoryItems.map(item => ({
           id: item.id,
           sku: item.sku,
@@ -140,7 +135,6 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
         toast.success(`Successfully imported ${properInventoryItems.length} items to database!`);
       }
       
-      // Call the onImport callback with properly formatted items
       if (onImport) {
         onImport(properInventoryItems);
       }
@@ -172,14 +166,11 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       headers.forEach((header, index) => {
         let value = values[index]?.trim() || '';
         
-        // Remove quotes if present
         value = value.replace(/^"(.*)"$/, '$1');
         
-        // Convert boolean strings
         if (value.toLowerCase() === 'true') value = true;
         if (value.toLowerCase() === 'false') value = false;
         
-        // Convert numbers
         if (!isNaN(Number(value)) && value !== '') {
           value = Number(value);
         }
