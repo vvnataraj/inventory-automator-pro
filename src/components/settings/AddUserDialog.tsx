@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Role = 'admin' | 'manager' | 'user';
 
@@ -36,10 +37,29 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState<Role>("user");
   const { isAdmin } = useUserRoles();
+  const { checkPasswordStrength } = useAuth();
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  
+  // Check password as user types
+  useEffect(() => {
+    if (newUserPassword) {
+      const { errors } = checkPasswordStrength(newUserPassword);
+      setPasswordErrors(errors);
+    } else {
+      setPasswordErrors([]);
+    }
+  }, [newUserPassword, checkPasswordStrength]);
   
   async function addUser() {
     if (!isAdmin()) {
       toast.error("Only admins can add users");
+      return;
+    }
+
+    // Check password strength
+    const { isStrong, errors } = checkPasswordStrength(newUserPassword);
+    if (!isStrong) {
+      toast.error(`Password doesn't meet security requirements: ${errors.join(", ")}`);
       return;
     }
 
@@ -125,7 +145,21 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
               onChange={(e) => setNewUserPassword(e.target.value)}
               placeholder="Password"
               required
+              className={passwordErrors.length > 0 ? "border-red-300" : ""}
             />
+            {passwordErrors.length > 0 && (
+              <div className="text-sm text-red-500 mt-1">
+                <p className="font-medium">Password requirements:</p>
+                <ul className="list-disc list-inside space-y-1 mt-1">
+                  {passwordErrors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {newUserPassword && passwordErrors.length === 0 && (
+              <p className="text-sm text-green-600 mt-1">✓ Password meets all requirements</p>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -151,7 +185,10 @@ export default function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
         
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={addUser} disabled={loading || !newUserEmail || !newUserPassword}>
+          <Button 
+            onClick={addUser} 
+            disabled={loading || !newUserEmail || !newUserPassword || passwordErrors.length > 0}
+          >
             {loading ? "Creating..." : "Create User"}
           </Button>
         </DialogFooter>

@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MainLayout } from "@/components/layout/MainLayout";
 import ProfileTab from "@/components/settings/ProfileTab";
@@ -7,7 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function UserSettings() {
-  const { user } = useAuth();
+  const { user, needsPasswordChange } = useAuth();
+  const [activeTab, setActiveTab] = useState(needsPasswordChange ? "security" : "profile");
+  
+  // Update active tab if needsPasswordChange changes
+  useEffect(() => {
+    if (needsPasswordChange) {
+      setActiveTab("security");
+    }
+  }, [needsPasswordChange]);
   
   if (!user) {
     return (
@@ -35,7 +44,11 @@ export default function UserSettings() {
             </CardHeader>
           </Card>
           
-          <Tabs defaultValue="profile" className="w-full">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={setActiveTab} 
+            className="w-full"
+          >
             <TabsList className="mb-6">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="security">Password</TabsTrigger>

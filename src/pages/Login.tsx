@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,13 +11,25 @@ import { Navigate } from "react-router-dom";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signIn, signUp, user, loading, checkPasswordStrength } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("signin");
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
 
   // If already logged in, redirect to dashboard
   if (user && !loading) {
     return <Navigate to="/" />;
   }
+
+  // Check password strength when on signup tab
+  useEffect(() => {
+    if (activeTab === "signup" && password) {
+      const { errors } = checkPasswordStrength(password);
+      setPasswordErrors(errors);
+    } else {
+      setPasswordErrors([]);
+    }
+  }, [password, activeTab, checkPasswordStrength]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +80,12 @@ export default function Login() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
-                <Tabs defaultValue="signin" className="w-full">
+                <Tabs 
+                  defaultValue="signin" 
+                  value={activeTab} 
+                  onValueChange={setActiveTab}
+                  className="w-full"
+                >
                   <TabsList className="grid w-full grid-cols-2 mb-6 rounded-lg bg-purple-100/50">
                     <TabsTrigger 
                       value="signin"
@@ -155,13 +172,28 @@ export default function Login() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
-                          className="border-gray-300 focus:border-purple-500 focus:ring focus:ring-purple-200"
+                          className={`border-gray-300 focus:border-purple-500 focus:ring focus:ring-purple-200 ${
+                            passwordErrors.length > 0 ? "border-red-300" : ""
+                          }`}
                         />
+                        {passwordErrors.length > 0 && (
+                          <div className="mt-2 bg-red-50 border border-red-100 rounded-md p-3">
+                            <p className="text-sm font-medium text-red-800">Password requirements:</p>
+                            <ul className="list-disc list-inside space-y-1 mt-1 text-xs text-red-700">
+                              {passwordErrors.map((error, index) => (
+                                <li key={index}>{error}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {password && passwordErrors.length === 0 && (
+                          <p className="text-sm text-green-600 mt-1">✓ Password meets all requirements</p>
+                        )}
                       </div>
                       <Button 
                         type="submit" 
                         className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium" 
-                        disabled={isLoading}
+                        disabled={isLoading || (password.length > 0 && passwordErrors.length > 0)}
                       >
                         {isLoading ? (
                           <span className="flex items-center">
