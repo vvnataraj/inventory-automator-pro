@@ -19,7 +19,7 @@ export function useLocations() {
   const [locations, setLocations] = useState<Location[]>(
     locationsData.map(location => ({
       ...location,
-      phoneNumber: "phoneNumber" in location ? location.phoneNumber : ""
+      phoneNumber: location.phoneNumber || "" // Ensure phoneNumber is a string
     }))
   );
   const [isLoading, setIsLoading] = useState(false);
