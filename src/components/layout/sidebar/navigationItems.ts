@@ -24,8 +24,8 @@ export const navigation = [
   { name: "Inventory", href: "/inventory", icon: Box },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Purchases", href: "/purchases", icon: Truck },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Sales", href: "/sales", icon: CircleDollarSign },
+  { name: "Analytics", href: "/analytics", icon: BarChart3 },
 ];
 
 // Admin section items
