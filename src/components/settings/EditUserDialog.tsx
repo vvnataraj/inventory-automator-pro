@@ -21,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Role = 'admin' | 'manager' | 'user';
 
@@ -41,6 +43,7 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
   const [loading, setLoading] = useState(false);
   // Get the primary role (first in the array) or default to "user"
   const [editUserRole, setEditUserRole] = useState<Role>((user.roles[0] as Role) || "user");
+  const [username, setUsername] = useState<string>(user.username || "");
   const { isAdmin } = useUserRoles();
   
   async function updateUser() {
@@ -51,6 +54,14 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
 
     try {
       setLoading(true);
+      
+      // Update username in profiles table
+      const { error: usernameError } = await supabase
+        .from('profiles')
+        .update({ username })
+        .eq('id', user.id);
+        
+      if (usernameError) throw usernameError;
       
       // Delete all existing roles for this user
       const { error: deleteError } = await supabase
@@ -67,7 +78,7 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
       
       if (insertError) throw insertError;
       
-      toast.success("User role updated successfully");
+      toast.success("User updated successfully");
       onUserUpdated();
       setOpen(false);
     } catch (error) {
@@ -91,19 +102,25 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit User Role</DialogTitle>
+          <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update role for {user.email}
+            Update information for {user.email}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <p className="text-sm font-medium">Username: {user.username || 'No username set'}</p>
+            <Label htmlFor="username">Username</Label>
+            <Input 
+              id="username" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter username"
+            />
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="edit-role" className="text-sm font-medium">Role</label>
+            <Label htmlFor="edit-role">Role</Label>
             <Select value={editUserRole} onValueChange={(value) => setEditUserRole(value as Role)}>
               <SelectTrigger id="edit-role">
                 <SelectValue placeholder="Select a role" />
@@ -126,7 +143,7 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
           <Button onClick={updateUser} disabled={loading}>
-            {loading ? "Updating..." : "Update Role"}
+            {loading ? "Updating..." : "Update User"}
           </Button>
         </DialogFooter>
       </DialogContent>
