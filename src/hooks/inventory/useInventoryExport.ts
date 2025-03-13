@@ -33,7 +33,6 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         return items;
       }
       
-      // Map Supabase items to InventoryItem type with correct property names
       const dbItems: InventoryItem[] = data.map(item => {
         const dimensionsObj = item.dimensions as Record<string, any> | null;
         const weightObj = item.weight as Record<string, any> | null;
@@ -129,6 +128,9 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         
         const blob = new Blob([content], { type: mimeType });
         const url = URL.createObjectURL(blob);
+        setDownloadUrl(url);
+        setExportedFileName(filename);
+        
         const a = document.createElement("a");
         a.href = url;
         a.download = filename;
@@ -137,7 +139,6 @@ export const useInventoryExport = (items: InventoryItem[]) => {
         
         setTimeout(() => {
           document.body.removeChild(a);
-          URL.revokeObjectURL(url);
           setIsExporting(false);
           setIsExportDialogOpen(false);
           toast.success(`Inventory exported as ${exportFormat?.toUpperCase()} successfully!`);

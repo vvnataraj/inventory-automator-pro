@@ -5,12 +5,12 @@ import { InventoryItem } from "@/types/inventory";
  * Generates CSV content from inventory items
  */
 export const generateCSV = (data: InventoryItem[]): string => {
-  // Include all relevant fields for export
+  // Include all relevant fields needed for import
   const headers = [
     "id", "sku", "name", "description", "category", "subcategory", 
-    "brand", "cost", "rrp", "price", "stock", "lowStockThreshold",
-    "minStockCount", "location", "barcode", "supplier", "dateAdded", 
-    "lastUpdated", "isActive"
+    "brand", "price", "rrp", "cost", "stock", "lowStockThreshold",
+    "minStockCount", "location", "barcode", "dateAdded", 
+    "lastUpdated", "imageUrl", "isActive", "supplier"
   ];
   
   const csvRows = [headers.join(",")];
@@ -19,9 +19,22 @@ export const generateCSV = (data: InventoryItem[]): string => {
     const row = headers.map(header => {
       const value = item[header as keyof InventoryItem];
       
-      // Handle string values with commas
+      // Handle special cases for complex objects
+      if (header === "dimensions" && item.dimensions) {
+        return JSON.stringify(item.dimensions);
+      }
+      
+      if (header === "weight" && item.weight) {
+        return JSON.stringify(item.weight);
+      }
+      
+      if (header === "tags" && Array.isArray(item.tags)) {
+        return JSON.stringify(item.tags);
+      }
+      
+      // Handle string values with commas by quoting them
       if (typeof value === "string" && value.includes(",")) {
-        return `"${value}"`;
+        return `"${value.replace(/"/g, '""')}"`;
       }
       
       // Handle null/undefined values
@@ -29,9 +42,14 @@ export const generateCSV = (data: InventoryItem[]): string => {
         return "";
       }
       
-      // Handle boolean values
+      // Handle boolean values as strings that can be parsed by the import function
       if (typeof value === "boolean") {
         return value ? "true" : "false";
+      }
+      
+      // Convert date objects to ISO strings
+      if (value instanceof Date) {
+        return value.toISOString();
       }
       
       return value;
