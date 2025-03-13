@@ -7,9 +7,23 @@ import { DemandForecast } from "@/components/analytics/DemandForecast";
 import { InventoryPrediction } from "@/components/analytics/InventoryPrediction";
 import { SeasonalTrends } from "@/components/analytics/SeasonalTrends";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 export default function Analytics() {
   const { sales } = useSales(1, 1000, ""); // Get all sales for analytics
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<string>("current");
+  
+  useEffect(() => {
+    // Check for tab query parameter
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    
+    if (tabParam === "predictive") {
+      setActiveTab("predictive");
+    }
+  }, [location]);
 
   return (
     <MainLayout>
@@ -17,7 +31,7 @@ export default function Analytics() {
         <h1 className="text-3xl font-semibold tracking-tight">Analytics Dashboard</h1>
       </div>
       
-      <Tabs defaultValue="current" className="w-full mb-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="current">Current Analytics</TabsTrigger>
           <TabsTrigger value="predictive">Predictive Analytics</TabsTrigger>

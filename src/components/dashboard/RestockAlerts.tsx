@@ -20,7 +20,7 @@ export const RestockAlerts: React.FC<RestockAlertsProps> = ({ sales, className }
   const warningCount = 3;
   
   const handleViewDetails = () => {
-    navigate("/analytics");
+    navigate("/analytics?tab=predictive");
   };
   
   return (
