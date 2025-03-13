@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -10,7 +9,6 @@ import {
   Tooltip, 
   ResponsiveContainer,
   ReferenceLine,
-  Legend,
   LabelList,
   Cell
 } from "recharts";
@@ -135,7 +133,6 @@ export const InventoryPrediction: React.FC<InventoryPredictionProps> = ({ sales,
                 }}
                 labelFormatter={(label) => ""}
               />
-              <Legend />
               <ReferenceLine x={7} stroke="#ef4444" strokeDasharray="3 3" />
               <ReferenceLine x={14} stroke="#f59e0b" strokeDasharray="3 3" />
               <Bar 
