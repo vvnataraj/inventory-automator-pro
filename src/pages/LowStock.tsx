@@ -30,12 +30,15 @@ export default function LowStock() {
       const sameSkuItems = inventoryItems.filter(invItem => invItem.sku === item.sku);
       const totalStock = sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
       
-      if (totalStock <= item.lowStockThreshold) {
+      // Add 10% buffer to the low stock threshold
+      const bufferedThreshold = item.lowStockThreshold * 1.1;
+      
+      if (totalStock <= bufferedThreshold) {
         lowStockSkus.add(item.sku);
       }
     });
     
-    console.log(`Found ${lowStockSkus.size} unique SKUs with low stock`);
+    console.log(`Found ${lowStockSkus.size} unique SKUs with low stock (including 10% buffer)`);
     
     // Second pass: get one representative item for each low-stock SKU
     const uniqueLowStockItems = Array.from(lowStockSkus).map(sku => {
@@ -150,7 +153,7 @@ export default function LowStock() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <p>
-              These items have stock levels at or below their low stock threshold. 
+              These items have stock levels at or below their low stock threshold plus a 10% buffer.
               Consider reordering soon to maintain optimal inventory levels.
             </p>
           </CardContent>
@@ -160,7 +163,7 @@ export default function LowStock() {
           <div className="flex flex-col items-center justify-center p-8 bg-muted/30 rounded-lg">
             <h3 className="text-xl font-medium mb-2">No Low Stock Items</h3>
             <p className="text-muted-foreground text-center">
-              All your inventory items are above their low stock thresholds.
+              All your inventory items are above their low stock thresholds plus buffer.
             </p>
           </div>
         ) : (

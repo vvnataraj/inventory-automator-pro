@@ -81,12 +81,16 @@ export default function Index() {
     };
 
     const calculateLowStockItems = () => {
-      // Count items with low stock
+      // Count items with low stock (including 10% buffer)
       const lowStockItems = inventoryItems.filter(item => {
         // Find all items with the same SKU to calculate total stock
         const sameSkuItems = inventoryItems.filter(invItem => invItem.sku === item.sku);
         const totalStock = sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
-        return totalStock <= item.lowStockThreshold;
+        
+        // Add 10% buffer to the low stock threshold
+        const bufferedThreshold = item.lowStockThreshold * 1.1;
+        
+        return totalStock <= bufferedThreshold;
       });
       
       // Get unique items (by SKU) to avoid counting the same product multiple times
