@@ -30,6 +30,7 @@ export function useInventoryItems(
       // Apply search filter
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.toLowerCase().trim();
+        // Use ilike with multiple conditions
         query = query.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
       }
       
@@ -62,9 +63,9 @@ export function useInventoryItems(
       if (data && data.length > 0) {
         // Transform Supabase data to match our InventoryItem type
         dbItems = data.map(item => {
-          // Parse dimensions and weight JSON to match our type structure
-          let dimensionsData = typeof item.dimensions === 'object' ? item.dimensions : null;
-          let weightData = typeof item.weight === 'object' ? item.weight : null;
+          // Safely access dimensions and weight as Record<string, any>
+          const dimensionsObj = item.dimensions as Record<string, any> | null;
+          const weightObj = item.weight as Record<string, any> | null;
           
           return {
             id: item.id,
@@ -84,20 +85,20 @@ export function useInventoryItems(
             dateAdded: item.date_added,
             lastUpdated: item.last_updated,
             imageUrl: item.image_url,
-            dimensions: dimensionsData ? {
-              length: dimensionsData.length || 0,
-              width: dimensionsData.width || 0,
-              height: dimensionsData.height || 0,
-              unit: dimensionsData.unit || 'cm'
+            dimensions: dimensionsObj ? {
+              length: Number(dimensionsObj.length) || 0,
+              width: Number(dimensionsObj.width) || 0,
+              height: Number(dimensionsObj.height) || 0,
+              unit: (dimensionsObj.unit as 'cm' | 'mm' | 'in') || 'cm'
             } : undefined,
-            weight: weightData ? {
-              value: weightData.value || 0,
-              unit: weightData.unit || 'kg'
+            weight: weightObj ? {
+              value: Number(weightObj.value) || 0,
+              unit: (weightObj.unit as 'kg' | 'g' | 'lb') || 'kg'
             } : undefined,
             isActive: item.is_active,
             supplier: item.supplier || "",
             tags: item.tags || []
-          };
+          } as InventoryItem;
         });
         
         setItems(dbItems);
