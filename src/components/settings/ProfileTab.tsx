@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Upload } from "lucide-react";
+import { Upload, Trash } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -21,7 +21,7 @@ export default function ProfileTab() {
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [username, setUsername] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function ProfileTab() {
       
       setProfile(data);
       setUsername(data.username || "");
-      setAvatarUrl(data.avatar_url || "");
+      setAvatarUrl(data.avatar_url || null);
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to load profile data");
@@ -99,7 +99,15 @@ export default function ProfileTab() {
       
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
+      
+      // Ensure we have a user ID
+      if (!user?.id) {
+        toast.error("You must be logged in to upload an avatar");
+        return;
+      }
+      
+      // Create a unique file path with the user's ID as a folder
+      const filePath = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
       
       // Check if file is an image and is less than 2MB
       if (!file.type.match(/image\/.*/)) {
@@ -112,8 +120,23 @@ export default function ProfileTab() {
         return;
       }
       
+      // Delete previous avatar if one exists
+      if (avatarUrl) {
+        const previousPath = avatarUrl.split('/').slice(-2).join('/');
+        if (previousPath.startsWith(user.id)) {
+          const { error: deleteError } = await supabase.storage
+            .from('avatars')
+            .remove([previousPath]);
+            
+          if (deleteError) {
+            console.error("Error removing previous avatar:", deleteError);
+            // Continue with upload even if delete fails
+          }
+        }
+      }
+      
       // Upload file to Supabase Storage
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
         
@@ -126,8 +149,14 @@ export default function ProfileTab() {
         .from('avatars')
         .getPublicUrl(filePath);
         
-      // Update profile with new avatar URL
+      // Update state with new avatar URL
       setAvatarUrl(publicUrl);
+      
+      // Immediately update profile with new avatar
+      await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
       
       toast.success("Avatar uploaded successfully");
     } catch (error) {
@@ -139,6 +168,47 @@ export default function ProfileTab() {
       if (event.target) {
         event.target.value = '';
       }
+    }
+  }
+  
+  async function removeAvatar() {
+    try {
+      setLoading(true);
+      
+      if (!user?.id || !avatarUrl) return;
+      
+      // Extract file path from the URL
+      const filePath = avatarUrl.split('/').slice(-2).join('/');
+      
+      // Remove file from storage
+      if (filePath.startsWith(user.id)) {
+        const { error: deleteError } = await supabase.storage
+          .from('avatars')
+          .remove([filePath]);
+          
+        if (deleteError) {
+          console.error("Error removing avatar:", deleteError);
+          throw deleteError;
+        }
+      }
+      
+      // Update profile with null avatar URL
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', user.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      setAvatarUrl(null);
+      toast.success("Avatar removed successfully");
+    } catch (error) {
+      console.error("Error removing avatar:", error);
+      toast.error("Failed to remove avatar");
+    } finally {
+      setLoading(false);
     }
   }
   
@@ -174,7 +244,7 @@ export default function ProfileTab() {
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20 border">
               <AvatarImage 
-                src={avatarUrl} 
+                src={avatarUrl || ""} 
                 alt={username || user?.email || "User"} 
               />
               <AvatarFallback className="text-xl bg-primary/10 text-primary">
@@ -211,8 +281,10 @@ export default function ProfileTab() {
                 variant="outline" 
                 size="sm" 
                 type="button" 
-                onClick={() => setAvatarUrl("")}
+                onClick={removeAvatar}
+                className="text-destructive border-destructive hover:bg-destructive/10"
               >
+                <Trash className="h-4 w-4 mr-2" />
                 Remove Avatar
               </Button>
             </div>
