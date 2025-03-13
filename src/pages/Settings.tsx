@@ -1,7 +1,6 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SecurityTab from "@/components/settings/SecurityTab";
 import RolesTab from "@/components/settings/RolesTab";
 import UsersTab from "@/components/settings/UsersTab";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -25,16 +24,11 @@ export default function Settings() {
       <div className="container py-10">
         <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
         
-        <Tabs defaultValue="security" className="w-full max-w-3xl">
+        <Tabs defaultValue="roles" className="w-full max-w-3xl">
           <TabsList className="mb-6">
-            <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="roles">Roles</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="security">
-            <SecurityTab />
-          </TabsContent>
           
           <TabsContent value="roles">
             <RolesTab />

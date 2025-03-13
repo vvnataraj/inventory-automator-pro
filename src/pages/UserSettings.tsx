@@ -2,6 +2,8 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { MainLayout } from "@/components/layout/MainLayout";
 import ProfileTab from "@/components/settings/ProfileTab";
+import SecurityTab from "@/components/settings/SecurityTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function UserSettings() {
@@ -28,12 +30,25 @@ export default function UserSettings() {
             <CardHeader>
               <CardTitle>Your Profile</CardTitle>
               <CardDescription>
-                Manage your personal information and appearance
+                Manage your personal information and account security
               </CardDescription>
             </CardHeader>
           </Card>
           
-          <ProfileTab />
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="mb-6">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="security">Security</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="profile">
+              <ProfileTab />
+            </TabsContent>
+            
+            <TabsContent value="security">
+              <SecurityTab />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </MainLayout>
