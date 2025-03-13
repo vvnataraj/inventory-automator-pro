@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +24,10 @@ export default function Users() {
       const { data: authUsers, error: authError } = await supabase
         .rpc('get_users');
       
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Error fetching users:", authError);
+        throw authError;
+      }
       
       // Get all user roles
       const { data: userRoles, error: rolesError } = await supabase
@@ -40,16 +44,17 @@ export default function Users() {
         
         return {
           id: user.id,
-          email: user.email || 'No email', // Now using actual email from auth.users
+          email: user.email || 'No email',
           username: user.username || user.email?.split('@')[0] || 'No username',
           created_at: user.created_at,
-          last_sign_in_at: user.last_sign_in_at, // Now available from auth.users
-          roles: roles.length > 0 ? roles : ['user'], // Default to user if no roles
+          last_sign_in_at: user.last_sign_in_at,
+          roles: roles.length > 0 ? roles : ['user'],
           is_disabled: false // Not implemented yet
         };
       });
       
       setUsers(usersWithRoles);
+      console.log("Fetched users successfully:", usersWithRoles.length);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
