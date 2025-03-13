@@ -25,15 +25,13 @@ export default function ProfileTab() {
       
       if (!user) return;
       
-      // Using the profiles view for backward compatibility
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      // Update user metadata directly using the auth API
+      const { error } = await supabase.auth.updateUser({
+        data: {
           username,
           avatar_url: avatarUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        }
+      });
         
       if (error) {
         throw error;
@@ -117,11 +115,12 @@ export default function ProfileTab() {
       // Update state with new avatar URL
       setAvatarUrl(publicUrl);
       
-      // Immediately update profile with new avatar using the profiles view
-      await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
+      // Update user metadata directly
+      await supabase.auth.updateUser({
+        data: {
+          avatar_url: publicUrl
+        }
+      });
       
       // Update local user state
       if (user) {
@@ -162,12 +161,13 @@ export default function ProfileTab() {
         }
       }
       
-      // Update profile with null avatar URL using the profiles view
-      const { error } = await supabase
-        .from('profiles')
-        .update({ avatar_url: null })
-        .eq('id', user.id);
-        
+      // Update user metadata directly
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          avatar_url: null
+        }
+      });
+      
       if (error) {
         throw error;
       }
