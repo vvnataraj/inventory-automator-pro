@@ -9,7 +9,7 @@ import { TransferInventoryItem } from "./TransferInventoryItem";
 import { DeleteInventoryItem } from "./DeleteInventoryItem";
 import { ReorderInventoryItem } from "./ReorderInventoryItem";
 import { ReorderDialog } from "./ReorderDialog";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, CircleSlash } from "lucide-react";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import {
   Tooltip,
@@ -17,6 +17,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface InventoryItemCardProps {
   item: InventoryItem;
@@ -41,6 +51,7 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
 }) => {
   const { isReadOnly } = useUserRoles();
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
+  const [discontinueDialogOpen, setDiscontinueDialogOpen] = useState(false);
   
   const handleReorderStock = (item: InventoryItem, quantity: number) => {
     if (onReorderStock) {
@@ -48,8 +59,18 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
     }
   };
   
+  const handleDiscontinue = () => {
+    const discontinuedItem = {
+      ...item,
+      isActive: false,
+      lastUpdated: new Date().toISOString()
+    };
+    onSave(discontinuedItem);
+    setDiscontinueDialogOpen(false);
+  };
+  
   return (
-    <Card className="h-full flex flex-col transition-all hover:shadow-md">
+    <Card className={`h-full flex flex-col transition-all hover:shadow-md ${!item.isActive ? 'opacity-60' : ''}`}>
       <div className="relative pt-[100%] overflow-hidden bg-muted">
         <div className="absolute inset-0 flex items-center justify-center">
           {item.imageUrl ? (
@@ -75,6 +96,11 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
         >
           {item.stock}
         </Badge>
+        {!item.isActive && (
+          <Badge variant="destructive" className="absolute top-2 left-2">
+            Discontinued
+          </Badge>
+        )}
       </div>
       
       <CardHeader className="pb-0">
@@ -131,6 +157,23 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
                 </Tooltip>
               </TooltipProvider>
             )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant={item.isActive ? "outline" : "ghost"} 
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setDiscontinueDialogOpen(true)}
+                  >
+                    <CircleSlash className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{item.isActive ? "Discontinue" : "Reactivate"} item</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <EditInventoryItem item={item} onSave={onSave} />
             <TransferInventoryItem item={item} onTransfer={onTransfer} />
             <DeleteInventoryItem item={item} onDelete={onDelete} />
@@ -146,6 +189,30 @@ export const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
           onReorder={handleReorderStock}
         />
       )}
+      
+      <AlertDialog open={discontinueDialogOpen} onOpenChange={setDiscontinueDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {item.isActive ? "Discontinue" : "Reactivate"} Item
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {item.isActive 
+                ? "This will mark the item as discontinued. It will remain in your inventory but won't be available for new sales."
+                : "This will reactivate the discontinued item, making it available for sales again."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDiscontinue}
+              variant={item.isActive ? "destructive" : "default"}
+            >
+              {item.isActive ? "Discontinue" : "Reactivate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

@@ -1,11 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { InventoryItem, SortField } from "@/types/inventory";
 import { EditInventoryItem } from "./EditInventoryItem";
 import { TransferInventoryItem } from "./TransferInventoryItem";
 import { DeleteInventoryItem } from "./DeleteInventoryItem";
 import { ReorderInventoryItem } from "./ReorderInventoryItem";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, CircleSlash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -13,6 +13,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SortHeaderProps {
   field: SortField;
@@ -61,6 +71,20 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   onReorderItem,
   onOpenReorderDialog,
 }) => {
+  const [discontinueItem, setDiscontinueItem] = useState<InventoryItem | null>(null);
+  
+  const handleDiscontinue = () => {
+    if (discontinueItem) {
+      const updatedItem = {
+        ...discontinueItem,
+        isActive: !discontinueItem.isActive,
+        lastUpdated: new Date().toISOString()
+      };
+      onSaveItem(updatedItem);
+      setDiscontinueItem(null);
+    }
+  };
+  
   return (
     <div className="rounded-md border bg-card">
       <div className="overflow-x-auto">
@@ -74,13 +98,14 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               <SortHeader field="rrp" label="RRP" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <SortHeader field="stock" label="Stock" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
               <SortHeader field="location" label="Location" sortField={sortField} sortDirection={sortDirection} onSort={onSort} />
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Status</th>
               <th className="py-3 px-4 text-left font-medium text-muted-foreground">Reorder</th>
               <th className="py-3 px-4 text-left font-medium text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item, index) => (
-              <tr key={item.id} className="border-b hover:bg-muted/50">
+              <tr key={item.id} className={`border-b hover:bg-muted/50 ${!item.isActive ? 'opacity-60' : ''}`}>
                 <td className="py-3 px-4">{item.sku}</td>
                 <td className="py-3 px-4 font-medium break-words max-w-[200px]">{item.name}</td>
                 <td className="py-3 px-4">{item.category}</td>
@@ -98,6 +123,17 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   </span>
                 </td>
                 <td className="py-3 px-4">{item.location}</td>
+                <td className="py-3 px-4">
+                  {item.isActive ? (
+                    <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                      Discontinued
+                    </span>
+                  )}
+                </td>
                 <td className="py-3 px-4">
                   <div className="flex gap-1">
                     <ReorderInventoryItem 
@@ -127,6 +163,23 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant={item.isActive ? "outline" : "ghost"} 
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setDiscontinueItem(item)}
+                          >
+                            <CircleSlash className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{item.isActive ? "Discontinue" : "Reactivate"} item</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <EditInventoryItem item={item} onSave={onSaveItem} />
                     <TransferInventoryItem item={item} onTransfer={onTransferItem} />
                     <DeleteInventoryItem item={item} onDelete={onDeleteItem} />
@@ -137,6 +190,30 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
           </tbody>
         </table>
       </div>
+      
+      <AlertDialog open={!!discontinueItem} onOpenChange={(open) => !open && setDiscontinueItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {discontinueItem?.isActive ? "Discontinue" : "Reactivate"} Item
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {discontinueItem?.isActive 
+                ? "This will mark the item as discontinued. It will remain in your inventory but won't be available for new sales."
+                : "This will reactivate the discontinued item, making it available for sales again."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDiscontinue}
+              variant={discontinueItem?.isActive ? "destructive" : "default"}
+            >
+              {discontinueItem?.isActive ? "Discontinue" : "Reactivate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
