@@ -3,7 +3,6 @@ import { useCallback } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export function useInventoryDatabase() {
   const fetchFromSupabase = useCallback(async (
@@ -29,8 +28,9 @@ export function useInventoryDatabase() {
       }
       
       if (categoryFilter && categoryFilter !== "undefined") {
-        // Use an exact match for category filtering - fix case sensitivity
-        supabaseQuery = supabaseQuery.ilike('category', categoryFilter);
+        console.log(`Filtering by category "${categoryFilter}"`);
+        // Use exact match for category filtering
+        supabaseQuery = supabaseQuery.eq('category', categoryFilter);
       }
       
       if (locationFilter && locationFilter !== "undefined") {
@@ -91,13 +91,13 @@ export function useInventoryDatabase() {
     if (categoryFilter && categoryFilter !== "undefined") {
       console.log(`Filtering by category: "${categoryFilter}"`);
       filteredItems = filteredItems.filter(item => 
-        item.category.toLowerCase() === categoryFilter.toLowerCase()
+        item.category === categoryFilter
       );
     }
     
     if (locationFilter && locationFilter !== "undefined") {
       filteredItems = filteredItems.filter(item => 
-        item.location.toLowerCase() === locationFilter.toLowerCase()
+        item.location === locationFilter
       );
     }
     
@@ -135,7 +135,7 @@ export function useInventoryDatabase() {
       category: item.category || "",
       subcategory: item.subcategory || "",
       brand: item.brand || "",
-      price: typeof item.price === 'number' ? item.price : 0, // Fix: Ensure price field is included
+      price: typeof item.price === 'number' ? item.price : 0,
       rrp: typeof item.price === 'number' ? item.price : 0,
       cost: typeof item.cost === 'number' ? item.cost : 0,
       stock: typeof item.stock === 'number' ? item.stock : 0,
@@ -156,7 +156,7 @@ export function useInventoryDatabase() {
         value: Number(weightObj.value) || 0,
         unit: (weightObj.unit as 'kg' | 'g' | 'lb') || 'kg'
       } : undefined,
-      isActive: item.is_active !== false, // Default to true if undefined
+      isActive: Boolean(item.is_active !== false), // Default to true if undefined
       supplier: item.supplier || "",
       tags: Array.isArray(item.tags) ? item.tags : []
     };

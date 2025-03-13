@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { inventoryItems } from "@/data/inventoryData";
+import { useInventoryDatabase } from "@/hooks/inventory/useInventoryDatabase";
 
 interface InventoryControlsProps {
   searchQuery: string;
@@ -54,16 +54,56 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
   onCategoryFilterChange,
 }) => {
   const [filterOpen, setFilterOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const { fetchFromSupabase } = useInventoryDatabase();
   
-  // Extract unique categories from inventory items
-  const categories = React.useMemo(() => {
-    const uniqueCategories = new Set<string>();
-    inventoryItems.forEach(item => {
-      if (item.category) {
-        uniqueCategories.add(item.category);
+  // Fetch categories from the database
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        // First try to get categories from Supabase
+        const { data, error } = await supabase
+          .from('inventory_items')
+          .select('category')
+          .not('category', 'is', null);
+        
+        if (error) {
+          console.error("Error fetching categories:", error);
+          // Fall back to hard-coded categories if there's an error
+          fallbackToLocalCategories();
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          // Extract unique categories
+          const uniqueCategories = Array.from(
+            new Set(data.map(item => item.category).filter(Boolean))
+          ).sort();
+          
+          setCategories(uniqueCategories);
+        } else {
+          fallbackToLocalCategories();
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+        fallbackToLocalCategories();
       }
-    });
-    return Array.from(uniqueCategories).sort();
+    };
+    
+    const fallbackToLocalCategories = () => {
+      // Extract categories from local data
+      import('@/data/inventoryData').then(({ inventoryItems }) => {
+        const uniqueCategories = new Set<string>();
+        inventoryItems.forEach(item => {
+          if (item.category) {
+            uniqueCategories.add(item.category);
+          }
+        });
+        setCategories(Array.from(uniqueCategories).sort());
+      });
+    };
+    
+    fetchCategories();
   }, []);
 
   const getSortIcon = (field: SortField) => {
@@ -77,11 +117,6 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 ml-1"><path d="M3 16L7 20M7 20L11 16M7 20V4"/><path d="M14 8L17 4M17 4L20 8M17 4V20"/></svg>;
     }
   };
-
-  // Log when category filter changes 
-  useEffect(() => {
-    console.log("Current category filter:", categoryFilter);
-  }, [categoryFilter]);
 
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">

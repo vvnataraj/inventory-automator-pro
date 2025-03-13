@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { toast } from "sonner";
 import { useInventoryDatabase } from "./useInventoryDatabase";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useInventoryCore(
   page: number = 1, 

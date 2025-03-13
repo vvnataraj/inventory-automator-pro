@@ -31,25 +31,22 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
     setImportFile(file);
   };
 
-  const convertToInventoryItem = (item: any): InventoryItem => {
-    // Create a properly formatted InventoryItem object with all required fields
+  const mapImportedItemToInventoryItem = (item: any): InventoryItem => {
     return {
-      id: item.id || uuidv4(),
-      sku: item.sku || `SKU-${Date.now()}`,
-      name: item.name || "Unnamed Item",
+      id: item.id || `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      sku: item.sku || "",
+      name: item.name || "",
       description: item.description || "",
-      category: item.category || "Uncategorized",
+      category: item.category || "",
       subcategory: item.subcategory || "",
       brand: item.brand || "",
-      price: typeof item.price === 'number' ? item.price : 0,
-      rrp: typeof item.rrp === 'number' ? item.rrp : (typeof item.price === 'number' ? item.price : 0),
-      cost: typeof item.cost === 'number' ? item.cost : 0,
-      stock: typeof item.stock === 'number' ? item.stock : 0,
-      lowStockThreshold: typeof item.lowStockThreshold === 'number' ? item.lowStockThreshold : 
-                        (typeof item.low_stock_threshold === 'number' ? item.low_stock_threshold : 5),
-      minStockCount: typeof item.minStockCount === 'number' ? item.minStockCount : 
-                    (typeof item.min_stock_count === 'number' ? item.min_stock_count : 1),
-      location: item.location || "Warehouse A",
+      price: Number(item.price) || 0,
+      rrp: Number(item.rrp || item.price) || 0,
+      cost: Number(item.cost) || 0,
+      stock: Number(item.stock) || 0,
+      lowStockThreshold: Number(item.lowStockThreshold || item.low_stock_threshold) || 5,
+      minStockCount: Number(item.minStockCount || item.min_stock_count) || 1,
+      location: item.location || "",
       barcode: item.barcode || "",
       dateAdded: item.dateAdded || item.date_added || new Date().toISOString(),
       lastUpdated: item.lastUpdated || item.last_updated || new Date().toISOString(),
@@ -57,10 +54,14 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       dimensions: item.dimensions,
       weight: item.weight,
       isActive: item.isActive !== undefined ? Boolean(item.isActive) : 
-               (item.is_active !== undefined ? Boolean(item.is_active) : true),
+            (item.is_active !== undefined ? Boolean(item.is_active) : true),
       supplier: item.supplier || "",
       tags: Array.isArray(item.tags) ? item.tags : []
     };
+  };
+
+  const processImportedData = (data: any[]): InventoryItem[] => {
+    return data.map(item => mapImportedItemToInventoryItem(item));
   };
 
   const importItems = async () => {
@@ -91,7 +92,7 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
       }
       
       // Convert all items to proper InventoryItem format
-      const properInventoryItems: InventoryItem[] = importedItems.map(convertToInventoryItem);
+      const properInventoryItems: InventoryItem[] = processImportedData(importedItems);
       
       // Check if we should use Supabase
       const shouldUseSupabase = await checkSupabaseConnection();
