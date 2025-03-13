@@ -1,7 +1,8 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 interface LocationStock {
   location: string;
@@ -23,23 +24,38 @@ export const StockDistributionCard: React.FC<StockDistributionCardProps> = ({
   };
 
   return (
-    <Card className="p-4">
-      <div className="text-sm font-medium flex justify-between mb-2">
-        <span>Total Stock: {totalStock} units</span>
-      </div>
-      <div className="space-y-3">
-        {locationStocks.map((locationStock, index) => (
-          <div key={index} className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">{locationStock.location}</span>
-              <span>
-                {locationStock.count} units ({getStockPercentage(locationStock.count).toFixed(1)}%)
-              </span>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Stock Distribution</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-sm font-medium flex justify-between mb-3">
+          <span>Total Stock: {totalStock} units</span>
+        </div>
+        <Separator className="my-2" />
+        <div className="space-y-4 mt-3">
+          {locationStocks.map((locationStock, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium text-primary">{locationStock.location}</span>
+                <span className="font-semibold">
+                  {locationStock.count} units ({getStockPercentage(locationStock.count).toFixed(1)}%)
+                </span>
+              </div>
+              <Progress 
+                value={getStockPercentage(locationStock.count)} 
+                className="h-2" 
+                indicatorClassName={locationStock.count <= 5 ? "bg-destructive" : ""}
+              />
             </div>
-            <Progress value={getStockPercentage(locationStock.count)} className="h-2" />
-          </div>
-        ))}
-      </div>
+          ))}
+          {locationStocks.length === 0 && (
+            <div className="text-sm text-muted-foreground text-center py-2">
+              No stock information available for this item
+            </div>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 };

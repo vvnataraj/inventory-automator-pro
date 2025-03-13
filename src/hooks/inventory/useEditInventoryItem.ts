@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
+import { toast } from "sonner";
 
 interface LocationStock {
   location: string;
@@ -16,31 +17,36 @@ export function useEditInventoryItem(item: InventoryItem) {
 
   useEffect(() => {
     if (isOpen) {
-      // Find all items with the same SKU across different locations
-      const sameSkuItems = inventoryItems.filter(
-        (inventoryItem) => inventoryItem.sku === item.sku
-      );
-      
-      // Group by location and sum the stock
-      const stockByLocation = sameSkuItems.reduce<{ [key: string]: number }>((acc, curr) => {
-        if (!acc[curr.location]) {
-          acc[curr.location] = 0;
-        }
-        acc[curr.location] += curr.stock;
-        return acc;
-      }, {});
-      
-      // Convert to array for rendering
-      const locationStocksArray = Object.entries(stockByLocation).map(([location, count]) => ({
-        location,
-        count,
-      })).sort((a, b) => b.count - a.count); // Sort by count descending
-      
-      setLocationStocks(locationStocksArray);
-      
-      // Calculate total stock across all locations
-      const total = locationStocksArray.reduce((sum, item) => sum + item.count, 0);
-      setTotalStock(total);
+      try {
+        // Find all items with the same SKU across different locations
+        const sameSkuItems = inventoryItems.filter(
+          (inventoryItem) => inventoryItem.sku === item.sku
+        );
+        
+        // Group by location and sum the stock
+        const stockByLocation = sameSkuItems.reduce<{ [key: string]: number }>((acc, curr) => {
+          if (!acc[curr.location]) {
+            acc[curr.location] = 0;
+          }
+          acc[curr.location] += curr.stock;
+          return acc;
+        }, {});
+        
+        // Convert to array for rendering
+        const locationStocksArray = Object.entries(stockByLocation).map(([location, count]) => ({
+          location,
+          count,
+        })).sort((a, b) => b.count - a.count); // Sort by count descending
+        
+        setLocationStocks(locationStocksArray);
+        
+        // Calculate total stock across all locations
+        const total = locationStocksArray.reduce((sum, item) => sum + item.count, 0);
+        setTotalStock(total);
+      } catch (error) {
+        console.error("Error loading location stock data:", error);
+        toast.error("Failed to load stock distribution data");
+      }
     }
   }, [isOpen, item.sku]);
 

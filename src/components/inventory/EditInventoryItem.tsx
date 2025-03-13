@@ -50,7 +50,7 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
           {showLabel && "Edit"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Item</DialogTitle>
           <DialogDescription>
@@ -58,29 +58,31 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
           </DialogDescription>
         </DialogHeader>
 
-        {locationStocks.length > 1 && (
-          <div className="mb-4">
-            <h4 className="font-medium text-sm mb-2">Stock Distribution by Location</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+          <div className="space-y-4">
+            <h4 className="font-medium text-sm">Item Details</h4>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <InventoryItemEditForm 
+                formData={formData}
+                onChange={handleChange}
+              />
+              <div className="flex justify-end gap-3 mt-6">
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save changes</Button>
+              </div>
+            </form>
+          </div>
+          
+          <div>
+            <h4 className="font-medium text-sm mb-3">Location Inventory</h4>
             <StockDistributionCard
               locationStocks={locationStocks}
               totalStock={totalStock}
             />
-            <Separator className="my-4" />
           </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <InventoryItemEditForm 
-            formData={formData}
-            onChange={handleChange}
-          />
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Save changes</Button>
-          </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
