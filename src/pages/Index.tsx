@@ -24,6 +24,7 @@ export default function Index() {
 
   const handlePieChartClick = (data: any, index: number) => {
     if (data && data.name) {
+      // Navigate to inventory page with category filter applied
       navigate(`/inventory?category=${encodeURIComponent(data.name)}`);
     }
   };

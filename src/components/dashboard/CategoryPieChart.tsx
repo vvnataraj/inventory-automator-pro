@@ -43,7 +43,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 paddingAngle={5}
                 dataKey="value"
                 label={({ name, value }) => `${name}: $${value.toLocaleString()}`}
-                onClick={onSliceClick}
+                onClick={(data, index) => onSliceClick(data, index)}
                 className="cursor-pointer"
               >
                 {data.map((_, index) => (
