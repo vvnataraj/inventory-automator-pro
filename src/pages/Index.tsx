@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Box, DollarSign, TrendingUp } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -6,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { inventoryItems } from "@/data/inventoryData";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { TopProfitableItems } from "@/components/dashboard/TopProfitableItems";
 import { LeastProfitableItems } from "@/components/dashboard/LeastProfitableItems";
 import { 
   Tooltip as UITooltip, 
@@ -55,13 +53,11 @@ export default function Index() {
 
   useEffect(() => {
     const calculateTotalInventoryValue = () => {
-      // Calculate total cost value (cost * stock)
       const totalCostValue = inventoryItems.reduce((sum, item) => {
         const itemCostValue = (item.cost || 0) * item.stock;
         return sum + itemCostValue;
       }, 0);
       
-      // Calculate total RRP value (rrp * stock)
       const totalRrpValue = inventoryItems.reduce((sum, item) => {
         const itemRrpValue = (item.rrp || item.price || 0) * item.stock;
         return sum + itemRrpValue;
@@ -319,10 +315,6 @@ export default function Index() {
         </Card>
       </div>
       
-      <div className="mt-6">
-        <TopProfitableItems />
-      </div>
-
       <div className="mt-6">
         <LeastProfitableItems />
       </div>
