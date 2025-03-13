@@ -38,6 +38,7 @@ type EditUserDialogProps = {
 export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Get the primary role (first in the array) or default to "user"
   const [editUserRole, setEditUserRole] = useState<Role>((user.roles[0] as Role) || "user");
   const { isAdmin } = useUserRoles();
   
@@ -50,32 +51,20 @@ export default function EditUserDialog({ user, onUserUpdated }: EditUserDialogPr
     try {
       setLoading(true);
       
-      // First check if the role already exists for this user
-      const { data: existingRole, error: checkError } = await supabase
+      // Delete all existing roles for this user first
+      const { error: deleteError } = await supabase
         .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('role', editUserRole);
-      
-      if (checkError) throw checkError;
-      
-      // If role doesn't exist, add it
-      if (!existingRole || existingRole.length === 0) {
-        // Delete all existing roles for this user first
-        const { error: deleteError } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', user.id);
-          
-        if (deleteError) throw deleteError;
+        .delete()
+        .eq('user_id', user.id);
         
-        // Add the new role
-        const { error: insertError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: user.id, role: editUserRole });
-        
-        if (insertError) throw insertError;
-      }
+      if (deleteError) throw deleteError;
+      
+      // Add the new role
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: user.id, role: editUserRole });
+      
+      if (insertError) throw insertError;
       
       toast.success("User role updated successfully");
       onUserUpdated();

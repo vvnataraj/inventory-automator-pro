@@ -51,20 +51,15 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
 
   // Display the email if available, otherwise show a placeholder with the user ID
   const displayEmail = user.email || `User ${user.id.substring(0, 8)}...`;
+  
+  // Get the primary role (first in the array) or default to 'user'
+  const primaryRole = user.roles.length > 0 ? user.roles[0] : 'user';
 
   return (
     <TableRow>
       <TableCell>{displayEmail}</TableCell>
       <TableCell>
-        <div className="flex flex-wrap gap-1">
-          {user.roles.length > 0 ? (
-            user.roles.map((role, index) => (
-              <UserRoleBadge key={index} role={role} />
-            ))
-          ) : (
-            <UserRoleBadge role="user" />
-          )}
-        </div>
+        <UserRoleBadge role={primaryRole} />
       </TableCell>
       <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
       <TableCell>

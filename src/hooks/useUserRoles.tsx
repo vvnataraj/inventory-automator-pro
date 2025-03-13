@@ -8,25 +8,25 @@ type Role = 'admin' | 'manager' | 'user';
 
 export function useUserRoles() {
   const { user } = useAuth();
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Check if user has a specific role
-  const hasRole = (role: Role) => roles.includes(role);
+  const hasRole = (checkRole: Role) => role === checkRole;
   
   // Check if user is admin
-  const isAdmin = () => hasRole('admin');
+  const isAdmin = () => role === 'admin';
   
   // Check if user is manager or admin (managers and admins both have elevated permissions)
-  const isManager = () => hasRole('manager') || hasRole('admin');
+  const isManager = () => role === 'manager' || role === 'admin';
   
   // Check if user is a regular user with read-only access
-  const isReadOnly = () => roles.length === 0 || (roles.length === 1 && hasRole('user'));
+  const isReadOnly = () => role === null || role === 'user';
   
-  // Fetch user roles
+  // Fetch user role
   const fetchRoles = async () => {
     if (!user) {
-      setRoles([]);
+      setRole(null);
       setLoading(false);
       return;
     }
@@ -46,9 +46,10 @@ export function useUserRoles() {
         throw error;
       }
       
-      const userRoles = data ? data.map(r => r.role as Role) : [];
-      console.log("Fetched roles:", userRoles);
-      setRoles(userRoles);
+      // Get the first role or default to null
+      const userRole = data && data.length > 0 ? data[0].role as Role : null;
+      console.log("Fetched role:", userRole);
+      setRole(userRole);
     } catch (error) {
       console.error("Error fetching user roles:", error);
       toast.error("Failed to load user permissions: " + error.message);
@@ -57,73 +58,39 @@ export function useUserRoles() {
     }
   };
   
-  // Add a role to the current user
-  const addRole = async (role: Role) => {
+  // Set a role for the current user (replacing any existing role)
+  const setUserRole = async (newRole: Role) => {
     if (!user) return false;
     
     try {
       setLoading(true);
       
-      // Check if role already exists
-      const { data: existingRole, error: checkError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('role', role);
-      
-      if (checkError) {
-        console.error("Error checking existing role:", checkError);
-        throw checkError;
-      }
-      
-      // If role doesn't exist, add it
-      if (!existingRole || existingRole.length === 0) {
-        const { error: insertError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: user.id, role });
-        
-        if (insertError) {
-          console.error("Error adding role:", insertError);
-          throw insertError;
-        }
-        
-        await fetchRoles();
-        return true;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error("Error adding role:", error);
-      toast.error("Failed to add role: " + error.message);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Remove a role from the current user
-  const removeRole = async (role: Role) => {
-    if (!user) return false;
-    
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase
+      // Delete all existing roles
+      const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
-        .eq('user_id', user.id)
-        .eq('role', role);
+        .eq('user_id', user.id);
       
-      if (error) {
-        console.error("Error removing role:", error);
-        throw error;
+      if (deleteError) {
+        console.error("Error removing existing roles:", deleteError);
+        throw deleteError;
+      }
+      
+      // Add the new role
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: user.id, role: newRole });
+      
+      if (insertError) {
+        console.error("Error adding role:", insertError);
+        throw insertError;
       }
       
       await fetchRoles();
       return true;
     } catch (error) {
-      console.error("Error removing role:", error);
-      toast.error("Failed to remove role: " + error.message);
+      console.error("Error setting role:", error);
+      toast.error("Failed to set role: " + error.message);
       return false;
     } finally {
       setLoading(false);
@@ -135,14 +102,13 @@ export function useUserRoles() {
   }, [user]);
   
   return {
-    roles,
+    role,
     loading,
     hasRole,
     isAdmin,
     isManager,
     isReadOnly,
     fetchRoles,
-    addRole,
-    removeRole
+    setUserRole
   };
 }
