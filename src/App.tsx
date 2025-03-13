@@ -1,158 +1,163 @@
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Inventory from "./pages/Inventory";
+import Orders from "./pages/Orders";
+import Purchases from "./pages/Purchases";
+import Analytics from "./pages/Analytics";
+import Sales from "./pages/Sales";
+import Progress from "./pages/Progress";
+import Locations from "./pages/Locations";
+import UserSettings from "./pages/UserSettings";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./contexts/AuthContext";
+import Support from "./pages/Support";
+import Training from "./pages/Training";
+import Documentation from "./pages/Documentation";
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Index from "@/pages/Index";
-import Inventory from "@/pages/Inventory";
-import Orders from "@/pages/Orders";
-import Purchases from "@/pages/Purchases";
-import Locations from "@/pages/Locations";
-import Sales from "@/pages/Sales";
-import Analytics from "@/pages/Analytics";
-import Settings from "@/pages/Settings";
-import UserSettings from "@/pages/UserSettings";
-import Progress from "@/pages/Progress";
-import NotFound from "@/pages/NotFound";
-import Login from "@/pages/Login";
-import Support from "@/pages/Support";
-import Training from "@/pages/Training";
-import Documentation from "@/pages/Documentation";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+// Add the import for AccountSettings
+import AccountSettings from "./pages/AccountSettings";
 
-const queryClient = new QueryClient();
+function App() {
+  // Check if the app is running in a development environment
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="stocktopus-theme">
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              
-              {/* Protected Routes */}
-              <Route 
-                path="/" 
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/inventory" 
-                element={
-                  <ProtectedRoute>
-                    <Inventory />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/orders" 
-                element={
-                  <ProtectedRoute>
-                    <Orders />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/purchases" 
-                element={
-                  <ProtectedRoute>
-                    <Purchases />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/progress" 
-                element={
-                  <ProtectedRoute>
-                    <Progress />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/locations" 
-                element={
-                  <ProtectedRoute>
-                    <Locations />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/sales" 
-                element={
-                  <ProtectedRoute>
-                    <Sales />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/analytics" 
-                element={
-                  <ProtectedRoute>
-                    <Analytics />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/settings" 
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/user-settings" 
-                element={
-                  <ProtectedRoute>
-                    <UserSettings />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Help Section Routes */}
-              <Route 
-                path="/support" 
-                element={
-                  <ProtectedRoute>
-                    <Support />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/training" 
-                element={
-                  <ProtectedRoute>
-                    <Training />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/documentation" 
-                element={
-                  <ProtectedRoute>
-                    <Documentation />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Fallback Routes */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+  // Log the environment type to the console
+  if (isDevelopment) {
+    console.log('Running in development mode');
+  } else {
+    console.log('Running in production mode');
+  }
+
+  // Log the current version to the console
+  console.log('Version:', process.env.REACT_APP_VERSION);
+
+  // Log the build number to the console
+  console.log('Build Number:', process.env.REACT_APP_BUILD_NUMBER);
+
+  // Log the build date to the console
+  console.log('Build Date:', process.env.REACT_APP_BUILD_DATE);
+
+  // Log the git commit hash to the console
+  console.log('Git Commit Hash:', process.env.REACT_APP_GIT_COMMIT_HASH);
+
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <Index />,
+    },
+    {
+      path: "/login",
+      element: <Login />,
+    },
+    {
+      path: "/inventory",
+      element: (
+        <ProtectedRoute>
+          <Inventory />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/orders",
+      element: (
+        <ProtectedRoute>
+          <Orders />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/purchases",
+      element: (
+        <ProtectedRoute>
+          <Purchases />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/analytics",
+      element: (
+        <ProtectedRoute>
+          <Analytics />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/sales",
+      element: (
+        <ProtectedRoute>
+          <Sales />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/progress",
+      element: (
+        <ProtectedRoute>
+          <Progress />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/locations",
+      element: (
+        <ProtectedRoute>
+          <Locations />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/user-settings",
+      element: (
+        <ProtectedRoute>
+          <UserSettings />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/support",
+      element: (
+        <ProtectedRoute>
+          <Support />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/training",
+      element: (
+        <ProtectedRoute>
+          <Training />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/documentation",
+      element: (
+        <ProtectedRoute>
+          <Documentation />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/account-settings",
+      element: (
+        <ProtectedRoute>
+          <AccountSettings />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "*",
+      element: <NotFound />,
+    },
+  ]);
+
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
+}
 
 export default App;

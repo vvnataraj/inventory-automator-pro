@@ -32,7 +32,7 @@ export const navigation = [
 export const adminItems = [
   { name: "Progress", href: "/progress", icon: Clock },
   { name: "Locations", href: "/locations", icon: Building2 },
-  { name: "Account Settings", href: "/settings", icon: Users },
+  { name: "Account Settings", href: "/account-settings", icon: Users },
 ];
 
 // User section items
