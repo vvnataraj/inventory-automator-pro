@@ -30,10 +30,16 @@ export const StatCard: React.FC<StatCardProps> = ({
   tooltipContent,
   onClick,
 }) => {
+  const handleClick = () => {
+    if (link) {
+      onClick(link);
+    }
+  };
+
   const card = (
     <Card 
       className={`animate-fade-in ${link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-      onClick={() => onClick(link)}
+      onClick={handleClick}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">

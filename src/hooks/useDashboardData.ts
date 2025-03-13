@@ -45,7 +45,7 @@ export function useDashboardData() {
         value: "$45,231",
         change: "+20.1%",
         icon: null,
-        link: null
+        link: "/analytics"
       },
       {
         name: "Active Orders",
