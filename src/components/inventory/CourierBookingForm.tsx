@@ -150,7 +150,7 @@ export const CourierBookingForm = ({ transferData, onCancel, onComplete }: Couri
           <p className="text-sm text-gray-600">
             Item: {transferData.item.name}<br />
             Quantity: {transferData.quantity}<br />
-            Weight: {transferData.item.weight || "N/A"} {transferData.item.weightUnit || ""}
+            Weight: {transferData.item.weight ? `${transferData.item.weight.value} ${transferData.item.weight.unit}` : "N/A"}
           </p>
         </div>
       </form>
