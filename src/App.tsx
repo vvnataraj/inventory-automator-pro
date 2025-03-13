@@ -13,7 +13,6 @@ import Sales from "@/pages/Sales";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
 import UserSettings from "@/pages/UserSettings";
-import AccountManagement from "@/pages/AccountManagement";
 import Progress from "@/pages/Progress";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
@@ -106,7 +105,7 @@ const App = () => (
               <Route 
                 path="/settings" 
                 element={
-                  <ProtectedRoute requireAdmin={true}>
+                  <ProtectedRoute>
                     <Settings />
                   </ProtectedRoute>
                 } 
@@ -116,14 +115,6 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <UserSettings />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/account-management" 
-                element={
-                  <ProtectedRoute requireAdmin={true}>
-                    <AccountManagement />
                   </ProtectedRoute>
                 } 
               />

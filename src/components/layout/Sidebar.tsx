@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { navigation, adminItems, helpItems, sections } from "./sidebar/navigationItems";
 import { SidebarNavItem } from "./sidebar/SidebarNavItem";
@@ -18,7 +18,7 @@ export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
     Help: false
   });
   
-  const location = useLocation();
+  const location = window.location;
   
   // Check if current location is in admin section
   const isAdminActive = adminItems.some(item => item.href === location.pathname);

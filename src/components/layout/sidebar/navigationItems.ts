@@ -15,7 +15,6 @@ import {
   GraduationCap,
   FileText,
   User,
-  Users,
 } from "lucide-react";
 
 // Main navigation items
@@ -32,7 +31,6 @@ export const navigation = [
 export const adminItems = [
   { name: "Progress", href: "/progress", icon: Clock },
   { name: "Locations", href: "/locations", icon: Building2 },
-  { name: "Account Management", href: "/account-management", icon: Users },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
