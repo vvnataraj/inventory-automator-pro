@@ -55,7 +55,7 @@ export default function UserRow({ user, onUserUpdated }: UserRowProps) {
     }
   };
 
-  // Format user display info
+  // Format user display info - use email directly rather than username
   const displayEmail = user.email || "No email";
   
   // As admin, always show real usernames - never mask them
