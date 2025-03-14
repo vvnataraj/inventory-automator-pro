@@ -11,6 +11,7 @@ import { useEditInventoryItem } from "@/hooks/inventory/useEditInventoryItem";
 import { toast } from "sonner";
 import { useInventoryOperations } from "@/hooks/inventory/useInventoryOperations";
 import { EditInventoryDialog } from "./edit/EditInventoryDialog";
+import { logInventoryActivity } from "@/utils/logging";
 
 interface EditInventoryItemProps {
   item: InventoryItem;
@@ -44,6 +45,16 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
       console.log("Current stock value:", formData.stock);
       console.log("Total stock from locations:", totalStock);
       
+      // Log edit initiated
+      await logInventoryActivity('edit_item_initiated', formData.id, formData.name, {
+        sku: formData.sku,
+        old_stock: item.stock,
+        new_stock: totalStock,
+        changes: Object.keys(formData).filter(key => 
+          formData[key] !== item[key] && key !== 'lastUpdated'
+        ).join(', ')
+      });
+      
       // Get all items that need to be updated (across all locations)
       const itemsToUpdate = prepareItemsForSave();
       console.log("Items to update:", itemsToUpdate);
@@ -61,12 +72,26 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
       if (currentItemUpdate) {
         console.log("Calling onSave with updated item:", currentItemUpdate);
         onSave(currentItemUpdate);
+        
+        // Log edit completed
+        await logInventoryActivity('edit_item_completed', currentItemUpdate.id, currentItemUpdate.name, {
+          result: 'success',
+          sku: currentItemUpdate.sku,
+          stock: currentItemUpdate.stock,
+          locations_updated: itemsToUpdate.length
+        });
       }
       
       toast.success("Item updated successfully across all locations");
       setIsOpen(false);
     } catch (error) {
       console.error("Error updating items:", error);
+      
+      // Log edit failed
+      await logInventoryActivity('edit_item_failed', formData.id, formData.name, {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      
       toast.error("Failed to update item");
     } finally {
       setIsSaving(false);
@@ -77,6 +102,14 @@ export const EditInventoryItem = ({ item, onSave, showLabel = false }: EditInven
   const handleOpenChange = (open: boolean) => {
     if (!isSaving) {
       setIsOpen(open);
+      
+      // Log dialog opened/closed
+      if (open) {
+        logInventoryActivity('edit_dialog_opened', item.id, item.name, {
+          sku: item.sku,
+          current_stock: item.stock
+        });
+      }
     }
   };
 
