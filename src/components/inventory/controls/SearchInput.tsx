@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
@@ -16,36 +16,38 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 }) => {
   // Create a local state to track the input value
   const [inputValue, setInputValue] = useState(searchQuery);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Handle input changes immediately in the local state
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
+    
+    // Clear the previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Set up a new timer
+    debounceTimerRef.current = setTimeout(() => {
+      console.log("Executing search with query:", e.target.value);
+      setSearchQuery(e.target.value);
+    }, 500);
   };
   
-  // Use debounce with useCallback to avoid recreating the function
-  const debouncedSetSearchQuery = useCallback(() => {
-    if (inputValue !== searchQuery) {
-      console.log("Executing search with query:", inputValue);
-      setSearchQuery(inputValue);
-    }
-  }, [inputValue, searchQuery, setSearchQuery]);
-  
-  // Set up an effect to debounce the search
+  // Clear the timeout on unmount
   useEffect(() => {
-    // Create a timeout that will execute the search after 500ms
-    const timeoutId = setTimeout(() => {
-      debouncedSetSearchQuery();
-    }, 500);
-    
-    // Clear the timeout if the component unmounts or inputValue changes
     return () => {
-      clearTimeout(timeoutId);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
-  }, [inputValue, debouncedSetSearchQuery]);
+  }, []);
   
   // Update the local input value if the searchQuery prop changes (e.g., from URL parameters)
   useEffect(() => {
-    setInputValue(searchQuery);
+    if (searchQuery !== inputValue) {
+      setInputValue(searchQuery);
+    }
   }, [searchQuery]);
   
   return (

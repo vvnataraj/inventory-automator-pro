@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,43 @@ export const InventoryItemSelector: React.FC<InventoryItemSelectorProps> = ({
   onSearchChange,
   onAddItem,
 }) => {
+  // Create a local state to track the input value
+  const [inputValue, setInputValue] = useState(searchQuery);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Handle input changes with debounce
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    
+    // Clear the previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Set up a new timer
+    debounceTimerRef.current = setTimeout(() => {
+      console.log("Executing inventory item search with query:", newValue);
+      onSearchChange(newValue);
+    }, 500);
+  };
+  
+  // Clear the timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+  
+  // Update the local input value if the searchQuery prop changes
+  useEffect(() => {
+    if (searchQuery !== inputValue) {
+      setInputValue(searchQuery);
+    }
+  }, [searchQuery]);
+
   return (
     <div className="grid gap-2">
       <Label>Add Items</Label>
@@ -27,8 +64,8 @@ export const InventoryItemSelector: React.FC<InventoryItemSelectorProps> = ({
         <Input
           placeholder="Search inventory items..."
           className="pl-10"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          value={inputValue}
+          onChange={handleSearchChange}
         />
       </div>
 
