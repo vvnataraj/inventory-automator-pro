@@ -24,22 +24,21 @@ export function useInventoryUrlSync(
     }
     
     const page = parseInt(searchParams.get("page") || "1");
-    const search = searchParams.get("search") || "";
-    const sort = searchParams.get("sort") as SortField || "name";
-    const order = searchParams.get("order") as SortDirection || "asc";
+    // No longer sync search
+    const sort = searchParams.get("sort") as SortField || 'name';
+    const order = searchParams.get("order") as SortDirection || 'asc';
     const view = searchParams.get("view") as "grid" | "table" || "table";
     
-    console.log("Initial URL sync with params:", { page, search, sort, order, view });
+    console.log("Initial URL sync with params:", { page, sort, order, view });
     
     setCurrentPage(page);
-    setSearchQuery(search);
     setSortField(sort);
     setSortDirection(order);
     setViewMode(view);
     
     // Mark initial sync as done to prevent repeated syncs
     initialSyncDoneRef.current = true;
-  }, [searchParams, setSearchQuery, setSortField, setSortDirection, setViewMode]);
+  }, [searchParams, setSortField, setSortDirection, setViewMode]);
   
   // Separate effect for initial data fetch to avoid redundant fetches
   useEffect(() => {

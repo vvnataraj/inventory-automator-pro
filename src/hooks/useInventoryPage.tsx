@@ -1,4 +1,3 @@
-
 import { useInventoryFilters } from "@/hooks/inventory/useInventoryFilters";
 import { useInventoryView } from "@/hooks/inventory/useInventoryView";
 import { useInventoryDialogs } from "@/hooks/inventory/useInventoryDialogs";
@@ -7,11 +6,8 @@ import { useInventoryActions } from "@/hooks/inventory/useInventoryActions";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 
 export function useInventoryPage() {
-  // Get filter state
-  const {
-    searchQuery,
-    setSearchQuery
-  } = useInventoryFilters();
+  // We'll keep the filter hook but ignore its searchQuery
+  const { skipNextEffect, isSkippingEffect } = useInventoryFilters();
   
   // Get view mode and sorting state
   const {
@@ -33,7 +29,7 @@ export function useInventoryPage() {
     handleOpenReorderDialog
   } = useInventoryDialogs();
   
-  // Get inventory items
+  // Get inventory items - passing empty string for searchQuery
   const { 
     items, 
     isLoading, 
@@ -48,7 +44,7 @@ export function useInventoryPage() {
     refresh
   } = useInventoryItems(
     1, // Default page, will be overridden by URL sync
-    searchQuery,
+    "", // Empty search query
     sortField,
     sortDirection
   );
@@ -58,7 +54,7 @@ export function useInventoryPage() {
     currentPage,
     setCurrentPage
   } = useInventoryUrlSync(
-    setSearchQuery,
+    () => {}, // Empty function for setSearchQuery
     () => {}, // Empty function for setCategoryFilter
     () => {}, // Empty function for setLocationFilter
     setSortField,
@@ -91,7 +87,7 @@ export function useInventoryPage() {
 
   return {
     state: {
-      searchQuery,
+      searchQuery: "",
       currentPage,
       viewMode,
       sortField,
@@ -106,7 +102,7 @@ export function useInventoryPage() {
       locationFilter: undefined
     },
     actions: {
-      setSearchQuery,
+      setSearchQuery: () => {}, // Empty function
       setCurrentPage,
       setViewMode,
       setSortField,
@@ -124,7 +120,9 @@ export function useInventoryPage() {
       handleReorderStock,
       handleTransferItem,
       fetchItems,
-      handleReactivateAllItems
+      handleReactivateAllItems,
+      skipNextEffect,
+      isSkippingEffect
     }
   };
 }

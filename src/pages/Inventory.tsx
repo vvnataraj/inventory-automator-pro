@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -21,7 +20,6 @@ export default function Inventory() {
       isLoading, 
       totalItems, 
       currentPage, 
-      searchQuery, 
       viewMode, 
       sortField, 
       sortDirection, 
@@ -33,7 +31,6 @@ export default function Inventory() {
     },
     actions: { 
       setCurrentPage, 
-      setSearchQuery, 
       setViewMode, 
       setCategoryFilter, 
       setLocationFilter, 
@@ -81,8 +78,8 @@ export default function Inventory() {
         />
         
         <InventoryControls 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          searchQuery=""
+          setSearchQuery={() => {}}
           viewMode={viewMode}
           setViewMode={setViewMode}
           sortField={sortField}

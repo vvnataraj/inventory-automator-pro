@@ -1,10 +1,8 @@
 
 import React from "react";
 import { SortField, SortDirection } from "@/types/inventory";
-import { SearchInput } from "./controls/SearchInput";
 import { ViewModeToggle } from "./controls/ViewModeToggle";
 import { SortControl } from "./controls/SortControl";
-import { CategoryFilter } from "./controls/CategoryFilter";
 import { InventoryFilter } from "./controls/InventoryFilter";
 
 interface InventoryControlsProps {
@@ -23,8 +21,6 @@ interface InventoryControlsProps {
 }
 
 export const InventoryControls: React.FC<InventoryControlsProps> = ({
-  searchQuery,
-  setSearchQuery,
   viewMode,
   setViewMode,
   sortField,
@@ -38,12 +34,7 @@ export const InventoryControls: React.FC<InventoryControlsProps> = ({
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
-      <SearchInput 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
-      />
-      
-      <div className="flex flex-wrap gap-2 sm:ml-auto">
+      <div className="flex flex-wrap gap-2 ml-auto">
         {onCategoryFilterChange && onLocationFilterChange && (
           <InventoryFilter
             categoryFilter={categoryFilter}
