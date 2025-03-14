@@ -1,4 +1,3 @@
-
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Purchase } from "@/types/purchase";
 import { inventoryItems } from "./inventoryItems";
@@ -65,7 +64,21 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
   try {
     console.log("Starting inventory sync to Supabase...");
     
-    const supabaseItems = inventoryItems.map(item => {
+    // First, ensure we remove any duplicate SKUs from the items to sync
+    // Keep only the first occurrence of each SKU
+    const seenSkus = new Set<string>();
+    const uniqueItems = inventoryItems.filter(item => {
+      if (!item.sku || seenSkus.has(item.sku)) {
+        console.log(`Skipping duplicate or empty SKU: ${item.sku}`, item.name);
+        return false;
+      }
+      seenSkus.add(item.sku);
+      return true;
+    });
+    
+    console.log(`Filtered down to ${uniqueItems.length} unique SKU items (removed ${inventoryItems.length - uniqueItems.length} duplicates)`);
+    
+    const supabaseItems = uniqueItems.map(item => {
       // Prepare item for Supabase - don't include an id for insert operations
       // This will allow the database to generate its own UUIDs
       return {
@@ -84,7 +97,7 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
         location: item.location || "",
         barcode: item.barcode || "",
         date_added: item.dateAdded || new Date().toISOString(),
-        last_updated: item.lastUpdated || new Date().toISOString(),
+        last_updated: new Date().toISOString(), // Always update the timestamp
         image_url: item.imageUrl || "", // Ensure image_url is properly set
         dimensions: item.dimensions || null,
         weight: item.weight || null,
@@ -96,28 +109,44 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     
     console.log(`Preparing to sync ${supabaseItems.length} items to Supabase...`);
     
-    // Use upsert with sku as the conflict target, not id
-    const { error } = await supabase
-      .from('inventory_items')
-      .upsert(supabaseItems, { 
-        onConflict: 'sku',
-        ignoreDuplicates: false
-      });
+    // Process in smaller batches to avoid potential errors with large datasets
+    const batchSize = 50;
+    let successCount = 0;
+    let errors = [];
+    
+    for (let i = 0; i < supabaseItems.length; i += batchSize) {
+      const batch = supabaseItems.slice(i, i + batchSize);
+      console.log(`Processing batch ${i/batchSize + 1}, size: ${batch.length}`);
       
-    if (error) {
-      console.error("Error syncing inventory to Supabase:", error);
+      const { error, count } = await supabase
+        .from('inventory_items')
+        .upsert(batch, { 
+          onConflict: 'sku',
+          ignoreDuplicates: false
+        });
+      
+      if (error) {
+        console.error(`Error in batch ${i/batchSize + 1}:`, error);
+        errors.push(error.message);
+      } else {
+        successCount += batch.length;
+        console.log(`Batch ${i/batchSize + 1} completed successfully`);
+      }
+    }
+    
+    if (errors.length > 0) {
       return {
-        success: false,
-        message: `Error syncing inventory: ${error.message}`,
-        count: 0
+        success: successCount > 0, // Partial success if at least some items were synced
+        message: `Synced ${successCount} items with ${errors.length} errors: ${errors[0]}${errors.length > 1 ? ` (and ${errors.length - 1} more)` : ''}`,
+        count: successCount
       };
     }
     
-    console.log(`Successfully synced ${supabaseItems.length} inventory items to Supabase`);
+    console.log(`Successfully synced ${successCount} inventory items to Supabase`);
     return {
       success: true,
-      message: `Successfully synced ${supabaseItems.length} inventory items to Supabase`,
-      count: supabaseItems.length
+      message: `Successfully synced ${successCount} inventory items to Supabase`,
+      count: successCount
     };
   } catch (error) {
     console.error("Exception in syncInventoryItemsToSupabase:", error);
