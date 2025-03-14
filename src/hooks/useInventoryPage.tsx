@@ -70,7 +70,7 @@ export function useInventoryPage() {
     setSortField,
     setSortDirection,
     setViewMode,
-    fetchItems
+    fetchItems // This needs to return a Promise<void>
   );
   
   // Get inventory action handlers
@@ -129,7 +129,7 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      fetchItems: (forceRefresh = false) => {
+      fetchItems: (forceRefresh = false): Promise<void> => {
         console.log("Calling refresh with forceRefresh:", forceRefresh);
         return refresh();
       },

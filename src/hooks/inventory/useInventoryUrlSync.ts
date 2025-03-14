@@ -33,7 +33,8 @@ export function useInventoryUrlSync(
     setSortDirection(order);
     setViewMode(view);
     
-    fetchItems();
+    // We need to call this asynchronously but don't need to await it
+    fetchItems().catch(err => console.error("Error fetching items:", err));
   }, [searchParams, setSearchQuery, setCategoryFilter, setLocationFilter, setSortField, setSortDirection, setViewMode, fetchItems]);
   
   // Reset to page 1 when filters change
