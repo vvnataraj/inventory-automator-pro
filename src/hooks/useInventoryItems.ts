@@ -54,11 +54,6 @@ export function useInventoryItems(
     fetchItems
   );
   
-  // Ensure fetchItems returns a Promise<void>
-  const fetchItemsPromise = async (forceRefresh = false): Promise<void> => {
-    return fetchItems(forceRefresh);
-  };
-  
   return { 
     items, 
     totalItems, 
@@ -69,7 +64,7 @@ export function useInventoryItems(
     deleteItem, 
     reorderItem, 
     reorderStock,
-    fetchItems: fetchItemsPromise,
+    fetchItems,
     reactivateAllItems,
     refresh: refreshData
   };

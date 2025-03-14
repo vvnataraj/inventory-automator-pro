@@ -15,7 +15,7 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    Admin: true, // Set Admin section to be open by default
+    Admin: false,
     Help: false
   });
   
@@ -51,9 +51,6 @@ export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
     return false;
   };
 
-  // Force a re-render by using a different object reference for sections
-  const renderedSections = [...sections];
-
   return (
     <div className={cn(
       "flex h-full flex-col border-r transition-all duration-300",
@@ -78,7 +75,7 @@ export function Sidebar({ collapsed, toggleCollapse }: SidebarProps) {
         ))}
         
         {/* Collapsible sections */}
-        {renderedSections.filter(section => hasAccessToSection(section.requiredRole)).map((section) => (
+        {sections.filter(section => hasAccessToSection(section.requiredRole)).map((section) => (
           <SidebarSection
             key={section.title}
             title={section.title}

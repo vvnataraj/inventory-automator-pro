@@ -22,7 +22,6 @@ import Documentation from "@/pages/Documentation";
 import PromoVideo from "@/pages/PromoVideo";
 import LowStock from "@/pages/LowStock";
 import Users from "@/pages/Users";
-import Logs from "@/pages/Logs";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -103,14 +102,6 @@ const App = () => (
                 element={
                   <ProtectedRoute requireManager={true}>
                     <Users />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/logs" 
-                element={
-                  <ProtectedRoute requireManager={true}>
-                    <Logs />
                   </ProtectedRoute>
                 } 
               />
