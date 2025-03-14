@@ -55,15 +55,19 @@ export const logInventoryActivity = async (
   itemName: string,
   details?: Record<string, any>
 ): Promise<void> => {
-  await logActivity({
-    action,
-    target_type: 'inventory_item',
-    target_id: itemId,
-    details: {
-      item_name: itemName,
-      ...details
-    }
-  });
+  try {
+    await logActivity({
+      action,
+      target_type: 'inventory_item',
+      target_id: itemId,
+      details: {
+        item_name: itemName,
+        ...details
+      }
+    });
+  } catch (error) {
+    console.error('Failed to log inventory activity:', error);
+  }
 };
 
 /**
@@ -75,15 +79,19 @@ export const logOrderActivity = async (
   orderNumber: string,
   details?: Record<string, any>
 ): Promise<void> => {
-  await logActivity({
-    action,
-    target_type: 'order',
-    target_id: orderId,
-    details: {
-      order_number: orderNumber,
-      ...details
-    }
-  });
+  try {
+    await logActivity({
+      action,
+      target_type: 'order',
+      target_id: orderId,
+      details: {
+        order_number: orderNumber,
+        ...details
+      }
+    });
+  } catch (error) {
+    console.error('Failed to log order activity:', error);
+  }
 };
 
 /**
@@ -93,11 +101,15 @@ export const logAuthActivity = async (
   action: string,
   details?: Record<string, any>
 ): Promise<void> => {
-  await logActivity({
-    action,
-    target_type: 'authentication',
-    details
-  });
+  try {
+    await logActivity({
+      action,
+      target_type: 'authentication',
+      details
+    });
+  } catch (error) {
+    console.error('Failed to log auth activity:', error);
+  }
 };
 
 /**
@@ -108,13 +120,17 @@ export const logError = async (
   source: string,
   details?: Record<string, any>
 ): Promise<void> => {
-  await logActivity({
-    action: 'system_error',
-    target_type: 'system',
-    target_id: source,
-    details: {
-      error_message: errorMessage,
-      ...details
-    }
-  });
+  try {
+    await logActivity({
+      action: 'system_error',
+      target_type: 'system',
+      target_id: source,
+      details: {
+        error_message: errorMessage,
+        ...details
+      }
+    });
+  } catch (error) {
+    console.error('Failed to log error:', error);
+  }
 };

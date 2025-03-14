@@ -1,36 +1,63 @@
-import { useEffect, useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
+import { SortField, SortDirection } from "@/types/inventory";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { InventoryHeader } from "@/components/inventory/InventoryHeader";
 import { InventoryControls } from "@/components/inventory/InventoryControls";
 import { InventoryGrid } from "@/components/inventory/InventoryGrid";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
-import { getInventoryItems, syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
+import { syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
 import { SimplePagination } from "@/components/common/SimplePagination";
 import { logInventoryActivity } from "@/utils/logging";
+import { useInventoryPage } from "@/hooks/useInventoryPage";
 
 export default function Inventory() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [syncingDb, setSyncingDb] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
-  const [sortField, setSortField] = useState<SortField>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
-  const [locationFilter, setLocationFilter] = useState<string | undefined>();
-  const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  const itemsPerPage = 20;
+  
+  const { 
+    state: { 
+      items, 
+      isLoading, 
+      totalItems, 
+      currentPage, 
+      searchQuery, 
+      viewMode, 
+      sortField, 
+      sortDirection, 
+      categoryFilter, 
+      locationFilter, 
+      reorderDialogOpen, 
+      selectedItem, 
+      itemsPerPage 
+    },
+    actions: { 
+      setCurrentPage, 
+      setSearchQuery, 
+      setViewMode, 
+      setCategoryFilter, 
+      setLocationFilter, 
+      setSortField, 
+      setSortDirection,
+      setReorderDialogOpen, 
+      setSelectedItem, 
+      handleSort, 
+      handleSaveItem, 
+      handleAddItem, 
+      handleDeleteItem, 
+      handleReorderItem, 
+      handleOpenReorderDialog, 
+      handleReorderStock, 
+      handleTransferItem,
+      fetchItems
+    } 
+  } = useInventoryPage();
   
   useEffect(() => {
     const page = parseInt(searchParams.get("page") || "1");
@@ -52,104 +79,10 @@ export default function Inventory() {
     fetchItems();
   }, [searchParams]);
   
-  const fetchItems = async (forceRefresh = false) => {
-    setIsLoading(true);
-    try {
-      const result = await getInventoryItems(
-        currentPage,
-        itemsPerPage,
-        searchQuery,
-        sortField,
-        sortDirection,
-        categoryFilter,
-        locationFilter,
-        forceRefresh
-      );
-      
-      setItems(result.items);
-      setTotalItems(result.total);
-    } catch (error) {
-      console.error("Error fetching inventory items:", error);
-      toast.error("Failed to load inventory items. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleSort = (field: SortField) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-    fetchItems();
-  };
-  
-  const handleSaveItem = async (updatedItem: InventoryItem) => {
-    toast.success(`Item "${updatedItem.name}" updated successfully`);
-    await logInventoryActivity('update_item', updatedItem.id, updatedItem.name, {
-      sku: updatedItem.sku,
-      category: updatedItem.category
-    });
-    fetchItems(true);
-  };
-  
-  const handleAddItem = async (newItem: InventoryItem) => {
-    toast.success(`Item "${newItem.name}" added successfully`);
-    await logInventoryActivity('add_item', newItem.id, newItem.name, {
-      sku: newItem.sku,
-      category: newItem.category
-    });
-    fetchItems(true);
-  };
-  
-  const handleDeleteItem = async (itemId: string) => {
-    const itemToDelete = items.find(item => item.id === itemId);
-    if (itemToDelete) {
-      toast.success(`Item "${itemToDelete.name}" deleted successfully`);
-      await logInventoryActivity('delete_item', itemToDelete.id, itemToDelete.name);
-      fetchItems(true);
-    }
-  };
-  
-  const handleTransferItem = async (item: InventoryItem, quantity: number, newLocation: string) => {
-    toast.success(`Transferred ${quantity} items from ${item.location} to ${newLocation}`);
-    await logInventoryActivity('transfer_item', item.id, item.name, {
-      quantity,
-      from_location: item.location,
-      to_location: newLocation
-    });
-    fetchItems(true);
-  };
-  
-  const handleReorderItem = async (itemId: string, direction: 'up' | 'down') => {
-    const item = items.find(i => i.id === itemId);
-    if (item) {
-      toast.success(`Item moved ${direction}`);
-      await logInventoryActivity('reorder_item', itemId, item.name, { direction });
-      fetchItems(true);
-    }
-  };
-  
-  const handleOpenReorderDialog = (item: InventoryItem) => {
-    setSelectedItem(item);
-    setReorderDialogOpen(true);
-  };
-  
-  const handleReorderStock = async (item: InventoryItem, quantity: number) => {
-    toast.success(`Reordered ${quantity} units of "${item.name}"`);
-    await logInventoryActivity('reorder_stock', item.id, item.name, { quantity });
-    setReorderDialogOpen(false);
-    fetchItems(true);
-  };
-  
-  const handleImportItems = async (importedItems: InventoryItem[]) => {
-    toast.success(`Successfully imported ${importedItems.length} items`);
-    await logInventoryActivity('import_items', 'batch', 'Multiple Items', { 
-      count: importedItems.length 
-    });
-    fetchItems(true);
+  const handlePageChange = (page: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", page.toString());
+    navigate(`?${newParams.toString()}`);
   };
   
   const handleSyncToDatabase = async () => {
@@ -181,15 +114,6 @@ export default function Inventory() {
       setSyncingDb(false);
     }
   };
-  
-  const handlePageChange = (page: number) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("page", page.toString());
-    navigate(`?${newParams.toString()}`);
-    
-    setCurrentPage(page);
-    fetchItems();
-  };
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   
@@ -200,7 +124,10 @@ export default function Inventory() {
           <InventoryHeader 
             onAddItem={handleAddItem} 
             items={items}
-            onImportItems={handleImportItems}
+            onImportItems={(items) => {
+              toast.success(`Successfully imported ${items.length} items`);
+              fetchItems(true);
+            }}
           />
           <Button 
             onClick={handleSyncToDatabase} 

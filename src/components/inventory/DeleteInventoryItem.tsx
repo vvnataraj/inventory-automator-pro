@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { InventoryItem } from "@/types/inventory";
 import { logInventoryActivity } from "@/utils/logging";
+import { toast } from "sonner";
 
 interface DeleteInventoryItemProps {
   item: InventoryItem;
@@ -41,9 +42,13 @@ export const DeleteInventoryItem: React.FC<DeleteInventoryItemProps> = ({
       // Call the parent component's delete handler
       onDelete(item.id);
       
+      // Log success and show toast
+      toast.success(`Item "${item.name}" deleted successfully`);
+      
       setIsOpen(false);
     } catch (error) {
       console.error("Error while deleting item:", error);
+      toast.error(`Failed to delete item: ${error instanceof Error ? error.message : 'Unknown error'}`);
       // The actual delete may have succeeded, but logging failed
     }
   };
