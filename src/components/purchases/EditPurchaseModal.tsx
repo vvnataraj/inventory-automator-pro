@@ -63,8 +63,7 @@ export function EditPurchaseModal({
     e.preventDefault();
     
     if (!purchase || !formData.poNumber || !formData.supplier) {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "PO Number and Supplier are required",
       });
       return;
@@ -85,8 +84,7 @@ export function EditPurchaseModal({
     onPurchaseUpdated(updatedPurchase);
     onOpenChange(false);
     
-    toast({
-      title: "Success",
+    toast("Success", {
       description: "Purchase order updated successfully",
     });
   };
