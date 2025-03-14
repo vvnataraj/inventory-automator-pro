@@ -20,7 +20,7 @@ interface AddInventoryItemProps {
 
 export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { isManager, loading } = useUserRoles();
+  const { isManager } = useUserRoles();
   const [formData, setFormData] = React.useState<InventoryItemFormData>({
     name: "",
     sku: "",
@@ -32,14 +32,6 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
     minStockCount: 5,
     lowStockThreshold: 10,
   });
-
-  // Don't render anything during loading or if not a manager
-  if (loading || !isManager()) {
-    return null;
-  }
-
-  console.log("Current role in AddInventoryItem:", role);
-  console.log("Is manager?", isManager());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +69,10 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
       location: value
     }));
   };
+
+  if (!isManager()) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

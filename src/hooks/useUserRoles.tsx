@@ -18,10 +18,7 @@ export function useUserRoles() {
   const isAdmin = useCallback(() => role === 'admin', [role]);
   
   // Check if user is manager or admin (managers and admins both have elevated permissions)
-  const isManager = useCallback(() => {
-    console.log("Current role:", role); // Add logging to debug
-    return role === 'manager' || role === 'admin';
-  }, [role]);
+  const isManager = useCallback(() => role === 'manager' || role === 'admin', [role]);
   
   // Check if user is a regular user with read-only access
   // A user with the 'user' role should NOT be considered read-only
@@ -49,8 +46,6 @@ export function useUserRoles() {
         console.error("Error fetching user roles:", error);
         throw error;
       }
-      
-      console.log("Raw user roles data:", data); // Log the raw data
       
       // Get the first role or default to 'user' instead of null
       // This ensures authenticated users without explicit roles get 'user' role by default
@@ -109,7 +104,7 @@ export function useUserRoles() {
   // Only fetch roles when user changes, not on every render
   useEffect(() => {
     fetchRoles();
-  }, [user?.id, fetchRoles]); // Add fetchRoles to dependencies
+  }, [user?.id]); // Only depend on user.id, not the entire user object
   
   return {
     role,
