@@ -19,6 +19,7 @@ import Login from "@/pages/Login";
 import Support from "@/pages/Support";
 import Training from "@/pages/Training";
 import Documentation from "@/pages/Documentation";
+import PromoVideo from "@/pages/PromoVideo";
 import LowStock from "@/pages/LowStock";
 import Users from "@/pages/Users";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -159,6 +160,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Documentation />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/promo-video" 
+                element={
+                  <ProtectedRoute>
+                    <PromoVideo />
                   </ProtectedRoute>
                 } 
               />

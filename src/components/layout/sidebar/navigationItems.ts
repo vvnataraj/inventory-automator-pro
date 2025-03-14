@@ -16,6 +16,7 @@ import {
   FileText,
   User,
   Users,
+  Video,
 } from "lucide-react";
 
 // Main navigation items
@@ -46,6 +47,7 @@ export const helpItems = [
   { name: "Contact Support", href: "/support", icon: Headphones },
   { name: "Training", href: "/training", icon: GraduationCap },
   { name: "Documentation", href: "/documentation", icon: FileText },
+  { name: "Promo Video", href: "/promo-video", icon: Video },
 ];
 
 // Section configurations
