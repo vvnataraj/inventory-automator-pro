@@ -7,6 +7,7 @@ import { Purchase, PurchaseStatus, PurchaseDB, PurchaseItemDB } from "@/types/pu
 
 export const usePurchasesWithDB = (page = 1, pageSize = 12, searchQuery = "", statusFilter?: PurchaseStatus) => {
   const [currentPage, setCurrentPage] = useState(page);
+  const [currentPageSize, setCurrentPageSize] = useState(pageSize);
 
   // Fetch purchases from the database
   const fetchPurchases = async (): Promise<Purchase[]> => {
@@ -29,8 +30,8 @@ export const usePurchasesWithDB = (page = 1, pageSize = 12, searchQuery = "", st
     }
 
     // Apply pagination
-    const from = (currentPage - 1) * pageSize;
-    const to = from + pageSize - 1;
+    const from = (currentPage - 1) * currentPageSize;
+    const to = from + currentPageSize - 1;
     query = query.range(from, to);
 
     const { data: purchasesData, error } = await query;
@@ -250,7 +251,7 @@ export const usePurchasesWithDB = (page = 1, pageSize = 12, searchQuery = "", st
 
   // Query for purchases
   const { data: purchases = [], isLoading, error } = useQuery({
-    queryKey: ['purchases', currentPage, pageSize, searchQuery, statusFilter],
+    queryKey: ['purchases', currentPage, currentPageSize, searchQuery, statusFilter],
     queryFn: fetchPurchases,
   });
 
@@ -300,11 +301,12 @@ export const usePurchasesWithDB = (page = 1, pageSize = 12, searchQuery = "", st
     isLoading,
     error,
     page: currentPage,
-    setPage,
-    pageSize,
+    setPage: (newPage: number) => setCurrentPage(newPage),
+    pageSize: currentPageSize,
     setPageSize: (newPageSize: number) => {
       // Reset to page 1 when changing page size
       setCurrentPage(1);
+      setCurrentPageSize(newPageSize);
     },
     addPurchase: addPurchaseMutation,
     updatePurchase: updatePurchaseMutation,

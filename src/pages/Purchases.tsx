@@ -91,7 +91,6 @@ export default function Purchases() {
       } catch (error) {
         toast("Error", {
           description: "Failed to delete purchase order",
-          variant: "destructive"
         });
       }
     }
@@ -125,7 +124,6 @@ export default function Purchases() {
       } catch (error) {
         toast("Error", {
           description: "Failed to update purchase status",
-          variant: "destructive"
         });
       }
       
