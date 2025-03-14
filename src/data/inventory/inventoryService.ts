@@ -4,6 +4,7 @@ import { inventoryItems } from "./inventoryItems";
 import { purchaseOrders } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 export const getInventoryItems = (
   page: number = 1,
@@ -20,14 +21,12 @@ export const getInventoryItems = (
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Apply category filter if provided
   if (categoryFilter) {
     filteredItems = filteredItems.filter(item => 
       item.category === categoryFilter
     );
   }
 
-  // Apply location filter if provided
   if (locationFilter) {
     filteredItems = filteredItems.filter(item => 
       item.location === locationFilter
@@ -43,7 +42,6 @@ export const getInventoryItems = (
   };
 };
 
-// Function to get paginated and filtered purchase orders
 export const getPurchases = (
   page: number = 1,
   pageSize: number = 20,
@@ -63,24 +61,21 @@ export const getPurchases = (
   };
 };
 
-// New function to sync all inventory items to Supabase
 export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean, message: string, count: number}> => {
   try {
     console.log("Starting inventory sync to Supabase...");
     
-    // Map local inventory items to Supabase format
     const supabaseItems = inventoryItems.map(item => {
-      // Ensure the item has a valid UUID for Supabase
-      // For items without a UUID, we'll keep their existing ID but they won't be synced
       const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
       
+      const itemId = isValidUUID ? item.id : uuidv4();
+      
       if (!isValidUUID) {
-        console.log(`Skipping item ${item.id} (${item.name}) - not a valid UUID`);
-        return null;
+        console.log(`Item ${item.id} (${item.name}) doesn't have a valid UUID - generating new UUID: ${itemId}`);
       }
       
       return {
-        id: item.id,
+        id: itemId,
         sku: item.sku,
         name: item.name,
         description: item.description || "",
@@ -104,11 +99,10 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
         supplier: item.supplier || "",
         tags: item.tags || []
       };
-    }).filter(Boolean); // Remove any null items (those without UUIDs)
+    });
     
     console.log(`Preparing to sync ${supabaseItems.length} items to Supabase...`);
     
-    // Use upsert to insert or update items
     const { error, count } = await supabase
       .from('inventory_items')
       .upsert(supabaseItems, { 
