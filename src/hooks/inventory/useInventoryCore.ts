@@ -83,6 +83,7 @@ export function useInventoryCore(
         console.log("Falling back to local data");
         
         // Get the clean string value or undefined for local fetch
+        // Ensure we're passing either a string or undefined to fetchFromLocal
         const categoryValue = categoryFilter === null ? undefined : 
           (typeof categoryFilter === 'string' ? categoryFilter : undefined);
         
