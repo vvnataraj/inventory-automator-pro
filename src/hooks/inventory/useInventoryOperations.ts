@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { InventoryItem } from "@/types/inventory";
 import { inventoryItems } from "@/data/inventoryData";
@@ -12,6 +13,7 @@ export function useInventoryOperations() {
   const updateItem = useCallback(async (updatedItem: InventoryItem) => {
     try {
       console.log("Updating inventory item:", updatedItem);
+      console.log("Image URL being saved:", updatedItem.imageUrl);
       
       // Calculate total stock from all locations if available
       if (updatedItem.locations && updatedItem.locations.length > 0) {
@@ -51,19 +53,17 @@ export function useInventoryOperations() {
       
       console.log("Updating item in Supabase:", supabaseItem);
       console.log("Stock value being set:", supabaseItem.stock);
+      console.log("Image URL being sent to Supabase:", supabaseItem.image_url);
       
-      const { error, data } = await supabase
+      const { error } = await supabase
         .from('inventory_items')
         .update(supabaseItem)
-        .eq('id', itemToUpdate.id)
-        .select();
+        .eq('id', itemToUpdate.id);
       
       if (error) {
         console.error("Error updating item in Supabase:", error);
         throw error;
       }
-      
-      console.log("Supabase update response:", data);
       
       // Update local inventory items array for fallback
       const itemIndex = inventoryItems.findIndex(item => item.id === itemToUpdate.id);
@@ -99,15 +99,13 @@ export function useInventoryOperations() {
   
   const addItem = useCallback(async (newItem: InventoryItem) => {
     try {
-      // Ensure item has a proper UUID for Supabase
-      const itemWithValidId = {
-        ...newItem,
-        id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newItem.id) 
-          ? newItem.id 
-          : uuidv4()
-      };
+      console.log("Adding new inventory item:", newItem);
+      console.log("Image URL for new item:", newItem.imageUrl);
       
-      const supabaseItem = mapInventoryItemToSupabaseItem(itemWithValidId);
+      // Let Supabase generate UUID for new items
+      const supabaseItem = mapInventoryItemToSupabaseItem(newItem);
+      
+      console.log("Supabase item prepared:", supabaseItem);
       
       const { error } = await supabase
         .from('inventory_items')
@@ -119,9 +117,9 @@ export function useInventoryOperations() {
       }
       
       // Add to local inventory items array for fallback
-      inventoryItems.unshift(itemWithValidId);
+      inventoryItems.unshift(newItem);
       
-      console.log("Item added successfully:", itemWithValidId);
+      console.log("Item added successfully:", newItem);
       return true;
     } catch (error) {
       console.error("Failed to add item:", error);

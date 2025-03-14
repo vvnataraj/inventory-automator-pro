@@ -65,10 +65,8 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     console.log("Starting inventory sync to Supabase...");
     
     const supabaseItems = inventoryItems.map(item => {
-      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
-      
+      // When syncing items, preserve the imageUrl exactly as is
       return {
-        ...(isValidUUID ? { id: item.id } : {}),
         sku: item.sku,
         name: item.name,
         description: item.description || "",
@@ -85,7 +83,7 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
         barcode: item.barcode || "",
         date_added: item.dateAdded || new Date().toISOString(),
         last_updated: item.lastUpdated || new Date().toISOString(),
-        image_url: item.imageUrl || "",
+        image_url: item.imageUrl || "", // Ensure image_url is properly set
         dimensions: item.dimensions || null,
         weight: item.weight || null,
         is_active: item.isActive !== undefined ? item.isActive : true,
@@ -99,7 +97,7 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     const { error } = await supabase
       .from('inventory_items')
       .upsert(supabaseItems, { 
-        onConflict: 'id',
+        onConflict: 'sku',
         ignoreDuplicates: false
       });
       

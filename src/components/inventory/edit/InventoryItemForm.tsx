@@ -16,6 +16,19 @@ export const InventoryItemEditForm: React.FC<InventoryItemFormProps> = ({
   totalStock,
   readOnlyStock = false
 }) => {
+  // Custom handler for image URL changes
+  const handleImageChange = (url: string) => {
+    console.log("Image URL changed in edit form:", url);
+    const imageChangeEvent = {
+      target: {
+        name: 'imageUrl',
+        value: url
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    onChange(imageChangeEvent);
+  };
+  
   return (
     <div className="grid gap-4 py-4">
       <FormField
@@ -25,11 +38,13 @@ export const InventoryItemEditForm: React.FC<InventoryItemFormProps> = ({
         onChange={onChange}
       />
       
-      <ImageField 
-        imageUrl={formData.imageUrl}
-        onChange={onChange}
-        inputId="image-edit"
-      />
+      <div className="grid grid-cols-4 items-center gap-4">
+        <ImageField 
+          imageUrl={formData.imageUrl}
+          onChange={handleImageChange}
+          inputId="image-edit"
+        />
+      </div>
       
       <FormField
         label="Cost Price"

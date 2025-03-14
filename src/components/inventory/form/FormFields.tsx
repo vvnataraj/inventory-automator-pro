@@ -100,7 +100,7 @@ export const LocationSelect: React.FC<LocationSelectProps> = ({
 
 interface ImageFieldProps {
   imageUrl?: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (url: string) => void;
   inputId?: string;
 }
 
@@ -109,17 +109,8 @@ export const ImageField: React.FC<ImageFieldProps> = ({
   onChange,
   inputId = "image",
 }) => {
-  const handleImageChange = (url: string) => {
-    const imageChangeEvent = {
-      target: {
-        name: 'imageUrl',
-        value: url
-      }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    onChange(imageChangeEvent);
-  };
-
+  console.log("ImageField rendering with imageUrl:", imageUrl);
+  
   return (
     <div className="grid grid-cols-4 items-center gap-4">
       <Label htmlFor={inputId} className="text-right">
@@ -127,7 +118,7 @@ export const ImageField: React.FC<ImageFieldProps> = ({
       </Label>
       <ImageUploadField 
         imageUrl={imageUrl} 
-        onImageChange={handleImageChange}
+        onImageChange={onChange}
         inputId={inputId}
       />
     </div>

@@ -18,7 +18,12 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   inputId = "image"
 }) => {
   const [uploading, setUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(imageUrl || null);
+
+  // Update local preview when imageUrl prop changes
+  useEffect(() => {
+    setImagePreview(imageUrl || null);
+  }, [imageUrl]);
 
   useEffect(() => {
     // Check if the inventory-images bucket exists and create it if needed
@@ -87,7 +92,8 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       if (error) {
         console.error("Upload error:", error);
         toast.error("Failed to upload image: " + error.message);
-        throw error;
+        setUploading(false);
+        return;
       }
 
       console.log("Upload successful, data:", data);
@@ -134,6 +140,11 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           <Upload className="h-4 w-4" />
           {uploading ? 'Uploading...' : 'Upload Image'}
         </Button>
+        {imageUrl && (
+          <div className="text-sm text-muted-foreground ml-2 truncate max-w-[200px]">
+            Current image set
+          </div>
+        )}
       </div>
       
       {(imagePreview || imageUrl) && (
