@@ -1,6 +1,5 @@
 
-import React, { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import React from "react";
 import { 
   Pagination, 
   PaginationContent, 
@@ -46,14 +45,14 @@ export const InventoryPagination: React.FC<InventoryPaginationProps> = ({
             <PaginationItem>
               <PaginationPrevious 
                 onClick={() => handlePageChange(currentPage - 1)}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                disabled={currentPage === 1}
               />
             </PaginationItem>
             
             <PaginationItem>
               <PaginationNext 
                 onClick={() => handlePageChange(currentPage + 1)}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                disabled={currentPage === totalPages}
               />
             </PaginationItem>
           </PaginationContent>
