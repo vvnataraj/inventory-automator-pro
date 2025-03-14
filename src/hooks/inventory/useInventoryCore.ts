@@ -26,11 +26,11 @@ export function useInventoryCore(
   
   const { fetchFromSupabase, fetchFromLocal } = useInventoryDatabase();
   
-  const fetchItems = useCallback(async (forceRefresh = false) => {
+  const fetchItems = useCallback(async (forceRefresh = false): Promise<void> => {
     // Prevent duplicate fetches unless forced
     if (isFetchingRef.current && !forceRefresh) {
       console.log("Already fetching, skip duplicate request");
-      return;
+      return Promise.resolve();
     }
     
     console.log("Fetching inventory items with forceRefresh:", forceRefresh);
@@ -97,16 +97,18 @@ export function useInventoryCore(
       // Update the current page ref after fetch completes
       currentPageRef.current = page;
     }
+    
+    return Promise.resolve();
   }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchFromSupabase, fetchFromLocal]);
   
   // Create a separate method to explicitly trigger refresh
-  const refreshData = useCallback(() => {
+  const refreshData = useCallback((): Promise<void> => {
     setLastRefresh(Date.now());
     console.log("Explicitly refreshing data with refreshData()");
     console.log("Current page:", page);
     console.log("Current search query:", searchQuery);
     console.log("Current filters - category:", categoryFilter, "location:", locationFilter);
-    fetchItems(true); // Always force refresh when explicitly called
+    return fetchItems(true); // Always force refresh when explicitly called
   }, [fetchItems, categoryFilter, locationFilter, searchQuery, page]);
 
   // Use effect to fetch items when dependencies change

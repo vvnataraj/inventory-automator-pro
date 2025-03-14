@@ -59,11 +59,8 @@ export function useInventoryPage() {
     locationFilter
   );
   
-  // Create a wrapper function that explicitly returns a Promise<void>
-  const fetchItemsAsync = async (): Promise<void> => {
-    // This is the key fix - we need to make sure fetchItems returns a Promise
-    return Promise.resolve(fetchItems());
-  };
+  // fetchItems from useInventoryItems now properly returns a Promise<void>
+  // No need for a wrapper function anymore
   
   // Sync with URL parameters
   const {
@@ -76,7 +73,7 @@ export function useInventoryPage() {
     setSortField,
     setSortDirection,
     setViewMode,
-    fetchItemsAsync // Pass the properly typed async function
+    fetchItems // This now accepts a function that returns Promise<void>
   );
   
   // Get inventory action handlers
@@ -135,17 +132,7 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      // Create a properly typed async function that returns Promise<void>
-      fetchItems: async (forceRefresh = false): Promise<void> => {
-        console.log("Calling refresh with forceRefresh:", forceRefresh);
-        try {
-          await refresh();
-          return Promise.resolve();
-        } catch (error) {
-          console.error("Error refreshing data:", error);
-          return Promise.reject(error);
-        }
-      },
+      fetchItems,
       handleReactivateAllItems
     }
   };
