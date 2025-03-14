@@ -3,10 +3,17 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Headphones, Mail, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Support() {
   const openEmailClient = () => {
     window.location.href = "mailto:support@stocktopus.com";
+  };
+  
+  const callPhoneSupport = () => {
+    // Use tel: protocol to trigger the device's phone dialer
+    window.location.href = "tel:+18005551234";
+    toast.success("Dialing support number...");
   };
 
   return (
@@ -16,7 +23,7 @@ export default function Support() {
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={callPhoneSupport}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Headphones className="h-5 w-5" />
