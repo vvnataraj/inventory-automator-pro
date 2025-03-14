@@ -35,7 +35,8 @@ const Pagination = ({
       <PaginationItem key="prev">
         <PaginationPrevious 
           onClick={() => handlePageChange(currentPage - 1)}
-          className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+          className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+          tabIndex={currentPage <= 1 ? -1 : 0}
         />
       </PaginationItem>
     )
@@ -49,6 +50,8 @@ const Pagination = ({
             <PaginationLink 
               isActive={currentPage === i}
               onClick={() => handlePageChange(i)}
+              className="cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              tabIndex={0}
             >
               {i}
             </PaginationLink>
@@ -62,6 +65,8 @@ const Pagination = ({
           <PaginationLink 
             isActive={currentPage === 1}
             onClick={() => handlePageChange(1)}
+            className="cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            tabIndex={0}
           >
             1
           </PaginationLink>
@@ -87,6 +92,8 @@ const Pagination = ({
             <PaginationLink 
               isActive={currentPage === i}
               onClick={() => handlePageChange(i)}
+              className="cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              tabIndex={0}
             >
               {i}
             </PaginationLink>
@@ -108,6 +115,8 @@ const Pagination = ({
           <PaginationLink 
             isActive={currentPage === totalPages}
             onClick={() => handlePageChange(totalPages)}
+            className="cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            tabIndex={0}
           >
             {totalPages}
           </PaginationLink>
@@ -120,7 +129,8 @@ const Pagination = ({
       <PaginationItem key="next">
         <PaginationNext 
           onClick={() => handlePageChange(currentPage + 1)}
-          className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+          className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+          tabIndex={currentPage >= totalPages ? -1 : 0}
         />
       </PaginationItem>
     )
@@ -181,8 +191,11 @@ const PaginationLink = ({
         variant: isActive ? "outline" : "ghost",
         size,
       }),
+      "cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       className
     )}
+    role="button"
+    tabIndex={0}
     {...props}
   />
 )
@@ -195,7 +208,7 @@ const PaginationPrevious = ({
   <PaginationLink
     aria-label="Go to previous page"
     size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    className={cn("gap-1 pl-2.5 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", className)}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
@@ -211,7 +224,7 @@ const PaginationNext = ({
   <PaginationLink
     aria-label="Go to next page"
     size="default"
-    className={cn("gap-1 pr-2.5", className)}
+    className={cn("gap-1 pr-2.5 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", className)}
     {...props}
   >
     <span>Next</span>
