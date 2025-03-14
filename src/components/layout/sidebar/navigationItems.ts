@@ -17,6 +17,7 @@ import {
   User,
   Users,
   Video,
+  Activity,
 } from "lucide-react";
 
 // Main navigation items
@@ -34,6 +35,7 @@ export const adminItems = [
   { name: "Progress", href: "/progress", icon: Clock },
   { name: "Locations", href: "/locations", icon: Building2 },
   { name: "Users", href: "/users", icon: Users },
+  { name: "Logs", href: "/logs", icon: Activity },
   { name: "Account Settings", href: "/settings", icon: Settings },
 ];
 
