@@ -7,6 +7,29 @@ import { InventoryItem } from "@/types/inventory";
 import { syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
 import { logInventoryActivity } from "@/utils/logging";
 
+interface InventoryHeaderProps {
+  onAddItem: (newItem: InventoryItem) => void;
+  items: InventoryItem[];
+  onImportItems: (items: InventoryItem[]) => void;
+}
+
+export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
+  onAddItem,
+  items,
+  onImportItems
+}) => {
+  return (
+    <div className="flex flex-col space-y-2">
+      <div className="flex items-center">
+        <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
+      </div>
+      <p className="text-muted-foreground">
+        {items.length} items in your inventory
+      </p>
+    </div>
+  );
+};
+
 interface InventoryHeaderWithActionsProps {
   onAddItem: (newItem: InventoryItem) => void;
   items: InventoryItem[];
