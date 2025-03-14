@@ -3,8 +3,10 @@ import { useState, useCallback, useEffect } from "react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 
 export function useInventoryPage() {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -12,8 +14,25 @@ export function useInventoryPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  
+  // Get category and location from URL if present
+  const categoryFromUrl = searchParams.get("category");
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(
+    categoryFromUrl || undefined
+  );
   const [locationFilter, setLocationFilter] = useState<string | undefined>(undefined);
+  
+  // Update category filter when URL param changes
+  useEffect(() => {
+    const newCategoryFromUrl = searchParams.get("category");
+    if (newCategoryFromUrl !== null) {
+      console.log(`Setting category filter from URL: ${newCategoryFromUrl}`);
+      setCategoryFilter(newCategoryFromUrl);
+    } else if (categoryFilter && !newCategoryFromUrl) {
+      console.log("Clearing category filter since URL param is removed");
+      setCategoryFilter(undefined);
+    }
+  }, [searchParams, categoryFilter]);
   
   // Reset to page 1 when filters change
   useEffect(() => {

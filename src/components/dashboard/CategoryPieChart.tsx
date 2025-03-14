@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 interface CategoryData {
   name: string;
@@ -19,6 +20,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   onSliceClick,
   className 
 }) => {
+  const navigate = useNavigate();
   const COLORS = [
     '#0088FE', '#00C49F', '#FFBB28', '#FF8042', 
     '#8884d8', '#82ca9d', '#ffc658', '#ff7300'
@@ -27,11 +29,17 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   const handlePieClick = (data: any, index: number) => {
     console.log("Pie slice clicked:", data.name);
     onSliceClick(data, index);
+    
+    // Navigate to inventory with the category filter
+    navigate(`/inventory?category=${encodeURIComponent(data.name)}`);
   };
 
   const handleLegendClick = (data: any) => {
     console.log("Legend item clicked:", data.value);
     onSliceClick({ name: data.value }, -1);
+    
+    // Navigate to inventory with the category filter
+    navigate(`/inventory?category=${encodeURIComponent(data.value)}`);
   };
 
   return (

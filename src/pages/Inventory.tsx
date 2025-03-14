@@ -1,4 +1,3 @@
-
 import { useInventoryPage } from "@/hooks/useInventoryPage";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -13,7 +12,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
-import { RefreshCw } from "lucide-react"; // Changed from ReloadIcon to RefreshCw from lucide-react
+import { RefreshCw } from "lucide-react";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
@@ -23,24 +22,9 @@ export default function Inventory() {
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
     
-    // Check if there's a category filter in the URL parameters
-    const categoryFromUrl = searchParams.get("category");
-    if (categoryFromUrl) {
-      console.log(`Setting category filter from URL: ${categoryFromUrl}`);
-      actions.setCategoryFilter(categoryFromUrl);
-    } else if (state.categoryFilter) {
-      // If no category in URL but we have a category filter set already, clear it
-      console.log("Clearing existing category filter since none in URL");
-      actions.setCategoryFilter(undefined);
-    }
-    
-    // Always fetch items after setting/clearing category filter
+    // Always fetch items after setting/clearing category filter from useInventoryPage
     actions.fetchItems(true);
     
-    // Cleanup function to reset category filter when navigating away
-    return () => {
-      actions.setCategoryFilter(undefined);
-    };
   }, [searchParams]); 
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
@@ -95,7 +79,7 @@ export default function Inventory() {
             onClick={handleSyncToDatabase} 
             disabled={syncingDb}
             variant="outline"
-            className="ml-2 h-10" // Added h-10 to match the height of the Add New Item button
+            className="ml-2 h-10"
           >
             {syncingDb ? (
               <>
