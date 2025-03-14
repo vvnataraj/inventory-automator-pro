@@ -1,9 +1,23 @@
 
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Video, Users } from "lucide-react";
+import { BookOpen, Video, Users, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 
 export default function Training() {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoTitle, setVideoTitle] = useState<string>("");
+  
+  const openVideo = (url: string, title: string) => {
+    setVideoUrl(url);
+    setVideoTitle(title);
+  };
+  
+  const closeVideo = () => {
+    setVideoUrl(null);
+  };
+  
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -21,13 +35,22 @@ export default function Training() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              <li className="flex items-center text-blue-600 hover:underline cursor-pointer">
+              <li 
+                className="flex items-center text-blue-600 hover:underline cursor-pointer"
+                onClick={() => openVideo("https://www.youtube.com/embed/dQw4w9WgXcQ", "Getting Started Guide")}
+              >
                 Getting Started Guide
               </li>
-              <li className="flex items-center text-blue-600 hover:underline cursor-pointer">
+              <li 
+                className="flex items-center text-blue-600 hover:underline cursor-pointer"
+                onClick={() => openVideo("https://www.youtube.com/embed/jNQXAC9IVRw", "Inventory Management Basics")}
+              >
                 Inventory Management Basics
               </li>
-              <li className="flex items-center text-blue-600 hover:underline cursor-pointer">
+              <li 
+                className="flex items-center text-blue-600 hover:underline cursor-pointer"
+                onClick={() => openVideo("https://www.youtube.com/embed/8jLOx1hD3_o", "Advanced Reporting Features")}
+              >
                 Advanced Reporting Features
               </li>
             </ul>
@@ -76,6 +99,31 @@ export default function Training() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Video Dialog */}
+      <Dialog open={videoUrl !== null} onOpenChange={(open) => !open && closeVideo()}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
+          <DialogHeader className="pb-2">
+            <DialogTitle>{videoTitle}</DialogTitle>
+            <DialogClose className="absolute right-4 top-4" onClick={closeVideo}>
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </DialogHeader>
+          {videoUrl && (
+            <div className="aspect-video">
+              <iframe
+                className="w-full h-full"
+                src={videoUrl}
+                title={videoTitle}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
