@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { logActivity } from "@/utils/logging";
 
 interface SearchInputProps {
   searchQuery: string;
@@ -20,7 +21,8 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   
   // Handle input changes immediately in the local state
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+    const newValue = e.target.value;
+    setInputValue(newValue);
     
     // Clear the previous timer
     if (debounceTimerRef.current) {
@@ -29,8 +31,19 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     
     // Set up a new timer
     debounceTimerRef.current = setTimeout(() => {
-      console.log("Executing search with query:", e.target.value);
-      setSearchQuery(e.target.value);
+      console.log("Executing search with query:", newValue);
+      setSearchQuery(newValue);
+      
+      // Log search activity
+      if (newValue.trim() !== '') {
+        logActivity({
+          action: 'search_inventory',
+          target_type: 'inventory',
+          details: {
+            search_query: newValue
+          }
+        });
+      }
     }, 500);
   };
   

@@ -22,11 +22,11 @@ export function useInventoryFilters() {
         search: ${newSearchFromUrl}`);
       
       if (newCategoryFromUrl !== null) {
-        setCategoryFilter(newCategoryFromUrl);
+        setCategoryFilter(newCategoryFromUrl === "undefined" ? undefined : newCategoryFromUrl);
       }
       
       if (newLocationFromUrl !== null) {
-        setLocationFilter(newLocationFromUrl);
+        setLocationFilter(newLocationFromUrl === "undefined" ? undefined : newLocationFromUrl);
       }
       
       setSearchQuery(newSearchFromUrl);
@@ -34,10 +34,16 @@ export function useInventoryFilters() {
     }
   }, [searchParams, initialLoadDone]);
   
-  // Create a wrapper for setCategoryFilter that logs updates
+  // Create a wrapper for setCategoryFilter that logs updates and handles undefined properly
   const handleSetCategoryFilter = useCallback((category: string | undefined) => {
     console.log(`Setting category filter to: ${category || 'undefined'}`);
-    setCategoryFilter(category);
+    setCategoryFilter(category === "undefined" ? undefined : category);
+  }, []);
+
+  // Create a wrapper for setLocationFilter to ensure proper handling of undefined
+  const handleSetLocationFilter = useCallback((location: string | undefined) => {
+    console.log(`Setting location filter to: ${location || 'undefined'}`);
+    setLocationFilter(location === "undefined" ? undefined : location);
   }, []);
 
   return {
@@ -46,6 +52,6 @@ export function useInventoryFilters() {
     categoryFilter,
     setCategoryFilter: handleSetCategoryFilter,
     locationFilter,
-    setLocationFilter
+    setLocationFilter: handleSetLocationFilter
   };
 }
