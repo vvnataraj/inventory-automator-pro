@@ -67,7 +67,39 @@ export function useLogs() {
           setTotalLogs(count);
         }
 
-        return data as ActivityLog[];
+        // Process logs to ensure we have usernames from emails
+        const logs = data as ActivityLog[];
+        
+        // For any logs with user_id but no username, try to fetch from auth.users
+        const logsWithUserIds = logs.filter(log => log.user_id && !log.username);
+        
+        if (logsWithUserIds.length > 0) {
+          // Get unique user IDs
+          const userIds = [...new Set(logsWithUserIds.map(log => log.user_id))];
+          
+          // Fetch user emails for these IDs
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', userIds);
+          
+          if (!userError && userData) {
+            // Create a map of user_id to username
+            const userMap = userData.reduce((acc, user) => {
+              acc[user.id] = user.username;
+              return acc;
+            }, {} as Record<string, string>);
+            
+            // Update logs with usernames
+            logs.forEach(log => {
+              if (log.user_id && !log.username && userMap[log.user_id]) {
+                log.username = userMap[log.user_id];
+              }
+            });
+          }
+        }
+
+        return logs;
       } catch (error) {
         console.error("Error fetching logs:", error);
         toast.error("Failed to fetch logs");
