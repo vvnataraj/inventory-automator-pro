@@ -29,10 +29,14 @@ export const TopProfitableItems = () => {
   }, []);
 
   const handleItemClick = (sku: string, category?: string) => {
+    // Create a URLSearchParams object to build the query string properly
     const params = new URLSearchParams();
+    
+    // Only add parameters that have values
     if (sku) params.append("search", sku);
     if (category) params.append("category", category);
     
+    console.log(`Navigating to inventory with params: search=${sku}, category=${category}`);
     navigate(`/inventory?${params.toString()}`);
   };
 

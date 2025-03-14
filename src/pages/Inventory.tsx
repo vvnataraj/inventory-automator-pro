@@ -1,3 +1,4 @@
+
 import { useInventoryPage } from "@/hooks/useInventoryPage";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -21,8 +22,10 @@ export default function Inventory() {
     const categoryFromUrl = searchParams.get("category");
     if (categoryFromUrl) {
       console.log(`Setting category filter from URL: ${categoryFromUrl}`);
+      // Use the dedicated method that ensures refresh happens after setting the filter
       actions.setCategoryFilterAndRefresh(categoryFromUrl);
     } else {
+      // If no category in URL, just do a normal fetch with force refresh
       actions.fetchItems(true);
     }
   }, [searchParams]); 

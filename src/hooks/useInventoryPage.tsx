@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -134,9 +135,12 @@ export function useInventoryPage() {
     console.log(`Setting category filter and refreshing: ${category}`);
     setCategoryFilter(category);
     setCurrentPage(1);
+    
+    // Immediately trigger a refresh with force=true to ensure data is updated
     setTimeout(() => {
+      console.log("Calling refresh() from setCategoryFilterAndRefresh");
       refresh();
-    }, 50);
+    }, 0);
   }, [refresh]);
 
   return {
@@ -174,7 +178,10 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      fetchItems: (forceRefresh = false) => refresh(),
+      fetchItems: (forceRefresh = false) => {
+        console.log("Calling refresh with forceRefresh:", forceRefresh);
+        return refresh();
+      },
       handleReactivateAllItems
     }
   };
