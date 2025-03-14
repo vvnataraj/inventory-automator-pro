@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { toast } from "sonner";
@@ -18,8 +19,8 @@ export function useInventoryCore(
   
   // Add a ref to track if we're currently fetching to prevent duplicate requests
   const isFetchingRef = useRef(false);
-  // Add a ref to track current page to detect changes
-  const currentPageRef = useRef(page);
+  // Add refs to track previous parameters to detect real changes
+  const prevParamsRef = useRef({ page, searchQuery, sortField, sortDirection });
   // Track the first fetch
   const initialFetchDoneRef = useRef(false);
   
@@ -32,28 +33,32 @@ export function useInventoryCore(
       return Promise.resolve();
     }
     
+    // Compare with previous parameters to avoid unnecessary fetches
+    const prevParams = prevParamsRef.current;
+    const paramsUnchanged = 
+      prevParams.page === page && 
+      prevParams.searchQuery === searchQuery && 
+      prevParams.sortField === sortField && 
+      prevParams.sortDirection === sortDirection;
+      
     // Skip duplicate fetch calls with the same parameters unless forced
-    if (initialFetchDoneRef.current && !forceRefresh && 
-        currentPageRef.current === page) {
+    if (initialFetchDoneRef.current && !forceRefresh && paramsUnchanged) {
       console.log("Parameters unchanged, skipping fetch");
       return Promise.resolve();
     }
     
-    console.log("Fetching inventory items with forceRefresh:", forceRefresh);
-    console.log("Current page:", page);
-    console.log("Search query:", searchQuery);
+    console.log("Fetching inventory items with params:", {
+      page, searchQuery, sortField, sortDirection, 
+      forceRefresh, initialFetchDone: initialFetchDoneRef.current
+    });
+    
+    // Update previous parameters
+    prevParamsRef.current = { page, searchQuery, sortField, sortDirection };
     
     isFetchingRef.current = true;
     setIsLoading(true);
     
     try {
-      console.log("Fetching items with params:", {
-        page, 
-        searchQuery, 
-        sortField, 
-        sortDirection
-      });
-      
       // Try to fetch from Supabase first
       const { items: dbItems, count, error: dbError } = await fetchFromSupabase(
         page, searchQuery, sortField, sortDirection
@@ -98,8 +103,6 @@ export function useInventoryCore(
     } finally {
       setIsLoading(false);
       isFetchingRef.current = false;
-      // Update the current page ref after fetch completes
-      currentPageRef.current = page;
     }
     
     return Promise.resolve();
@@ -109,26 +112,20 @@ export function useInventoryCore(
   const refreshData = useCallback((): Promise<void> => {
     setLastRefresh(Date.now());
     console.log("Explicitly refreshing data with refreshData()");
-    console.log("Current page:", page);
-    console.log("Current search query:", searchQuery);
     return fetchItems(true); // Always force refresh when explicitly called
-  }, [fetchItems, searchQuery, page]);
+  }, [fetchItems]);
 
   // Use a single effect to fetch items and avoid multiple triggers
   useEffect(() => {
-    if (!initialFetchDoneRef.current || currentPageRef.current !== page) {
-      console.log("Fetching items due to page change or initial load");
+    // Only fetch on mount or when parameters actually change
+    if (!initialFetchDoneRef.current || 
+        prevParamsRef.current.page !== page || 
+        prevParamsRef.current.searchQuery !== searchQuery ||
+        prevParamsRef.current.sortField !== sortField ||
+        prevParamsRef.current.sortDirection !== sortDirection) {
       fetchItems();
     }
-  }, [page, fetchItems]);
-
-  // Separate effect for search and filter changes to prevent unnecessary fetches
-  useEffect(() => {
-    if (initialFetchDoneRef.current) {
-      console.log("Fetching items due to search/filter/sort changes");
-      fetchItems();
-    }
-  }, [searchQuery, sortField, sortDirection, fetchItems]);
+  }, [page, searchQuery, sortField, sortDirection, fetchItems]);
 
   return { 
     items, 

@@ -15,6 +15,7 @@ export function useInventoryUrlSync(
   const [searchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const initialSyncDoneRef = useRef(false);
+  const isInitialFetchDoneRef = useRef(false);
   
   // Sync URL parameters with state only once during initial load
   useEffect(() => {
@@ -38,10 +39,16 @@ export function useInventoryUrlSync(
     
     // Mark initial sync as done to prevent repeated syncs
     initialSyncDoneRef.current = true;
-    
-    // Initial data fetch
-    fetchItems().catch(err => console.error("Error fetching items:", err));
-  }, [searchParams, setSearchQuery, setSortField, setSortDirection, setViewMode, fetchItems]);
+  }, [searchParams, setSearchQuery, setSortField, setSortDirection, setViewMode]);
+  
+  // Separate effect for initial data fetch to avoid redundant fetches
+  useEffect(() => {
+    if (initialSyncDoneRef.current && !isInitialFetchDoneRef.current) {
+      console.log("Performing initial data fetch");
+      fetchItems().catch(err => console.error("Error fetching items:", err));
+      isInitialFetchDoneRef.current = true;
+    }
+  }, [fetchItems, initialSyncDoneRef.current]);
   
   // Update page when URL params change, but don't trigger data fetch
   useEffect(() => {

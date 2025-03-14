@@ -18,7 +18,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   // Use local state to track input value to prevent input field reset
   const [inputValue, setInputValue] = useState(searchQuery);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isInitialRenderRef = useRef(true);
+  const skipPropUpdateRef = useRef(false);
   
   // Handle input changes immediately in the local state
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +32,12 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     
     // Set up a new timer for debounced search
     debounceTimerRef.current = setTimeout(() => {
+      if (newValue === searchQuery) {
+        return; // Don't update if it's the same
+      }
+      
       console.log("Executing search with query:", newValue);
+      skipPropUpdateRef.current = true; // Skip the next prop update
       setSearchQuery(newValue);
       
       // Log search activity
@@ -57,21 +62,20 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     };
   }, []);
   
-  // Update local input value only on initial render or if props change significantly
+  // Update local input value when props change (but not during our own updates)
   useEffect(() => {
-    if (isInitialRenderRef.current) {
-      setInputValue(searchQuery);
-      isInitialRenderRef.current = false;
+    // If we just triggered an update ourselves, skip this update
+    if (skipPropUpdateRef.current) {
+      skipPropUpdateRef.current = false;
       return;
     }
     
-    // Only update if the searchQuery prop changes dramatically and doesn't match what user is typing
-    // This prevents the input field from resetting while user is typing
-    if (searchQuery !== inputValue && (searchQuery === '' || Math.abs(searchQuery.length - inputValue.length) > 3)) {
-      console.log("External searchQuery changed drastically, updating input value:", searchQuery);
+    // Only update if the searchQuery prop changes significantly
+    if (searchQuery !== inputValue) {
+      console.log("Updating input value from prop:", searchQuery);
       setInputValue(searchQuery);
     }
-  }, [searchQuery]);
+  }, [searchQuery, inputValue]);
   
   return (
     <div className="relative flex-1">
