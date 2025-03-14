@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronUp, ChevronDown } from "lucide-react";
-import { useOrdersWithDB } from "@/hooks/useOrdersWithDB"; // Updated import
+import { Plus, ChevronUp, ChevronDown, Database } from "lucide-react";
+import { useOrdersWithDB } from "@/hooks/useOrdersWithDB"; 
 import { OrderCard } from "@/components/orders/OrderCard";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Order, OrderStatus } from "@/types/order";
@@ -20,7 +20,9 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { ListControls, ViewMode } from "@/components/common/ListControls";
 import { OrderDetailsDialog } from "@/components/orders/OrderDetailsDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
-import { InventoryPagination } from "@/components/inventory/InventoryPagination"; // Added for better pagination
+import { InventoryPagination } from "@/components/inventory/InventoryPagination";
+import { migrateOrdersData } from "@/data/migrateOrdersData";
+import { toast } from "sonner";
 
 type SortField = "orderNumber" | "customerName" | "createdAt" | "total" | "status";
 type SortDirection = "asc" | "desc";
@@ -36,6 +38,7 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | undefined>(undefined);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Updated to use the database hook
   const { orders, totalOrders, isLoading, page, setPage, pageSize, setPageSize } = useOrdersWithDB(
@@ -52,6 +55,19 @@ export default function Orders() {
 
   const handleCloseOrderDetails = () => {
     setIsOrderDetailsOpen(false);
+  };
+
+  const handleSyncToDatabase = async () => {
+    try {
+      setIsSyncing(true);
+      await migrateOrdersData();
+      toast.success("Successfully synced 100 orders to the database");
+    } catch (error) {
+      console.error("Error syncing orders to database:", error);
+      toast.error("Failed to sync orders to database");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const totalPages = Math.ceil(totalOrders / pageSize);
@@ -137,10 +153,21 @@ export default function Orders() {
         <h1 className="text-3xl font-semibold tracking-tight">Orders</h1>
         <div className="flex gap-2">
           {isManager() && (
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Order
-            </Button>
+            <>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Order
+              </Button>
+              <Button 
+                variant="outline" 
+                className="gap-2" 
+                onClick={handleSyncToDatabase} 
+                disabled={isSyncing}
+              >
+                <Database className="h-4 w-4" />
+                {isSyncing ? "Syncing..." : "Sync to Database"}
+              </Button>
+            </>
           )}
           {viewMode === "card" && (
             <Button variant="outline" className="gap-2" onClick={toggleBadgeDisplayMode}>
