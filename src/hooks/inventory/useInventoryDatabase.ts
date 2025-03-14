@@ -24,7 +24,10 @@ export function useInventoryDatabase() {
       
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.toLowerCase().trim();
-        supabaseQuery = supabaseQuery.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+        // Improve the search query to properly search across name, sku, and category
+        supabaseQuery = supabaseQuery.or(
+          `name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`
+        );
       }
       
       if (categoryFilter && categoryFilter !== "undefined") {
@@ -81,6 +84,7 @@ export function useInventoryDatabase() {
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
+      // Improve local search to match the same fields we're searching in Supabase
       filteredItems = filteredItems.filter(item =>
         item.name.toLowerCase().includes(query) ||
         item.sku.toLowerCase().includes(query) ||

@@ -1,10 +1,9 @@
-
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Purchase } from "@/types/purchase";
 import { purchaseOrders } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { inventoryItems } from "./inventoryItems"; // Import inventory items
+import { inventoryItems } from "@/data/inventoryData";
 
 export const getInventoryItems = async (
   page: number = 1,
@@ -37,7 +36,6 @@ export const getInventoryItems = async (
       query = query.eq('location', locationFilter);
     }
     
-    // Map sort field to database column name if needed
     const dbSortField = sortField === 'rrp' ? 'rrp' : sortField;
     query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
     
@@ -51,7 +49,6 @@ export const getInventoryItems = async (
       throw error;
     }
     
-    // Map the database items to our InventoryItem interface
     const mappedItems = data.map(item => mapDatabaseItemToInventoryItem(item));
     
     return {
@@ -70,7 +67,6 @@ export const getPurchases = (
   pageSize: number = 20,
   searchQuery: string = ""
 ): { items: Purchase[], total: number } => {
-  // Keep using mock data for purchases for now
   const filteredPurchases = purchaseOrders.filter(purchase =>
     purchase.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
     purchase.supplier.toLowerCase().includes(searchQuery.toLowerCase())
@@ -85,7 +81,6 @@ export const getPurchases = (
   };
 };
 
-// Helper function to map database item to our InventoryItem interface
 const mapDatabaseItemToInventoryItem = (item: any): InventoryItem => {
   return {
     id: item.id || "",
@@ -118,8 +113,6 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
   try {
     console.log("Starting inventory sync to Supabase...");
     
-    // First, ensure we remove any duplicate SKUs from the items to sync
-    // Keep only the first occurrence of each SKU
     const seenSkus = new Set<string>();
     const uniqueItems = inventoryItems.filter(item => {
       if (!item.sku || seenSkus.has(item.sku)) {
@@ -133,8 +126,6 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     console.log(`Filtered down to ${uniqueItems.length} unique SKU items (removed ${inventoryItems.length - uniqueItems.length} duplicates)`);
     
     const supabaseItems = uniqueItems.map(item => {
-      // Prepare item for Supabase - don't include an id for insert operations
-      // This will allow the database to generate its own UUIDs
       return {
         sku: item.sku,
         name: item.name,
@@ -151,8 +142,8 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
         location: item.location || "",
         barcode: item.barcode || "",
         date_added: item.dateAdded || new Date().toISOString(),
-        last_updated: new Date().toISOString(), // Always update the timestamp
-        image_url: item.imageUrl || "", // Ensure image_url is properly set
+        last_updated: new Date().toISOString(),
+        image_url: item.imageUrl || "",
         dimensions: item.dimensions || null,
         weight: item.weight || null,
         is_active: item.isActive !== undefined ? item.isActive : true,
@@ -163,7 +154,6 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     
     console.log(`Preparing to sync ${supabaseItems.length} items to Supabase...`);
     
-    // Process in smaller batches to avoid potential errors with large datasets
     const batchSize = 50;
     let successCount = 0;
     let errors = [];
@@ -190,7 +180,7 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     
     if (errors.length > 0) {
       return {
-        success: successCount > 0, // Partial success if at least some items were synced
+        success: successCount > 0,
         message: `Synced ${successCount} items with ${errors.length} errors: ${errors[0]}${errors.length > 1 ? ` (and ${errors.length - 1} more)` : ''}`,
         count: successCount
       };

@@ -32,6 +32,7 @@ export function useInventoryCore(
     }
     
     console.log("Fetching inventory items with forceRefresh:", forceRefresh);
+    console.log("Search query:", searchQuery);
     console.log("Category filter:", categoryFilter);
     console.log("Location filter:", locationFilter);
     
@@ -97,13 +98,15 @@ export function useInventoryCore(
   const refreshData = useCallback(() => {
     setLastRefresh(Date.now());
     console.log("Explicitly refreshing data with refreshData()");
+    console.log("Current search query:", searchQuery);
     console.log("Current filters - category:", categoryFilter, "location:", locationFilter);
     fetchItems(true); // Always force refresh when explicitly called
-  }, [fetchItems, categoryFilter, locationFilter]);
+  }, [fetchItems, categoryFilter, locationFilter, searchQuery]);
 
   // Use effect to fetch items when dependencies change
   useEffect(() => {
     console.log("Dependencies changed, fetching items...");
+    console.log("Current search query:", searchQuery);
     console.log("Current category filter:", categoryFilter);
     fetchItems();
   }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);
