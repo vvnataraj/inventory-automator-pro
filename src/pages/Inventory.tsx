@@ -17,9 +17,10 @@ import { logInventoryActivity } from "@/utils/logging";
 import { useInventoryPage } from "@/hooks/useInventoryPage";
 
 export default function Inventory() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [syncingDb, setSyncingDb] = useState(false);
+  const [initialRender, setInitialRender] = useState(true);
   
   const { 
     state: { 
@@ -59,25 +60,13 @@ export default function Inventory() {
     } 
   } = useInventoryPage();
   
+  // Single effect to handle initial load
   useEffect(() => {
-    const page = parseInt(searchParams.get("page") || "1");
-    const search = searchParams.get("search") || "";
-    const category = searchParams.get("category") || undefined;
-    const location = searchParams.get("location") || undefined;
-    const sort = searchParams.get("sort") as SortField || "name";
-    const order = searchParams.get("order") as SortDirection || "asc";
-    const view = searchParams.get("view") as "grid" | "table" || "table";
-    
-    setCurrentPage(page);
-    setSearchQuery(search);
-    setCategoryFilter(category);
-    setLocationFilter(location);
-    setSortField(sort);
-    setSortDirection(order);
-    setViewMode(view);
-    
-    fetchItems();
-  }, [searchParams]);
+    if (initialRender) {
+      console.log("Initial render, fetching items");
+      setInitialRender(false);
+    }
+  }, [initialRender]);
   
   const handlePageChange = (page: number) => {
     const newParams = new URLSearchParams(searchParams);

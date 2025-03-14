@@ -7,20 +7,34 @@ export function useInventoryFilters() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   const [locationFilter, setLocationFilter] = useState<string | undefined>(undefined);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   
-  // Update category filter when URL param changes
+  // Update filters only once during initial load
   useEffect(() => {
-    const newCategoryFromUrl = searchParams.get("category");
-    if (newCategoryFromUrl !== null) {
-      console.log(`Setting category filter from URL: ${newCategoryFromUrl}`);
-      setCategoryFilter(newCategoryFromUrl);
-    } else if (categoryFilter && !newCategoryFromUrl) {
-      console.log("Clearing category filter since URL param is removed");
-      setCategoryFilter(undefined);
+    if (!initialLoadDone) {
+      const newCategoryFromUrl = searchParams.get("category");
+      const newLocationFromUrl = searchParams.get("location");
+      const newSearchFromUrl = searchParams.get("search") || "";
+      
+      console.log(`Setting filters from URL during initial load: 
+        category: ${newCategoryFromUrl || 'undefined'},
+        location: ${newLocationFromUrl || 'undefined'},
+        search: ${newSearchFromUrl}`);
+      
+      if (newCategoryFromUrl !== null) {
+        setCategoryFilter(newCategoryFromUrl);
+      }
+      
+      if (newLocationFromUrl !== null) {
+        setLocationFilter(newLocationFromUrl);
+      }
+      
+      setSearchQuery(newSearchFromUrl);
+      setInitialLoadDone(true);
     }
-  }, [searchParams, categoryFilter]);
+  }, [searchParams, initialLoadDone]);
   
-  // Create a wrapper for setCategoryFilter that also resets the page
+  // Create a wrapper for setCategoryFilter that logs updates
   const handleSetCategoryFilter = useCallback((category: string | undefined) => {
     console.log(`Setting category filter to: ${category || 'undefined'}`);
     setCategoryFilter(category);
