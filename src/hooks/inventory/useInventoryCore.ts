@@ -87,7 +87,9 @@ export function useInventoryCore(
         const safeLocation = locationFilter === null ? undefined : locationFilter;
         
         const { items: localItems, total } = fetchFromLocal(
-          page, searchQuery, sortField, sortDirection, safeCategory, safeLocation
+          page, searchQuery, sortField, sortDirection, 
+          typeof safeCategory === 'string' ? safeCategory : undefined, 
+          typeof safeLocation === 'string' ? safeLocation : undefined
         );
         
         setItems(localItems);
@@ -115,7 +117,9 @@ export function useInventoryCore(
       const safeLocation = locationFilter === null ? undefined : locationFilter;
       
       const { items: localItems, total } = fetchFromLocal(
-        page, searchQuery, sortField, sortDirection, safeCategory, safeLocation
+        page, searchQuery, sortField, sortDirection, 
+        typeof safeCategory === 'string' ? safeCategory : undefined, 
+        typeof safeLocation === 'string' ? safeLocation : undefined
       );
       
       setItems(localItems);
