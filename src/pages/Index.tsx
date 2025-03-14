@@ -1,5 +1,4 @@
-
-import { Box, DollarSign, TrendingUp, BarChart3 } from "lucide-react";
+import { Box, DollarSign, TrendingUp, BarChart3, Video } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -10,11 +9,16 @@ import { RestockAlerts } from "@/components/dashboard/RestockAlerts";
 import { TheftAlerts } from "@/components/dashboard/TheftAlerts";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useSales } from "@/hooks/useSales";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PromoVideoScript } from "@/components/marketing/PromoVideoScript";
 
 export default function Index() {
   const navigate = useNavigate();
   const { stats, categoryData } = useDashboardData();
   const { sales } = useSales();
+  const [isPromoScriptOpen, setIsPromoScriptOpen] = useState(false);
 
   const handleCardClick = (link: string | null) => {
     if (link) {
@@ -48,6 +52,10 @@ export default function Index() {
     <MainLayout>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+        <Button variant="outline" className="flex items-center gap-2" onClick={() => setIsPromoScriptOpen(true)}>
+          <Video className="h-4 w-4" />
+          Promo Video Script
+        </Button>
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
@@ -86,6 +94,15 @@ export default function Index() {
       <div className="mt-6">
         <LeastProfitableItems />
       </div>
+
+      <Dialog open={isPromoScriptOpen} onOpenChange={setIsPromoScriptOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Promotional Video Script</DialogTitle>
+          </DialogHeader>
+          <PromoVideoScript />
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
