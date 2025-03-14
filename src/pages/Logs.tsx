@@ -5,10 +5,11 @@ import { LogsHeader } from "@/components/logs/LogsHeader";
 import { LogsTable } from "@/components/logs/LogsTable";
 import { useLogs } from "@/hooks/useLogs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { toast } from "sonner";
+import { SimplePagination } from "@/components/common/SimplePagination";
 
 export default function Logs() {
   const { user } = useAuth();
@@ -22,6 +23,9 @@ export default function Logs() {
     page,
     pageSize,
     searchQuery,
+    sortField,
+    sortDirection,
+    handleSort,
     setSearchQuery,
     setPage,
     refetch,
@@ -29,12 +33,6 @@ export default function Logs() {
   } = useLogs();
   
   const totalPages = Math.ceil(totalLogs / pageSize);
-  
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setPage(newPage);
-    }
-  };
   
   // If not authenticated or not a manager, show access denied
   if (!user || !isManager()) {
@@ -68,35 +66,22 @@ export default function Logs() {
             logs={logs}
             isLoading={isLoading}
             deleteLog={deleteLog}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
           />
           
           {/* Pagination */}
-          {totalPages > 1 && (
+          {totalPages > 0 && (
             <div className="flex items-center justify-between mt-6">
               <div className="text-sm text-muted-foreground">
                 Showing {logs.length} of {totalLogs} logs
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handlePageChange(page - 1)}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm">
-                  Page {page} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handlePageChange(page + 1)}
-                  disabled={page === totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+              <SimplePagination 
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
             </div>
           )}
         </div>

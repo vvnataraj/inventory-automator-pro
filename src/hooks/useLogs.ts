@@ -17,11 +17,16 @@ export interface ActivityLog {
   created_at: string;
 }
 
+export type LogSortField = "created_at" | "action" | "username" | "target_type";
+export type SortDirection = "asc" | "desc";
+
 export function useLogs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalLogs, setTotalLogs] = useState(0);
+  const [sortField, setSortField] = useState<LogSortField>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const queryClient = useQueryClient();
 
   // Function to fetch logs from Supabase
@@ -30,6 +35,8 @@ export function useLogs() {
       try {
         // Get the page from the query key (queryKey[1])
         const currentPage = queryKey[1] as number;
+        const currentSortField = queryKey[3] as LogSortField;
+        const currentSortDirection = queryKey[4] as SortDirection;
         
         // Create the base query
         let query = supabase
@@ -48,7 +55,7 @@ export function useLogs() {
 
         // Execute query with pagination and ordering
         const { data, error, count } = await query
-          .order("created_at", { ascending: false })
+          .order(currentSortField, { ascending: currentSortDirection === 'asc' })
           .range(from, to);
 
         if (error) {
@@ -77,7 +84,7 @@ export function useLogs() {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["logs", page, pageSize, searchQuery],
+    queryKey: ["logs", page, pageSize, sortField, sortDirection, searchQuery],
     queryFn: fetchLogs,
   });
 
@@ -98,6 +105,18 @@ export function useLogs() {
     },
   });
 
+  // Function to handle sorting
+  const handleSort = (field: LogSortField) => {
+    if (field === sortField) {
+      // Toggle direction if same field
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field and default to descending for dates, ascending for text
+      setSortField(field);
+      setSortDirection(field === 'created_at' ? 'desc' : 'asc');
+    }
+  };
+
   return {
     logs,
     isLoading,
@@ -106,9 +125,12 @@ export function useLogs() {
     page,
     pageSize,
     searchQuery,
+    sortField,
+    sortDirection,
     setSearchQuery,
     setPage,
     setPageSize,
+    handleSort,
     refetch,
     deleteLog: deleteLogMutation.mutate,
   };
