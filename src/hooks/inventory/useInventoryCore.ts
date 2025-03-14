@@ -81,8 +81,13 @@ export function useInventoryCore(
       if (dbError || dbItems.length === 0) {
         // Fallback to local data if Supabase fetch fails or returns no results
         console.log("Falling back to local data");
+        
+        // Convert null values to undefined for the local fetch as well
+        const safeCategory = categoryFilter === null ? undefined : categoryFilter;
+        const safeLocation = locationFilter === null ? undefined : locationFilter;
+        
         const { items: localItems, total } = fetchFromLocal(
-          page, searchQuery, sortField, sortDirection, cleanCategoryFilter, cleanLocationFilter
+          page, searchQuery, sortField, sortDirection, safeCategory, safeLocation
         );
         
         setItems(localItems);
@@ -105,8 +110,12 @@ export function useInventoryCore(
       console.error("Failed to fetch inventory items:", err);
       
       // Fallback to local data
+      // Convert null values to undefined for the local fetch
+      const safeCategory = categoryFilter === null ? undefined : categoryFilter;
+      const safeLocation = locationFilter === null ? undefined : locationFilter;
+      
       const { items: localItems, total } = fetchFromLocal(
-        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+        page, searchQuery, sortField, sortDirection, safeCategory, safeLocation
       );
       
       setItems(localItems);
