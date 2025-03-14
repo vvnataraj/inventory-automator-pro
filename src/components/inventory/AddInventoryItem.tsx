@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -13,6 +14,7 @@ import { InventoryItem } from "@/types/inventory";
 import { InventoryItemForm, InventoryItemFormData } from "./form/InventoryItemForm";
 import { generateInventoryItem } from "@/utils/inventoryItemGenerator";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { logInventoryActivity } from "@/utils/logging";
 
 interface AddInventoryItemProps {
   onAdd: (newItem: InventoryItem) => void;
@@ -33,10 +35,19 @@ export const AddInventoryItem = ({ onAdd }: AddInventoryItemProps) => {
     lowStockThreshold: 10,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const newItem = generateInventoryItem(formData);
+    
+    // Log the item creation
+    await logInventoryActivity('add_item_initiated', newItem.id, newItem.name, {
+      sku: newItem.sku,
+      category: newItem.category,
+      stock: newItem.stock,
+      cost: newItem.cost,
+      rrp: newItem.rrp
+    });
     
     onAdd(newItem);
     setIsOpen(false);

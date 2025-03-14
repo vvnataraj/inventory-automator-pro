@@ -12,6 +12,7 @@ import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { getInventoryItems, syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
 import { SimplePagination } from "@/components/common/SimplePagination";
+import { logInventoryActivity } from "@/utils/logging";
 
 export default function Inventory() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -85,32 +86,50 @@ export default function Inventory() {
     fetchItems();
   };
   
-  const handleSaveItem = (updatedItem: InventoryItem) => {
+  const handleSaveItem = async (updatedItem: InventoryItem) => {
     toast.success(`Item "${updatedItem.name}" updated successfully`);
+    await logInventoryActivity('update_item', updatedItem.id, updatedItem.name, {
+      sku: updatedItem.sku,
+      category: updatedItem.category
+    });
     fetchItems(true);
   };
   
-  const handleAddItem = (newItem: InventoryItem) => {
+  const handleAddItem = async (newItem: InventoryItem) => {
     toast.success(`Item "${newItem.name}" added successfully`);
+    await logInventoryActivity('add_item', newItem.id, newItem.name, {
+      sku: newItem.sku,
+      category: newItem.category
+    });
     fetchItems(true);
   };
   
-  const handleDeleteItem = (itemId: string) => {
+  const handleDeleteItem = async (itemId: string) => {
     const itemToDelete = items.find(item => item.id === itemId);
     if (itemToDelete) {
       toast.success(`Item "${itemToDelete.name}" deleted successfully`);
+      await logInventoryActivity('delete_item', itemToDelete.id, itemToDelete.name);
       fetchItems(true);
     }
   };
   
-  const handleTransferItem = (item: InventoryItem, quantity: number, newLocation: string) => {
+  const handleTransferItem = async (item: InventoryItem, quantity: number, newLocation: string) => {
     toast.success(`Transferred ${quantity} items from ${item.location} to ${newLocation}`);
+    await logInventoryActivity('transfer_item', item.id, item.name, {
+      quantity,
+      from_location: item.location,
+      to_location: newLocation
+    });
     fetchItems(true);
   };
   
-  const handleReorderItem = (itemId: string, direction: 'up' | 'down') => {
-    toast.success(`Item moved ${direction}`);
-    fetchItems(true);
+  const handleReorderItem = async (itemId: string, direction: 'up' | 'down') => {
+    const item = items.find(i => i.id === itemId);
+    if (item) {
+      toast.success(`Item moved ${direction}`);
+      await logInventoryActivity('reorder_item', itemId, item.name, { direction });
+      fetchItems(true);
+    }
   };
   
   const handleOpenReorderDialog = (item: InventoryItem) => {
@@ -118,14 +137,18 @@ export default function Inventory() {
     setReorderDialogOpen(true);
   };
   
-  const handleReorderStock = (item: InventoryItem, quantity: number) => {
+  const handleReorderStock = async (item: InventoryItem, quantity: number) => {
     toast.success(`Reordered ${quantity} units of "${item.name}"`);
+    await logInventoryActivity('reorder_stock', item.id, item.name, { quantity });
     setReorderDialogOpen(false);
     fetchItems(true);
   };
   
-  const handleImportItems = (importedItems: InventoryItem[]) => {
+  const handleImportItems = async (importedItems: InventoryItem[]) => {
     toast.success(`Successfully imported ${importedItems.length} items`);
+    await logInventoryActivity('import_items', 'batch', 'Multiple Items', { 
+      count: importedItems.length 
+    });
     fetchItems(true);
   };
   
@@ -135,12 +158,25 @@ export default function Inventory() {
       const result = await syncInventoryItemsToSupabase();
       if (result.success) {
         toast.success(result.message);
+        await logInventoryActivity('sync_to_database', 'batch', 'All Items', { 
+          result: 'success',
+          message: result.message
+        });
         await fetchItems(true);
       } else {
         toast.error(result.message);
+        await logInventoryActivity('sync_to_database', 'batch', 'All Items', { 
+          result: 'error',
+          message: result.message
+        });
       }
     } catch (error) {
-      toast.error(`Failed to sync inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to sync inventory: ${errorMessage}`);
+      await logInventoryActivity('sync_to_database', 'batch', 'All Items', { 
+        result: 'error',
+        message: errorMessage
+      });
     } finally {
       setSyncingDb(false);
     }

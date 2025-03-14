@@ -22,6 +22,7 @@ import { useUserRoles } from "@/hooks/useUserRoles";
 import { SimplePagination } from "@/components/common/SimplePagination";
 import { migrateOrdersData } from "@/data/migrateOrdersData";
 import { toast } from "sonner";
+import { logOrderActivity } from "@/utils/logging";
 
 type SortField = "orderNumber" | "customerName" | "createdAt" | "total" | "status";
 type SortDirection = "asc" | "desc";
@@ -49,6 +50,7 @@ export default function Orders() {
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
     setIsOrderDetailsOpen(true);
+    logOrderActivity('view_order_details', order.id, order.orderNumber);
   };
 
   const handleCloseOrderDetails = () => {
@@ -60,9 +62,17 @@ export default function Orders() {
       setIsSyncing(true);
       await migrateOrdersData();
       toast.success("Successfully synced 100 orders to the database");
+      await logOrderActivity('sync_orders_to_database', 'batch', 'Bulk Orders', {
+        count: 100,
+        result: 'success'
+      });
     } catch (error) {
       console.error("Error syncing orders to database:", error);
       toast.error("Failed to sync orders to database");
+      await logOrderActivity('sync_orders_to_database', 'batch', 'Bulk Orders', {
+        result: 'error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     } finally {
       setIsSyncing(false);
     }

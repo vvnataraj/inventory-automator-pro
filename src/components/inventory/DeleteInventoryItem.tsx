@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { InventoryItem } from "@/types/inventory";
+import { logInventoryActivity } from "@/utils/logging";
 
 interface DeleteInventoryItemProps {
   item: InventoryItem;
@@ -28,9 +29,23 @@ export const DeleteInventoryItem: React.FC<DeleteInventoryItemProps> = ({
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const handleDelete = () => {
-    onDelete(item.id);
-    setIsOpen(false);
+  const handleDelete = async () => {
+    try {
+      // Log the delete attempt before actually deleting
+      await logInventoryActivity('delete_item_initiated', item.id, item.name, {
+        sku: item.sku,
+        category: item.category,
+        stock: item.stock
+      });
+      
+      // Call the parent component's delete handler
+      onDelete(item.id);
+      
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error while deleting item:", error);
+      // The actual delete may have succeeded, but logging failed
+    }
   };
 
   return (
