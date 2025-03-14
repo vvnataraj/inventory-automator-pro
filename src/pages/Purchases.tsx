@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Truck, Check, X, ShoppingCart, Package, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -345,11 +346,7 @@ export default function Purchases() {
         purchase={editingPurchase}
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
-        onPurchaseUpdated={(purchase) => {
-          if (purchase) {
-            updatePurchase(purchase);
-          }
-        }}
+        onPurchaseUpdated={updatePurchase}
       />
 
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>

@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Purchase, PurchaseStatus } from "@/types/purchase";
 import { PurchaseFormData } from "./AddPurchaseModal";
 
@@ -20,7 +20,7 @@ interface EditPurchaseModalProps {
   purchase: Purchase | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPurchaseUpdated: (id: string, purchase: PurchaseFormData) => void;
+  onPurchaseUpdated: (purchase: Purchase) => void;
 }
 
 export function EditPurchaseModal({ 
@@ -66,13 +66,23 @@ export function EditPurchaseModal({
       toast({
         title: "Error",
         description: "PO Number and Supplier are required",
-        variant: "destructive",
       });
       return;
     }
 
-    // Pass the data to parent component
-    onPurchaseUpdated(purchase.id, formData);
+    // Create updated purchase with all original fields plus updated ones
+    const updatedPurchase: Purchase = {
+      ...purchase,
+      poNumber: formData.poNumber,
+      supplier: formData.supplier,
+      status: formData.status,
+      totalCost: formData.totalCost,
+      orderDate: formData.orderDate,
+      expectedDeliveryDate: formData.expectedDeliveryDate,
+    };
+
+    // Pass the complete updated purchase to parent component
+    onPurchaseUpdated(updatedPurchase);
     onOpenChange(false);
     
     toast({
