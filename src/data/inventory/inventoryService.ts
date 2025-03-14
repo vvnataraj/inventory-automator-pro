@@ -1,3 +1,4 @@
+
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Purchase } from "@/types/purchase";
 import { inventoryItems } from "./inventoryItems";
@@ -103,13 +104,13 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     
     console.log(`Preparing to sync ${supabaseItems.length} items to Supabase...`);
     
-    const { error, count } = await supabase
+    // Fix: Don't use .select('count') which causes the "aggregate functions are not allowed in RETURNING" error
+    const { error } = await supabase
       .from('inventory_items')
       .upsert(supabaseItems, { 
         onConflict: 'id',
         ignoreDuplicates: false
-      })
-      .select('count');
+      });
       
     if (error) {
       console.error("Error syncing inventory to Supabase:", error);
