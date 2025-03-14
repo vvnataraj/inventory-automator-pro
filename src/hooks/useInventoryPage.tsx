@@ -70,9 +70,13 @@ export function useInventoryPage() {
     setSortField,
     setSortDirection,
     setViewMode,
-    // Fix #1: Ensure fetchItems returns a Promise<void>
-    (): Promise<void> => {
-      return fetchItems() || Promise.resolve();
+    // Fix: Properly ensure this always returns a Promise<void>
+    async (): Promise<void> => {
+      try {
+        await fetchItems();
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
     }
   );
   
@@ -132,10 +136,14 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      // Fix #2: Ensure fetchItems returns a Promise<void>
-      fetchItems: (forceRefresh = false): Promise<void> => {
+      // Fix: Properly ensure this always returns a Promise<void>
+      fetchItems: async (forceRefresh = false): Promise<void> => {
         console.log("Calling refresh with forceRefresh:", forceRefresh);
-        return refresh() || Promise.resolve();
+        try {
+          await refresh();
+        } catch (error) {
+          console.error("Error refreshing data:", error);
+        }
       },
       handleReactivateAllItems
     }
