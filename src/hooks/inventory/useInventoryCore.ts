@@ -61,27 +61,16 @@ export function useInventoryCore(
         locationFilter
       });
       
-      // Make sure we pass the actual values, not object representations
-      const cleanCategoryFilter = 
-        categoryFilter && typeof categoryFilter === 'object' && '_type' in categoryFilter 
-          ? undefined 
-          : categoryFilter;
-      
-      const cleanLocationFilter = 
-        locationFilter && typeof locationFilter === 'object' && '_type' in locationFilter
-          ? undefined
-          : locationFilter;
-      
       // Try to fetch from Supabase first
       const { items: dbItems, count, error: dbError } = await fetchFromSupabase(
-        page, searchQuery, sortField, sortDirection, cleanCategoryFilter, cleanLocationFilter
+        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
       );
       
       if (dbError || dbItems.length === 0) {
         // Fallback to local data if Supabase fetch fails or returns no results
         console.log("Falling back to local data");
         const { items: localItems, total } = fetchFromLocal(
-          page, searchQuery, sortField, sortDirection, cleanCategoryFilter, cleanLocationFilter
+          page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
         );
         
         setItems(localItems);
