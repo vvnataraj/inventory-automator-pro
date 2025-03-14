@@ -94,8 +94,11 @@ export const InventoryItemActions: React.FC<InventoryItemActionsProps> = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8" 
+                    className="h-8 w-8 cursor-pointer focus:ring-2 focus:ring-ring focus:ring-offset-2" 
                     onClick={() => setReorderDialogOpen(true)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label="Reorder stock"
                   >
                     <ShoppingCart className="h-4 w-4" />
                   </Button>
@@ -116,10 +119,13 @@ export const InventoryItemActions: React.FC<InventoryItemActionsProps> = ({
                   variant={item.isActive ? "outline" : "ghost"} 
                   size="icon"
                   className={cn(
-                    "h-8 w-8",
+                    "h-8 w-8 cursor-pointer focus:ring-2 focus:ring-ring focus:ring-offset-2",
                     item.isActive ? "text-amber-600 hover:bg-amber-100 hover:text-amber-700" : "text-green-600 hover:bg-green-100 hover:text-green-700"
                   )}
                   onClick={() => setDiscontinueDialogOpen(true)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={item.isActive ? "Discontinue item" : "Reactivate item"}
                 >
                   <CircleSlash className="h-4 w-4" />
                 </Button>
@@ -156,10 +162,11 @@ export const InventoryItemActions: React.FC<InventoryItemActionsProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="focus:ring-2 focus:ring-ring focus:ring-offset-2">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDiscontinue}
               className={cn(
+                "focus:ring-2 focus:ring-ring focus:ring-offset-2",
                 item.isActive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""
               )}
             >

@@ -33,7 +33,8 @@ export const ReorderInventoryItem: React.FC<ReorderInventoryItemProps> = ({
           size="sm"
           onClick={() => onReorder(item.id, 'up')}
           disabled={isFirst}
-          className="h-8 flex gap-1"
+          className="h-8 flex gap-1 focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label="Move item up"
         >
           <ArrowUp className="h-4 w-4" />
           Move Up
@@ -44,7 +45,8 @@ export const ReorderInventoryItem: React.FC<ReorderInventoryItemProps> = ({
           size="sm"
           onClick={() => onReorder(item.id, 'down')}
           disabled={isLast}
-          className="h-8 flex gap-1"
+          className="h-8 flex gap-1 focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label="Move item down"
         >
           <ArrowDown className="h-4 w-4" />
           Move Down
@@ -63,7 +65,9 @@ export const ReorderInventoryItem: React.FC<ReorderInventoryItemProps> = ({
               size="icon"
               onClick={() => onReorder(item.id, 'up')}
               disabled={isFirst}
-              className="h-8 w-8"
+              className="h-8 w-8 focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              aria-label="Move up"
+              tabIndex={isFirst ? -1 : 0}
             >
               <ArrowUp className="h-4 w-4" />
             </Button>
@@ -82,7 +86,9 @@ export const ReorderInventoryItem: React.FC<ReorderInventoryItemProps> = ({
               size="icon"
               onClick={() => onReorder(item.id, 'down')}
               disabled={isLast}
-              className="h-8 w-8"
+              className="h-8 w-8 focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              aria-label="Move down"
+              tabIndex={isLast ? -1 : 0}
             >
               <ArrowDown className="h-4 w-4" />
             </Button>
