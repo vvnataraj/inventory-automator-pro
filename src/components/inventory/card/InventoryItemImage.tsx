@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { InventoryItem } from "@/types/inventory";
 import { EditInventoryItem } from "../EditInventoryItem";
@@ -12,6 +12,8 @@ interface InventoryItemImageProps {
 }
 
 export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item, onSave }) => {
+  const [imageError, setImageError] = useState(false);
+  
   // Calculate total stock across all locations with the same SKU
   const totalStock = React.useMemo(() => {
     const sameSkuItems = inventoryItems.filter(
@@ -32,29 +34,31 @@ export const InventoryItemImage: React.FC<InventoryItemImageProps> = ({ item, on
   }, [totalStock, item.lowStockThreshold]);
 
   // Handle image error
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.style.display = 'none';
-    e.currentTarget.nextElementSibling?.removeAttribute('style');
+  const handleImageError = () => {
+    setImageError(true);
+    console.error(`Failed to load image: ${item.imageUrl}`);
   };
 
   return (
     <div className="relative pt-[100%] overflow-hidden bg-muted">
       <div className="absolute inset-0 flex items-center justify-center">
-        {item.imageUrl ? (
-          <>
-            <img 
-              src={item.imageUrl} 
-              alt={item.name} 
-              className="w-full h-full object-cover"
-              onError={handleImageError}
-            />
-            <div className="w-full h-full flex items-center justify-center bg-secondary/20" style={{ display: 'none' }}>
-              <ImageOff className="w-8 h-8 text-muted-foreground" />
-            </div>
-          </>
+        {item.imageUrl && !imageError ? (
+          <img 
+            src={item.imageUrl} 
+            alt={item.name} 
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-secondary/20">
-            <span className="text-muted-foreground">{item.category}</span>
+            {imageError ? (
+              <div className="flex flex-col items-center">
+                <ImageOff className="w-8 h-8 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground mt-1">Image not found</span>
+              </div>
+            ) : (
+              <span className="text-muted-foreground">{item.category}</span>
+            )}
           </div>
         )}
       </div>
