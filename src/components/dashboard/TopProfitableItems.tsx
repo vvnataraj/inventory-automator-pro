@@ -28,15 +28,14 @@ export const TopProfitableItems = () => {
       .slice(0, 10); // Get top 10
   }, []);
 
-  const handleItemClick = (sku: string, category?: string) => {
+  const handleItemClick = (sku: string) => {
     // Create a URLSearchParams object to build the query string properly
     const params = new URLSearchParams();
     
-    // Only add parameters that have values
+    // Only add the search parameter
     if (sku) params.append("search", sku);
-    if (category) params.append("category", category);
     
-    console.log(`Navigating to inventory with params: search=${sku}, category=${category}`);
+    console.log(`Navigating to inventory with params: search=${sku}`);
     navigate(`/inventory?${params.toString()}`);
   };
 
@@ -67,7 +66,7 @@ export const TopProfitableItems = () => {
                     <tr 
                       key={item.id} 
                       className="border-b hover:bg-muted/50 cursor-pointer"
-                      onClick={() => handleItemClick(item.sku, item.category)}
+                      onClick={() => handleItemClick(item.sku)}
                     >
                       <td className="py-2 px-1">{item.name}</td>
                       <td className="py-2 px-1 text-muted-foreground">{item.sku}</td>

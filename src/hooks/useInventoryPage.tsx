@@ -10,14 +10,12 @@ export function useInventoryPage() {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [locationFilter, setLocationFilter] = useState<string | undefined>(undefined);
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, locationFilter, categoryFilter]);
+  }, [searchQuery]);
   
   const { 
     items, 
@@ -35,9 +33,7 @@ export function useInventoryPage() {
     currentPage, 
     searchQuery,
     sortField,
-    sortDirection,
-    categoryFilter,
-    locationFilter
+    sortDirection
   );
   
   const itemsPerPage = 20;
@@ -131,18 +127,6 @@ export function useInventoryPage() {
     }
   }, [reactivateAllItems]);
 
-  const setCategoryFilterAndRefresh = useCallback((category: string | undefined) => {
-    console.log(`Setting category filter and refreshing: ${category}`);
-    setCategoryFilter(category);
-    setCurrentPage(1);
-    
-    // Immediately trigger a refresh with force=true to ensure data is updated
-    setTimeout(() => {
-      console.log("Calling refresh() from setCategoryFilterAndRefresh");
-      refresh();
-    }, 0);
-  }, [refresh]);
-
   return {
     state: {
       searchQuery,
@@ -150,8 +134,6 @@ export function useInventoryPage() {
       viewMode,
       sortField,
       sortDirection,
-      locationFilter,
-      categoryFilter,
       reorderDialogOpen,
       selectedItem,
       items,
@@ -165,9 +147,6 @@ export function useInventoryPage() {
       setViewMode,
       setSortField,
       setSortDirection,
-      setLocationFilter,
-      setCategoryFilter,
-      setCategoryFilterAndRefresh,
       setReorderDialogOpen,
       setSelectedItem,
       handleSort,
