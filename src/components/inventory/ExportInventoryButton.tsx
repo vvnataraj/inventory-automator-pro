@@ -27,10 +27,10 @@ export const ExportInventoryButton: React.FC<ExportInventoryButtonProps> = ({ it
     generateExport
   } = useInventoryExport(items);
   
-  const { isManager } = useUserRoles();
+  const { isManager, loading } = useUserRoles();
   
-  // Simplified role check - if not a manager, don't render the component
-  if (!isManager()) {
+  // Don't render anything during loading or if not a manager
+  if (loading || !isManager()) {
     return null;
   }
 

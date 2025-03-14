@@ -26,12 +26,9 @@ export const ImportInventoryButton: React.FC<ImportInventoryButtonProps> = ({
   const [isImporting, setIsImporting] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isManager, role } = useUserRoles();
+  const { isManager, loading } = useUserRoles();
   
-  console.log("Current role in ImportInventoryButton:", role);
-  console.log("Is manager?", isManager());
-  
-  if (!isManager()) {
+  if (loading || !isManager()) {
     return null;
   }
 
