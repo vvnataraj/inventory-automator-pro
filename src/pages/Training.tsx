@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,10 +135,10 @@ export default function Training() {
             <ul className="space-y-4">
               <li>
                 <div className="flex flex-col space-y-1">
-                  <p className="font-medium">New User Orientation</p>
+                  <p className="font-medium">STOCKtopus - New User Orientation</p>
                   <p className="text-sm text-muted-foreground">Every Monday at 2pm EST</p>
                   <Button 
-                    onClick={() => openWebinarSignup("New User Orientation")}
+                    onClick={() => openWebinarSignup("STOCKtopus - New User Orientation")}
                     variant="outline" 
                     size="sm"
                     className="mt-1 w-full"
@@ -151,10 +150,10 @@ export default function Training() {
               </li>
               <li>
                 <div className="flex flex-col space-y-1">
-                  <p className="font-medium">Advanced Features Workshop</p>
+                  <p className="font-medium">STOCKtopus - Advanced Features Workshop</p>
                   <p className="text-sm text-muted-foreground">Every Wednesday at 1pm EST</p>
                   <Button 
-                    onClick={() => openWebinarSignup("Advanced Features Workshop")}
+                    onClick={() => openWebinarSignup("STOCKtopus - Advanced Features Workshop")}
                     variant="outline" 
                     size="sm"
                     className="mt-1 w-full"

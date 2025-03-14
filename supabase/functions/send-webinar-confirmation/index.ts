@@ -43,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p>If you have any questions or need to make changes to your registration, please contact our support team.</p>
           <p style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee; font-size: 14px; color: #666;">
             Best regards,<br>
-            The Training Team
+            The STOCKtopus Training Team
           </p>
         </div>
       `,
