@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Truck, Check, X, ShoppingCart, Package, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -168,7 +167,6 @@ export default function Purchases() {
     });
   };
 
-  // Get status icon based on status
   const getStatusIcon = (status: PurchaseStatus) => {
     switch (status) {
       case "pending":
@@ -187,8 +185,6 @@ export default function Purchases() {
   };
 
   const handleSyncToDatabase = async () => {
-    // This function would be similar to the one in Orders.tsx if needed
-    // For now we've already synced the data via SQL
     toast("Already synced", {
       description: "Purchase orders have already been synced to the database",
     });
@@ -349,7 +345,11 @@ export default function Purchases() {
         purchase={editingPurchase}
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
-        onPurchaseUpdated={updatePurchase}
+        onPurchaseUpdated={(purchase) => {
+          if (purchase) {
+            updatePurchase(purchase);
+          }
+        }}
       />
 
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
