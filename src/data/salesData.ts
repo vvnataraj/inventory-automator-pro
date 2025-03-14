@@ -1,6 +1,6 @@
 
 import { Sale, SaleStatus } from "@/types/sale";
-import { subDays, subHours, subMinutes } from "date-fns";
+import { subDays } from "date-fns";
 import { faker } from "@faker-js/faker";
 import { getInventoryItems } from "./inventoryData";
 
@@ -51,8 +51,9 @@ const generateRandomStatus = (): SaleStatus => {
 };
 
 // Generate random items for a sale
-const generateSaleItems = () => {
-  const { items } = getInventoryItems(1, 50);
+const generateSaleItems = async () => {
+  const itemsResult = await getInventoryItems(1, 50);
+  const items = itemsResult.items;
   const numItems = Math.floor(Math.random() * 5) + 1; // 1 to 5 items per sale
   const selectedItems = [];
   
@@ -76,11 +77,11 @@ const generateSaleItems = () => {
 };
 
 // Generate 50 random sales
-export const generateSales = (): Sale[] => {
+export const generateSales = async (): Promise<Sale[]> => {
   const sales: Sale[] = [];
   
   for (let i = 0; i < 50; i++) {
-    const saleItems = generateSaleItems();
+    const saleItems = await generateSaleItems();
     const total = saleItems.reduce((sum, item) => sum + item.subtotal, 0);
     const status = generateRandomStatus();
     const customerName = customerNames[Math.floor(Math.random() * customerNames.length)];
@@ -104,12 +105,12 @@ export const generateSales = (): Sale[] => {
 };
 
 // Mock function to get sales with pagination and search
-export const getSales = (
+export const getSales = async (
   page: number = 1, 
   pageSize: number = 10,
   searchQuery: string = ""
-): { items: Sale[], total: number } => {
-  const allSales = generateSales();
+): Promise<{ items: Sale[], total: number }> => {
+  const allSales = await generateSales();
   
   // Filter sales based on search query
   const filteredSales = allSales.filter(sale => {

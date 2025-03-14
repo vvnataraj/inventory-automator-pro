@@ -1,8 +1,10 @@
+
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Purchase } from "@/types/purchase";
 import { purchaseOrders } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { inventoryItems } from "./inventoryItems"; // Import inventory items
 
 export const getInventoryItems = async (
   page: number = 1,
