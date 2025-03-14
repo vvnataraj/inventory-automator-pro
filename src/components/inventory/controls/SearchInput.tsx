@@ -15,9 +15,10 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   setSearchQuery,
   placeholder = "Search by name, SKU, or category..."
 }) => {
-  // Create a local state to track the input value
+  // Use local state to track input value to prevent input field reset
   const [inputValue, setInputValue] = useState(searchQuery);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialRenderRef = useRef(true);
   
   // Handle input changes immediately in the local state
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,7 +30,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       clearTimeout(debounceTimerRef.current);
     }
     
-    // Set up a new timer
+    // Set up a new timer for debounced search
     debounceTimerRef.current = setTimeout(() => {
       console.log("Executing search with query:", newValue);
       setSearchQuery(newValue);
@@ -56,11 +57,18 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     };
   }, []);
   
-  // Update the local input value if the searchQuery prop changes from external sources
-  // This is crucial - only update if the prop differs from the local state
+  // Update local input value only on initial render or if props change significantly
   useEffect(() => {
-    if (searchQuery !== inputValue) {
-      console.log("External searchQuery changed, updating input value:", searchQuery);
+    if (isInitialRenderRef.current) {
+      setInputValue(searchQuery);
+      isInitialRenderRef.current = false;
+      return;
+    }
+    
+    // Only update if the searchQuery prop changes dramatically and doesn't match what user is typing
+    // This prevents the input field from resetting while user is typing
+    if (searchQuery !== inputValue && (searchQuery === '' || Math.abs(searchQuery.length - inputValue.length) > 3)) {
+      console.log("External searchQuery changed drastically, updating input value:", searchQuery);
       setInputValue(searchQuery);
     }
   }, [searchQuery]);

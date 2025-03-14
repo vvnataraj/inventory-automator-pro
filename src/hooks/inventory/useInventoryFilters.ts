@@ -1,28 +1,25 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
 export function useInventoryFilters() {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const initializedRef = useRef(false);
   
-  // Update filters only once during initial load
-  useEffect(() => {
-    if (!initialLoadDone) {
-      const newSearchFromUrl = searchParams.get("search") || "";
-      
-      console.log(`Setting filters from URL during initial load: 
-        search: ${newSearchFromUrl}`);
-      
-      setSearchQuery(newSearchFromUrl);
-      setInitialLoadDone(true);
+  // Initialize search query from URL params only once
+  if (!initializedRef.current) {
+    const searchFromUrl = searchParams.get("search") || "";
+    if (searchQuery !== searchFromUrl) {
+      console.log(`Setting initial search from URL: "${searchFromUrl}"`);
+      setSearchQuery(searchFromUrl);
     }
-  }, [searchParams, initialLoadDone]);
+    initializedRef.current = true;
+  }
   
-  // Add a custom search handler
+  // Custom search handler that doesn't cause resets
   const handleSetSearchQuery = useCallback((query: string) => {
-    console.log(`Setting search query to: ${query}`);
+    console.log(`Setting search query to: "${query}"`);
     setSearchQuery(query);
   }, []);
 

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SortField, SortDirection } from "@/types/inventory";
 
@@ -14,37 +14,46 @@ export function useInventoryUrlSync(
 ) {
   const [searchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const initialSyncDoneRef = useRef(false);
   
-  // Sync URL parameters with state, but only fetch once
+  // Sync URL parameters with state only once during initial load
   useEffect(() => {
+    if (initialSyncDoneRef.current) {
+      return;
+    }
+    
     const page = parseInt(searchParams.get("page") || "1");
     const search = searchParams.get("search") || "";
-    const category = searchParams.get("category") || undefined;
-    const location = searchParams.get("location") || undefined;
     const sort = searchParams.get("sort") as SortField || "name";
     const order = searchParams.get("order") as SortDirection || "asc";
     const view = searchParams.get("view") as "grid" | "table" || "table";
     
+    console.log("Initial URL sync with params:", { page, search, sort, order, view });
+    
     setCurrentPage(page);
     setSearchQuery(search);
-    setCategoryFilter(category);
-    setLocationFilter(location);
     setSortField(sort);
     setSortDirection(order);
     setViewMode(view);
     
-    // Only call fetchItems once during initial load
-    if (!initialLoadComplete) {
-      fetchItems().catch(err => console.error("Error fetching items:", err));
-      setInitialLoadComplete(true);
-    }
-  }, [searchParams, setSearchQuery, setCategoryFilter, setLocationFilter, setSortField, setSortDirection, setViewMode, fetchItems, initialLoadComplete]);
+    // Mark initial sync as done to prevent repeated syncs
+    initialSyncDoneRef.current = true;
+    
+    // Initial data fetch
+    fetchItems().catch(err => console.error("Error fetching items:", err));
+  }, [searchParams, setSearchQuery, setSortField, setSortDirection, setViewMode, fetchItems]);
   
-  // Reset to page 1 when filters change, but don't fetch
+  // Update page when URL params change, but don't trigger data fetch
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchParams.get("search"), searchParams.get("category"), searchParams.get("location")]);
+    if (!initialSyncDoneRef.current) {
+      return;
+    }
+    
+    const page = parseInt(searchParams.get("page") || "1");
+    if (page !== currentPage) {
+      setCurrentPage(page);
+    }
+  }, [searchParams, currentPage]);
   
   return {
     currentPage,

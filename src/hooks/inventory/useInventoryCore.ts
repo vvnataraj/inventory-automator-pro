@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { toast } from "sonner";
