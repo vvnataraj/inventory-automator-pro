@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Truck, Check, X } from "lucide-react";
+import { Truck, Check, X, ShoppingCart, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -61,6 +61,8 @@ export default function Purchases() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [purchaseToDelete, setPurchaseToDelete] = useState<string | null>(null);
+  const [statusChangeConfirmOpen, setStatusChangeConfirmOpen] = useState(false);
+  const [statusChangeDetails, setStatusChangeDetails] = useState<{purchaseId: string, newStatus: PurchaseStatus} | null>(null);
   
   const itemsPerPage = 12;
   const totalPages = Math.ceil(totalPurchases / itemsPerPage);
@@ -87,22 +89,34 @@ export default function Purchases() {
     setDeleteConfirmOpen(false);
   };
 
-  const handleStatusChange = (purchaseId: string, status: PurchaseStatus) => {
-    updatePurchaseStatus(purchaseId, status);
-    
-    // Show success toast with appropriate message
-    const statusMessages = {
-      pending: "marked as Pending",
-      ordered: "marked as Ordered",
-      shipped: "marked as Shipped",
-      delivered: "marked as Delivered",
-      cancelled: "marked as Cancelled"
-    };
-    
-    toast({
-      title: "Status updated",
-      description: `Purchase order ${statusMessages[status]}`,
-    });
+  const handleStatusChangeRequest = (purchaseId: string, status: PurchaseStatus) => {
+    // Skip confirmation for certain status changes if desired
+    setStatusChangeDetails({ purchaseId, newStatus: status });
+    setStatusChangeConfirmOpen(true);
+  };
+
+  const confirmStatusChange = () => {
+    if (statusChangeDetails) {
+      const { purchaseId, newStatus } = statusChangeDetails;
+      updatePurchaseStatus(purchaseId, newStatus);
+      
+      // Show success toast with appropriate message
+      const statusMessages = {
+        pending: "marked as Pending",
+        ordered: "marked as Ordered",
+        shipped: "marked as Shipped",
+        delivered: "marked as Delivered",
+        cancelled: "marked as Cancelled"
+      };
+      
+      toast({
+        title: "Status updated",
+        description: `Purchase order ${statusMessages[newStatus]}`,
+      });
+      
+      setStatusChangeDetails(null);
+    }
+    setStatusChangeConfirmOpen(false);
   };
 
   const sortOptions = [
@@ -144,6 +158,24 @@ export default function Purchases() {
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // Get status icon based on status
+  const getStatusIcon = (status: PurchaseStatus) => {
+    switch (status) {
+      case "pending":
+        return null;
+      case "ordered":
+        return <ShoppingCart className="h-4 w-4 mr-2" />;
+      case "shipped":
+        return <Truck className="h-4 w-4 mr-2" />;
+      case "delivered":
+        return <Check className="h-4 w-4 mr-2" />;
+      case "cancelled":
+        return <X className="h-4 w-4 mr-2" />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -223,29 +255,31 @@ export default function Purchases() {
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                           {purchase.status !== "pending" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(purchase.id, "pending")}>
+                            <DropdownMenuItem onClick={() => handleStatusChangeRequest(purchase.id, "pending")}>
+                              <Package className="mr-2 h-4 w-4" />
                               Mark as Pending
                             </DropdownMenuItem>
                           )}
                           {purchase.status !== "ordered" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(purchase.id, "ordered")}>
+                            <DropdownMenuItem onClick={() => handleStatusChangeRequest(purchase.id, "ordered")}>
+                              <ShoppingCart className="mr-2 h-4 w-4" />
                               Mark as Ordered
                             </DropdownMenuItem>
                           )}
                           {purchase.status !== "shipped" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(purchase.id, "shipped")}>
+                            <DropdownMenuItem onClick={() => handleStatusChangeRequest(purchase.id, "shipped")}>
                               <Truck className="mr-2 h-4 w-4" />
                               Mark as Shipped
                             </DropdownMenuItem>
                           )}
                           {purchase.status !== "delivered" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(purchase.id, "delivered")}>
+                            <DropdownMenuItem onClick={() => handleStatusChangeRequest(purchase.id, "delivered")}>
                               <Check className="mr-2 h-4 w-4" />
                               Mark as Delivered
                             </DropdownMenuItem>
                           )}
                           {purchase.status !== "cancelled" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(purchase.id, "cancelled")}>
+                            <DropdownMenuItem onClick={() => handleStatusChangeRequest(purchase.id, "cancelled")}>
                               <X className="mr-2 h-4 w-4" />
                               Mark as Cancelled
                             </DropdownMenuItem>
@@ -268,12 +302,14 @@ export default function Purchases() {
           )}
 
           {purchases.length > 0 && (
-            <InventoryPagination 
-              currentPage={currentPage}
-              itemsPerPage={itemsPerPage}
-              totalItems={totalPurchases}
-              onPageChange={handlePageChange}
-            />
+            <div className="mt-6">
+              <InventoryPagination 
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                totalItems={totalPurchases}
+                onPageChange={handlePageChange}
+              />
+            </div>
           )}
         </>
       )}
@@ -297,6 +333,25 @@ export default function Purchases() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={statusChangeConfirmOpen} onOpenChange={setStatusChangeConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Purchase Status</AlertDialogTitle>
+            <AlertDialogDescription>
+              {statusChangeDetails && (
+                `Are you sure you want to mark this purchase order as ${statusChangeDetails.newStatus}?`
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmStatusChange}>
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
