@@ -102,8 +102,31 @@ export function useInventoryOperations() {
       console.log("Adding new inventory item:", newItem);
       console.log("Image URL for new item:", newItem.imageUrl);
       
-      // Let Supabase generate UUID for new items
-      const supabaseItem = mapInventoryItemToSupabaseItem(newItem);
+      // For Supabase items, don't include the id to let Supabase generate it
+      const supabaseItem = {
+        sku: newItem.sku,
+        name: newItem.name,
+        description: newItem.description || "",
+        category: newItem.category || "",
+        subcategory: newItem.subcategory || "",
+        brand: newItem.brand || "",
+        price: newItem.price || 0,
+        rrp: newItem.rrp || 0,
+        cost: newItem.cost || 0,
+        stock: newItem.stock || 0,
+        low_stock_threshold: newItem.lowStockThreshold || 5,
+        min_stock_count: newItem.minStockCount || 1,
+        location: newItem.location || "",
+        barcode: newItem.barcode || "",
+        date_added: newItem.dateAdded || new Date().toISOString(),
+        last_updated: newItem.lastUpdated || new Date().toISOString(),
+        image_url: newItem.imageUrl || "",
+        dimensions: newItem.dimensions || null,
+        weight: newItem.weight || null,
+        is_active: newItem.isActive !== undefined ? newItem.isActive : true,
+        supplier: newItem.supplier || "",
+        tags: newItem.tags || []
+      };
       
       console.log("Supabase item prepared:", supabaseItem);
       
@@ -130,7 +153,7 @@ export function useInventoryOperations() {
       toast.error("Failed to add item to database");
       return false;
     }
-  }, [mapInventoryItemToSupabaseItem]);
+  }, []);
   
   const deleteItem = useCallback(async (itemId: string) => {
     try {

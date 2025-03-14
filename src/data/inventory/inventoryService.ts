@@ -1,3 +1,4 @@
+
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Purchase } from "@/types/purchase";
 import { inventoryItems } from "./inventoryItems";
@@ -65,7 +66,8 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     console.log("Starting inventory sync to Supabase...");
     
     const supabaseItems = inventoryItems.map(item => {
-      // When syncing items, preserve the imageUrl exactly as is
+      // Prepare item for Supabase - don't include an id for insert operations
+      // This will allow the database to generate its own UUIDs
       return {
         sku: item.sku,
         name: item.name,
@@ -94,6 +96,7 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     
     console.log(`Preparing to sync ${supabaseItems.length} items to Supabase...`);
     
+    // Use upsert with sku as the conflict target, not id
     const { error } = await supabase
       .from('inventory_items')
       .upsert(supabaseItems, { 

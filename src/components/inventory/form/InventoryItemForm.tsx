@@ -31,6 +31,19 @@ export const InventoryItemForm = ({
   onLocationChange,
   onCancel,
 }: InventoryItemFormProps) => {
+  // Custom handler for image URL changes
+  const handleImageChange = (url: string) => {
+    console.log("Image URL changed in form:", url);
+    const imageChangeEvent = {
+      target: {
+        name: 'imageUrl',
+        value: url
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    onChange(imageChangeEvent);
+  };
+  
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid gap-4 py-4">
@@ -42,10 +55,12 @@ export const InventoryItemForm = ({
           required
         />
         
-        <ImageField 
-          imageUrl={formData.imageUrl}
-          onChange={onChange}
-        />
+        <div className="grid grid-cols-4 items-center gap-4">
+          <ImageField 
+            imageUrl={formData.imageUrl}
+            onChange={handleImageChange}
+          />
+        </div>
         
         <FormField 
           label="SKU"
