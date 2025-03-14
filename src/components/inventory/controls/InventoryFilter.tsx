@@ -49,11 +49,13 @@ export const InventoryFilter: React.FC<InventoryFilterProps> = ({
   ];
 
   const handleCategorySelect = (value: string) => {
+    console.log(`Category selected in filter: ${value}`);
     if (value === "all") {
       onCategoryFilterChange(undefined);
     } else {
       onCategoryFilterChange(value);
     }
+    // Don't close the popover to allow multiple selections if needed
   };
 
   const handleLocationSelect = (value: string) => {
@@ -62,6 +64,7 @@ export const InventoryFilter: React.FC<InventoryFilterProps> = ({
     } else {
       onLocationFilterChange(value);
     }
+    // Don't close the popover to allow multiple selections if needed
   };
 
   const activeFiltersCount = [

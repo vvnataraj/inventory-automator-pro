@@ -131,6 +131,18 @@ export function useInventoryPage() {
     }
   }, [reactivateAllItems]);
 
+  // Add this new method to set category filter and refresh data immediately
+  const setCategoryFilterAndRefresh = useCallback((category: string | undefined) => {
+    console.log(`Setting category filter and refreshing: ${category}`);
+    setCategoryFilter(category);
+    // Reset to first page when changing filter
+    setCurrentPage(1);
+    // Use timeout to ensure state is updated before fetching
+    setTimeout(() => {
+      refresh();
+    }, 50);
+  }, [refresh]);
+
   return {
     state: {
       searchQuery,
@@ -155,6 +167,7 @@ export function useInventoryPage() {
       setSortDirection,
       setLocationFilter,
       setCategoryFilter,
+      setCategoryFilterAndRefresh,
       setReorderDialogOpen,
       setSelectedItem,
       handleSort,

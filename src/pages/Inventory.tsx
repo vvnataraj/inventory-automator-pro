@@ -25,9 +25,14 @@ export default function Inventory() {
     if (categoryFromUrl) {
       console.log(`Setting category filter from URL: ${categoryFromUrl}`);
       actions.setCategoryFilter(categoryFromUrl);
+      
+      // Force a refresh after setting the category filter
+      setTimeout(() => {
+        actions.fetchItems(true);
+      }, 100);
+    } else {
+      actions.fetchItems();
     }
-    
-    actions.fetchItems();
   }, [searchParams]); 
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
@@ -80,7 +85,7 @@ export default function Inventory() {
           locationFilter={state.locationFilter}
           onLocationFilterChange={actions.setLocationFilter}
           categoryFilter={state.categoryFilter}
-          onCategoryFilterChange={actions.setCategoryFilter}
+          onCategoryFilterChange={actions.setCategoryFilterAndRefresh}
         />
 
         {state.isLoading ? (
