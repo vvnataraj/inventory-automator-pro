@@ -61,11 +61,7 @@ export function useInventoryPage() {
   
   // This function properly returns a Promise<void> to satisfy the TypeScript requirements
   const fetchItemsAsync = async (): Promise<void> => {
-    try {
-      await fetchItems();
-    } catch (error) {
-      console.error("Error fetching items:", error);
-    }
+    return fetchItems(); // Directly return the Promise from fetchItems
   };
   
   // Sync with URL parameters
