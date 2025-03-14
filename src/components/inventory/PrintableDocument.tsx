@@ -11,7 +11,19 @@ export const PrintableDocument = React.forwardRef<HTMLDivElement, PrintableDocum
   ({ transferData }, ref) => {
     return (
       <div ref={ref} className="my-4 p-4 border border-gray-200 rounded-lg">
-        <div className="text-center mb-4">
+        <div className="text-center mb-6">
+          {/* App logo and name */}
+          <div className="flex justify-center items-center mb-2">
+            <img 
+              src="/lovable-uploads/f849ba67-c0f4-4e4b-9f84-e91df8d9b64d.png" 
+              alt="STOCKtopus Logo" 
+              className="h-16 w-16 object-contain mr-2"
+              style={{ mixBlendMode: 'multiply' }}
+            />
+            <span className="font-bold text-3xl bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent">
+              STOCK<span className="text-purple-600">topus</span>
+            </span>
+          </div>
           <h2 className="text-xl font-bold">PACKING SLIP</h2>
         </div>
         
