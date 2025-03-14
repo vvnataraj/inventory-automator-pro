@@ -25,8 +25,11 @@ export function useInventoryCore(
   const { fetchFromSupabase, fetchFromLocal } = useInventoryDatabase();
   
   const fetchItems = useCallback(async (forceRefresh = false) => {
-    // Prevent duplicate fetches
-    if (isFetchingRef.current && !forceRefresh) return;
+    // Prevent duplicate fetches unless forced
+    if (isFetchingRef.current && !forceRefresh) {
+      console.log("Already fetching, skip duplicate request");
+      return;
+    }
     
     isFetchingRef.current = true;
     setIsLoading(true);

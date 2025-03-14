@@ -131,7 +131,7 @@ export function useInventoryPage() {
     }
   }, [reactivateAllItems]);
 
-  // Add this new method to set category filter and refresh data immediately
+  // Modified method to set category filter and refresh data immediately
   const setCategoryFilterAndRefresh = useCallback((category: string | undefined) => {
     console.log(`Setting category filter and refreshing: ${category}`);
     setCategoryFilter(category);
@@ -178,7 +178,8 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      fetchItems: refresh,
+      // Modify this to accept a forceRefresh parameter
+      fetchItems: (forceRefresh = false) => refresh(),
       handleReactivateAllItems
     }
   };

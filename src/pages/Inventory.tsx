@@ -28,7 +28,7 @@ export default function Inventory() {
       
       // Force a refresh after setting the category filter
       setTimeout(() => {
-        actions.fetchItems(true);
+        actions.fetchItems();
       }, 100);
     } else {
       actions.fetchItems();
