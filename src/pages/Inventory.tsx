@@ -26,9 +26,15 @@ export default function Inventory() {
     // Check if there's a category filter in the URL parameters
     const categoryFromUrl = searchParams.get("category");
     if (categoryFromUrl) {
+      console.log(`Setting category filter from URL: ${categoryFromUrl}`);
       actions.setCategoryFilter(categoryFromUrl);
+    } else if (state.categoryFilter) {
+      // If no category in URL but we have a category filter set already, clear it
+      console.log("Clearing existing category filter since none in URL");
+      actions.setCategoryFilter(undefined);
     }
     
+    // Always fetch items after setting/clearing category filter
     actions.fetchItems(true);
     
     // Cleanup function to reset category filter when navigating away

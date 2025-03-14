@@ -15,9 +15,16 @@ export function useInventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   const [locationFilter, setLocationFilter] = useState<string | undefined>(undefined);
   
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, categoryFilter, locationFilter]);
+  
+  // Create a wrapper for setCategoryFilter that also resets the page
+  const handleSetCategoryFilter = useCallback((category: string | undefined) => {
+    console.log(`Setting category filter to: ${category || 'undefined'}`);
+    setCategoryFilter(category);
+  }, []);
   
   const { 
     items, 
@@ -143,7 +150,7 @@ export function useInventoryPage() {
       items,
       isLoading,
       totalItems,
-      itemsPerPage,
+      itemsPerPage: 20,
       categoryFilter,
       locationFilter
     },
@@ -155,7 +162,7 @@ export function useInventoryPage() {
       setSortDirection,
       setReorderDialogOpen,
       setSelectedItem,
-      setCategoryFilter,
+      setCategoryFilter: handleSetCategoryFilter,
       setLocationFilter,
       handleSort,
       handleSaveItem,

@@ -24,6 +24,16 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
     '#8884d8', '#82ca9d', '#ffc658', '#ff7300'
   ];
 
+  const handlePieClick = (data: any, index: number) => {
+    console.log("Pie slice clicked:", data.name);
+    onSliceClick(data, index);
+  };
+
+  const handleLegendClick = (data: any) => {
+    console.log("Legend item clicked:", data.value);
+    onSliceClick({ name: data.value }, -1);
+  };
+
   return (
     <Card className={`${className || ''}`}>
       <CardHeader>
@@ -43,7 +53,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 paddingAngle={5}
                 dataKey="value"
                 label={({ name, value }) => `${name}: $${value.toLocaleString()}`}
-                onClick={(data, index) => onSliceClick(data, index)}
+                onClick={handlePieClick}
                 className="cursor-pointer"
               >
                 {data.map((_, index) => (
@@ -54,7 +64,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
               />
               <Legend 
-                onClick={(data) => onSliceClick(data, -1)}
+                onClick={handleLegendClick}
                 className="cursor-pointer"
               />
             </PieChart>
