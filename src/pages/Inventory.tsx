@@ -9,12 +9,16 @@ import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { InventoryPagination } from "@/components/inventory/InventoryPagination";
 import { InventoryItem } from "@/types/inventory";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
+import { ReloadIcon } from "@radix-ui/react-icons";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
   const [searchParams] = useSearchParams();
+  const [syncingDb, setSyncingDb] = useState(false);
   
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
@@ -54,6 +58,24 @@ export default function Inventory() {
     toast.success(`Successfully imported ${importedItems.length} items`);
   };
   
+  const handleSyncToDatabase = async () => {
+    setSyncingDb(true);
+    try {
+      const result = await syncInventoryItemsToSupabase();
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error(`Failed to sync inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSyncingDb(false);
+      // Refresh the inventory to get latest data
+      actions.fetchItems(true);
+    }
+  };
+  
   return (
     <MainLayout>
       <div className="flex flex-col gap-6">
@@ -63,6 +85,21 @@ export default function Inventory() {
             items={state.items}
             onImportItems={handleImportItems}
           />
+          <Button 
+            onClick={handleSyncToDatabase} 
+            disabled={syncingDb}
+            variant="outline"
+            className="ml-2"
+          >
+            {syncingDb ? (
+              <>
+                <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>Sync to Database</>
+            )}
+          </Button>
         </div>
         
         <InventoryControls 
