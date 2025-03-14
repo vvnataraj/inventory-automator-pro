@@ -7,8 +7,8 @@ import { InventoryControls } from "@/components/inventory/InventoryControls";
 import { InventoryHeaderWithActions } from "@/components/inventory/InventoryHeader";
 import { InventoryLoadingState } from "@/components/inventory/InventoryLoadingState";
 import { InventoryEmptyState } from "@/components/inventory/InventoryEmptyState";
+import { InventoryContent } from "@/components/inventory/InventoryContent";
 import { useInventoryPage } from "@/hooks/useInventoryPage";
-import { InventoryDisplay } from "@/components/inventory/InventoryDisplay";
 
 export default function Inventory() {
   const [searchParams] = useSearchParams();
@@ -21,6 +21,7 @@ export default function Inventory() {
       isLoading, 
       totalItems, 
       currentPage, 
+      searchQuery, 
       viewMode, 
       sortField, 
       sortDirection, 
@@ -32,6 +33,7 @@ export default function Inventory() {
     },
     actions: { 
       setCurrentPage, 
+      setSearchQuery, 
       setViewMode, 
       setCategoryFilter, 
       setLocationFilter, 
@@ -79,8 +81,8 @@ export default function Inventory() {
         />
         
         <InventoryControls 
-          searchQuery=""
-          setSearchQuery={() => {}}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
           viewMode={viewMode}
           setViewMode={setViewMode}
           sortField={sortField}
@@ -98,9 +100,9 @@ export default function Inventory() {
         ) : items.length === 0 ? (
           <InventoryEmptyState />
         ) : (
-          // New InventoryDisplay component that will handle item display
-          <InventoryDisplay 
+          <InventoryContent 
             items={items}
+            isLoading={isLoading}
             viewMode={viewMode}
             sortField={sortField}
             sortDirection={sortDirection}

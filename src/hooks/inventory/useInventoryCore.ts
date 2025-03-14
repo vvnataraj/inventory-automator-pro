@@ -9,7 +9,9 @@ export function useInventoryCore(
   page: number = 1, 
   searchQuery: string = "",
   sortField: SortField = 'name',
-  sortDirection: SortDirection = 'asc'
+  sortDirection: SortDirection = 'asc',
+  categoryFilter?: string,
+  locationFilter?: string
 ) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -19,8 +21,8 @@ export function useInventoryCore(
   
   // Add a ref to track if we're currently fetching to prevent duplicate requests
   const isFetchingRef = useRef(false);
-  // Add refs to track previous parameters to detect real changes
-  const prevParamsRef = useRef({ page, searchQuery, sortField, sortDirection });
+  // Add a ref to track current page to detect changes
+  const currentPageRef = useRef(page);
   // Track the first fetch
   const initialFetchDoneRef = useRef(false);
   
@@ -33,43 +35,53 @@ export function useInventoryCore(
       return Promise.resolve();
     }
     
-    // Compare with previous parameters to avoid unnecessary fetches
-    const prevParams = prevParamsRef.current;
-    const paramsUnchanged = 
-      prevParams.page === page && 
-      prevParams.searchQuery === searchQuery && 
-      prevParams.sortField === sortField && 
-      prevParams.sortDirection === sortDirection;
-      
     // Skip duplicate fetch calls with the same parameters unless forced
-    if (initialFetchDoneRef.current && !forceRefresh && paramsUnchanged) {
+    if (initialFetchDoneRef.current && !forceRefresh && 
+        currentPageRef.current === page) {
       console.log("Parameters unchanged, skipping fetch");
       return Promise.resolve();
     }
     
-    console.log("Fetching inventory items with params:", {
-      page, searchQuery, sortField, sortDirection, 
-      forceRefresh, initialFetchDone: initialFetchDoneRef.current
-    });
-    
-    // Update previous parameters
-    prevParamsRef.current = { page, searchQuery, sortField, sortDirection };
+    console.log("Fetching inventory items with forceRefresh:", forceRefresh);
+    console.log("Current page:", page);
+    console.log("Search query:", searchQuery);
+    console.log("Category filter:", categoryFilter);
+    console.log("Location filter:", locationFilter);
     
     isFetchingRef.current = true;
     setIsLoading(true);
     
     try {
+      console.log("Fetching items with params:", {
+        page, 
+        searchQuery, 
+        sortField, 
+        sortDirection,
+        categoryFilter,
+        locationFilter
+      });
+      
+      // Make sure we pass the actual values, not object representations
+      const cleanCategoryFilter = 
+        categoryFilter && typeof categoryFilter === 'object' && '_type' in categoryFilter 
+          ? undefined 
+          : categoryFilter;
+      
+      const cleanLocationFilter = 
+        locationFilter && typeof locationFilter === 'object' && '_type' in locationFilter
+          ? undefined
+          : locationFilter;
+      
       // Try to fetch from Supabase first
       const { items: dbItems, count, error: dbError } = await fetchFromSupabase(
-        page, searchQuery, sortField, sortDirection
+        page, searchQuery, sortField, sortDirection, cleanCategoryFilter, cleanLocationFilter
       );
       
       if (dbError || dbItems.length === 0) {
         // Fallback to local data if Supabase fetch fails or returns no results
         console.log("Falling back to local data");
-        
         const { items: localItems, total } = fetchFromLocal(
-          page, searchQuery, sortField, sortDirection
+          page, searchQuery, sortField, sortDirection, cleanCategoryFilter, cleanLocationFilter
         );
         
         setItems(localItems);
@@ -93,7 +105,7 @@ export function useInventoryCore(
       
       // Fallback to local data
       const { items: localItems, total } = fetchFromLocal(
-        page, searchQuery, sortField, sortDirection
+        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
       );
       
       setItems(localItems);
@@ -103,29 +115,38 @@ export function useInventoryCore(
     } finally {
       setIsLoading(false);
       isFetchingRef.current = false;
+      // Update the current page ref after fetch completes
+      currentPageRef.current = page;
     }
     
     return Promise.resolve();
-  }, [page, searchQuery, sortField, sortDirection, fetchFromSupabase, fetchFromLocal]);
+  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchFromSupabase, fetchFromLocal]);
   
   // Create a separate method to explicitly trigger refresh
   const refreshData = useCallback((): Promise<void> => {
     setLastRefresh(Date.now());
     console.log("Explicitly refreshing data with refreshData()");
+    console.log("Current page:", page);
+    console.log("Current search query:", searchQuery);
+    console.log("Current filters - category:", categoryFilter, "location:", locationFilter);
     return fetchItems(true); // Always force refresh when explicitly called
-  }, [fetchItems]);
+  }, [fetchItems, categoryFilter, locationFilter, searchQuery, page]);
 
   // Use a single effect to fetch items and avoid multiple triggers
   useEffect(() => {
-    // Only fetch on mount or when parameters actually change
-    if (!initialFetchDoneRef.current || 
-        prevParamsRef.current.page !== page || 
-        prevParamsRef.current.searchQuery !== searchQuery ||
-        prevParamsRef.current.sortField !== sortField ||
-        prevParamsRef.current.sortDirection !== sortDirection) {
+    if (!initialFetchDoneRef.current || currentPageRef.current !== page) {
+      console.log("Fetching items due to page change or initial load");
       fetchItems();
     }
-  }, [page, searchQuery, sortField, sortDirection, fetchItems]);
+  }, [page, fetchItems]);
+
+  // Separate effect for search and filter changes to prevent unnecessary fetches
+  useEffect(() => {
+    if (initialFetchDoneRef.current) {
+      console.log("Fetching items due to search/filter/sort changes");
+      fetchItems();
+    }
+  }, [searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);
 
   return { 
     items, 

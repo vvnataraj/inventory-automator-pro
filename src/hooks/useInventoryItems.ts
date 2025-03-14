@@ -8,7 +8,9 @@ export function useInventoryItems(
   page: number = 1, 
   searchQuery: string = "",
   sortField: SortField = 'name',
-  sortDirection: SortDirection = 'asc'
+  sortDirection: SortDirection = 'asc',
+  categoryFilter?: string,
+  locationFilter?: string
 ) {
   const { 
     items, 
@@ -24,7 +26,9 @@ export function useInventoryItems(
     page, 
     searchQuery,
     sortField,
-    sortDirection
+    sortDirection,
+    categoryFilter,
+    locationFilter
   );
   
   const { 

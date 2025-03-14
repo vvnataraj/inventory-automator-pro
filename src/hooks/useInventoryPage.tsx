@@ -1,3 +1,4 @@
+
 import { useInventoryFilters } from "@/hooks/inventory/useInventoryFilters";
 import { useInventoryView } from "@/hooks/inventory/useInventoryView";
 import { useInventoryDialogs } from "@/hooks/inventory/useInventoryDialogs";
@@ -6,8 +7,15 @@ import { useInventoryActions } from "@/hooks/inventory/useInventoryActions";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 
 export function useInventoryPage() {
-  // We'll keep the filter hook but ignore its searchQuery
-  const { skipNextEffect, isSkippingEffect } = useInventoryFilters();
+  // Get filter state
+  const {
+    searchQuery,
+    setSearchQuery,
+    categoryFilter,
+    setCategoryFilter,
+    locationFilter,
+    setLocationFilter
+  } = useInventoryFilters();
   
   // Get view mode and sorting state
   const {
@@ -29,7 +37,7 @@ export function useInventoryPage() {
     handleOpenReorderDialog
   } = useInventoryDialogs();
   
-  // Get inventory items - passing empty string for searchQuery
+  // Get inventory items
   const { 
     items, 
     isLoading, 
@@ -44,23 +52,28 @@ export function useInventoryPage() {
     refresh
   } = useInventoryItems(
     1, // Default page, will be overridden by URL sync
-    "", // Empty search query
+    searchQuery,
     sortField,
-    sortDirection
+    sortDirection,
+    categoryFilter,
+    locationFilter
   );
+  
+  // fetchItems from useInventoryItems now properly returns a Promise<void>
+  // No need for a wrapper function anymore
   
   // Sync with URL parameters
   const {
     currentPage,
     setCurrentPage
   } = useInventoryUrlSync(
-    () => {}, // Empty function for setSearchQuery
-    () => {}, // Empty function for setCategoryFilter
-    () => {}, // Empty function for setLocationFilter
+    setSearchQuery,
+    setCategoryFilter,
+    setLocationFilter,
     setSortField,
     setSortDirection,
     setViewMode,
-    fetchItems
+    fetchItems // This now accepts a function that returns Promise<void>
   );
   
   // Get inventory action handlers
@@ -87,7 +100,7 @@ export function useInventoryPage() {
 
   return {
     state: {
-      searchQuery: "",
+      searchQuery,
       currentPage,
       viewMode,
       sortField,
@@ -98,19 +111,19 @@ export function useInventoryPage() {
       isLoading,
       totalItems,
       itemsPerPage,
-      categoryFilter: undefined,
-      locationFilter: undefined
+      categoryFilter,
+      locationFilter
     },
     actions: {
-      setSearchQuery: () => {}, // Empty function
+      setSearchQuery,
       setCurrentPage,
       setViewMode,
       setSortField,
       setSortDirection,
       setReorderDialogOpen,
       setSelectedItem,
-      setCategoryFilter: () => {}, // Empty function
-      setLocationFilter: () => {}, // Empty function
+      setCategoryFilter,
+      setLocationFilter,
       handleSort,
       handleSaveItem,
       handleAddItem,
@@ -120,9 +133,7 @@ export function useInventoryPage() {
       handleReorderStock,
       handleTransferItem,
       fetchItems,
-      handleReactivateAllItems,
-      skipNextEffect,
-      isSkippingEffect
+      handleReactivateAllItems
     }
   };
 }

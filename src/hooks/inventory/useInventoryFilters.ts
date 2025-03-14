@@ -1,47 +1,57 @@
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
 export function useInventoryFilters() {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  const initializedRef = useRef(false);
-  const skipEffectRef = useRef(false);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  const [locationFilter, setLocationFilter] = useState<string | undefined>(undefined);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   
-  // Initialize search query from URL params only once
+  // Update filters only once during initial load
   useEffect(() => {
-    if (!initializedRef.current) {
-      const searchFromUrl = searchParams.get("search") || "";
+    if (!initialLoadDone) {
+      const newCategoryFromUrl = searchParams.get("category");
+      const newLocationFromUrl = searchParams.get("location");
+      const newSearchFromUrl = searchParams.get("search") || "";
       
-      if (searchQuery !== searchFromUrl) {
-        console.log(`Setting initial search from URL: "${searchFromUrl}"`);
-        // Set skip flag to prevent double effects
-        skipEffectRef.current = true;
-        setSearchQuery(searchFromUrl);
+      console.log(`Setting filters from URL during initial load: 
+        category: ${newCategoryFromUrl || 'undefined'},
+        location: ${newLocationFromUrl || 'undefined'},
+        search: ${newSearchFromUrl}`);
+      
+      if (newCategoryFromUrl !== null) {
+        setCategoryFilter(newCategoryFromUrl === "undefined" ? undefined : newCategoryFromUrl);
       }
-      initializedRef.current = true;
+      
+      if (newLocationFromUrl !== null) {
+        setLocationFilter(newLocationFromUrl === "undefined" ? undefined : newLocationFromUrl);
+      }
+      
+      setSearchQuery(newSearchFromUrl);
+      setInitialLoadDone(true);
     }
-  }, [searchParams, searchQuery]);
+  }, [searchParams, initialLoadDone]);
   
-  // Custom search handler that doesn't cause resets
-  const handleSetSearchQuery = useCallback((query: string) => {
-    if (query === searchQuery) return; // Don't update if unchanged
-    
-    console.log(`Setting search query to: "${query}"`);
-    skipEffectRef.current = true;
-    setSearchQuery(query);
-  }, [searchQuery]);
+  // Create a wrapper for setCategoryFilter that logs updates and handles undefined properly
+  const handleSetCategoryFilter = useCallback((category: string | undefined) => {
+    console.log(`Setting category filter to: ${category || 'undefined'}`);
+    setCategoryFilter(category === "undefined" ? undefined : category);
+  }, []);
+
+  // Create a wrapper for setLocationFilter to ensure proper handling of undefined
+  const handleSetLocationFilter = useCallback((location: string | undefined) => {
+    console.log(`Setting location filter to: ${location || 'undefined'}`);
+    setLocationFilter(location === "undefined" ? undefined : location);
+  }, []);
 
   return {
     searchQuery,
-    setSearchQuery: handleSetSearchQuery,
-    skipNextEffect: () => skipEffectRef.current = true,
-    isSkippingEffect: () => {
-      const shouldSkip = skipEffectRef.current;
-      if (shouldSkip) {
-        skipEffectRef.current = false; // Reset after checking
-      }
-      return shouldSkip;
-    }
+    setSearchQuery,
+    categoryFilter,
+    setCategoryFilter: handleSetCategoryFilter,
+    locationFilter,
+    setLocationFilter: handleSetLocationFilter
   };
 }
