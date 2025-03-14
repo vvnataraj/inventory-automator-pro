@@ -1,4 +1,3 @@
-
 import { useInventoryPage } from "@/hooks/useInventoryPage";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -16,34 +15,24 @@ export default function Inventory() {
   const { state, actions } = useInventoryPage();
   const [searchParams] = useSearchParams();
   
-  // Add specific effect to manually trigger data fetch when the page loads
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
     
-    // Check if category parameter exists in URL and set it
     const categoryFromUrl = searchParams.get("category");
     if (categoryFromUrl) {
       console.log(`Setting category filter from URL: ${categoryFromUrl}`);
-      actions.setCategoryFilter(categoryFromUrl);
-      
-      // Force a refresh after setting the category filter
-      setTimeout(() => {
-        actions.fetchItems();
-      }, 100);
+      actions.setCategoryFilterAndRefresh(categoryFromUrl);
     } else {
-      actions.fetchItems();
+      actions.fetchItems(true);
     }
   }, [searchParams]); 
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
-    // Process each imported item
     importedItems.forEach(item => {
-      // Generate a new ID if needed
       if (!item.id) {
         item.id = `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       }
       
-      // Add timestamps if missing
       if (!item.dateAdded) {
         item.dateAdded = new Date().toISOString();
       }
@@ -51,14 +40,11 @@ export default function Inventory() {
         item.lastUpdated = new Date().toISOString();
       }
       
-      // Add the item to inventory
       actions.handleAddItem(item);
     });
     
-    // Refresh the inventory items
     actions.fetchItems();
     
-    // Show a success toast
     toast.success(`Successfully imported ${importedItems.length} items`);
   };
   

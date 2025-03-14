@@ -28,8 +28,12 @@ export const TopProfitableItems = () => {
       .slice(0, 10); // Get top 10
   }, []);
 
-  const handleItemClick = (sku: string) => {
-    navigate(`/inventory?search=${encodeURIComponent(sku)}`);
+  const handleItemClick = (sku: string, category?: string) => {
+    const params = new URLSearchParams();
+    if (sku) params.append("search", sku);
+    if (category) params.append("category", category);
+    
+    navigate(`/inventory?${params.toString()}`);
   };
 
   return (
@@ -59,7 +63,7 @@ export const TopProfitableItems = () => {
                     <tr 
                       key={item.id} 
                       className="border-b hover:bg-muted/50 cursor-pointer"
-                      onClick={() => handleItemClick(item.sku)}
+                      onClick={() => handleItemClick(item.sku, item.category)}
                     >
                       <td className="py-2 px-1">{item.name}</td>
                       <td className="py-2 px-1 text-muted-foreground">{item.sku}</td>

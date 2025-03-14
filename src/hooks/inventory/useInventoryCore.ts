@@ -31,6 +31,7 @@ export function useInventoryCore(
       return;
     }
     
+    console.log("Fetching inventory items with forceRefresh:", forceRefresh);
     isFetchingRef.current = true;
     setIsLoading(true);
     
@@ -95,7 +96,7 @@ export function useInventoryCore(
   // Create a separate method to explicitly trigger refresh
   const refreshData = useCallback(() => {
     setLastRefresh(Date.now());
-    fetchItems(true);
+    fetchItems(true); // Always force refresh when explicitly called
   }, [fetchItems]);
 
   // Use effect to fetch items when dependencies change

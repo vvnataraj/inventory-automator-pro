@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
@@ -131,13 +130,10 @@ export function useInventoryPage() {
     }
   }, [reactivateAllItems]);
 
-  // Modified method to set category filter and refresh data immediately
   const setCategoryFilterAndRefresh = useCallback((category: string | undefined) => {
     console.log(`Setting category filter and refreshing: ${category}`);
     setCategoryFilter(category);
-    // Reset to first page when changing filter
     setCurrentPage(1);
-    // Use timeout to ensure state is updated before fetching
     setTimeout(() => {
       refresh();
     }, 50);
@@ -178,7 +174,6 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      // Modify this to accept a forceRefresh parameter
       fetchItems: (forceRefresh = false) => refresh(),
       handleReactivateAllItems
     }
