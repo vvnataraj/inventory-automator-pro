@@ -70,7 +70,7 @@ export function useInventoryPage() {
     setSortField,
     setSortDirection,
     setViewMode,
-    fetchItems // This function now returns a Promise<void>
+    fetchItems // This function returns a Promise<void>
   );
   
   // Get inventory action handlers
