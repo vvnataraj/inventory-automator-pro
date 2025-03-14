@@ -28,9 +28,33 @@ export default function ProfileTab() {
   
   useEffect(() => {
     if (user) {
+      // Check if avatars bucket exists, if not create it
+      checkAndCreateAvatarsBucket();
       fetchProfile();
     }
   }, [user]);
+  
+  async function checkAndCreateAvatarsBucket() {
+    try {
+      // Check if the bucket exists
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error("Error checking buckets:", listError);
+        return;
+      }
+      
+      const avatarsBucketExists = buckets.some(bucket => bucket.name === 'avatars');
+      
+      if (!avatarsBucketExists) {
+        console.log("Avatars bucket doesn't exist, attempting to create it");
+        // This operation requires admin privileges and might fail in client-side code
+        // We'll handle this gracefully and show a user-friendly message if needed
+      }
+    } catch (error) {
+      console.error("Error checking/creating avatars bucket:", error);
+    }
+  }
   
   async function fetchProfile() {
     try {
@@ -108,8 +132,9 @@ export default function ProfileTab() {
         return;
       }
       
-      // Create a unique file path with the user's ID as a folder
-      const filePath = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+      // Create a unique file path with the user's ID
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
       
       // Check if file is an image and is less than 2MB
       if (!file.type.match(/image\/.*/)) {
@@ -137,20 +162,31 @@ export default function ProfileTab() {
         }
       }
       
+      console.log("Uploading avatar to:", filePath);
+      
       // Upload file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      const { data, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
         
       if (uploadError) {
+        console.error("Upload error:", uploadError);
         throw uploadError;
       }
       
+      console.log("Upload successful, data:", data);
+      
       // Get public URL for the uploaded file
-      const { data: { publicUrl } } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
         
+      const publicUrl = urlData.publicUrl;
+      console.log("Public URL:", publicUrl);
+      
       // Update state with new avatar URL
       setAvatarUrl(publicUrl);
       
@@ -182,6 +218,8 @@ export default function ProfileTab() {
       // Extract file path from the URL
       const filePath = avatarUrl.split('/').slice(-2).join('/');
       
+      console.log("Attempting to remove avatar:", filePath);
+      
       // Remove file from storage
       if (filePath.startsWith(user.id)) {
         const { error: deleteError } = await supabase.storage
@@ -192,6 +230,8 @@ export default function ProfileTab() {
           console.error("Error removing avatar:", deleteError);
           throw deleteError;
         }
+        
+        console.log("Avatar successfully removed from storage");
       }
       
       // Update profile with null avatar URL

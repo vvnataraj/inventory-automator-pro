@@ -1,3 +1,4 @@
+
 import { Bell, LogOut, Menu, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +47,7 @@ export function Header() {
         return;
       }
       
+      console.log("Fetched profile data:", data);
       setAvatarUrl(data.avatar_url);
       setUsername(data.username);
     } catch (error) {
@@ -149,10 +151,17 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 p-0 rounded-full">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage
-                    src={avatarUrl || ""}
-                    alt={user?.email || "User"}
-                  />
+                  {avatarUrl ? (
+                    <AvatarImage
+                      src={avatarUrl}
+                      alt={username || user?.email || "User"}
+                      onError={(e) => {
+                        console.error("Avatar image failed to load:", avatarUrl);
+                        // Force fallback to show instead
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : null}
                   <AvatarFallback className="bg-primary/10 text-primary">
                     {getUserInitials()}
                   </AvatarFallback>

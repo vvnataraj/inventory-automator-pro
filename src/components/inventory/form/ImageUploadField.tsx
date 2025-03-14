@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
@@ -19,6 +19,33 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Check if the inventory-images bucket exists
+    checkInventoryImagesBucket();
+  }, []);
+
+  async function checkInventoryImagesBucket() {
+    try {
+      // Check if the bucket exists
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error("Error checking buckets:", listError);
+        return;
+      }
+      
+      const inventoryBucketExists = buckets.some(bucket => bucket.name === 'inventory-images');
+      
+      if (!inventoryBucketExists) {
+        console.log("Inventory images bucket doesn't exist yet");
+        // This operation requires admin privileges and might fail in client-side code
+        // We'll handle this gracefully
+      }
+    } catch (error) {
+      console.error("Error checking inventory-images bucket:", error);
+    }
+  }
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
       return;
@@ -32,20 +59,30 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     setUploading(true);
 
     try {
-      // Upload file to Supabase storage
+      console.log("Uploading inventory image:", filePath);
+      
+      // Upload file to Supabase storage with caching and upsert options
       const { data, error } = await supabase.storage
         .from('inventory-images')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (error) {
+        console.error("Upload error:", error);
         throw error;
       }
 
+      console.log("Upload successful, data:", data);
+      
       // Get public URL for the uploaded image
       const { data: { publicUrl } } = supabase.storage
         .from('inventory-images')
         .getPublicUrl(filePath);
 
+      console.log("Public URL:", publicUrl);
+      
       // Create object URL for preview
       setImagePreview(URL.createObjectURL(file));
       
@@ -87,6 +124,10 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             src={imagePreview || imageUrl} 
             alt="Preview" 
             className="h-32 object-contain mx-auto"
+            onError={(e) => {
+              console.error("Failed to load image:", imagePreview || imageUrl);
+              e.currentTarget.style.display = 'none';
+            }}
           />
         </div>
       )}
