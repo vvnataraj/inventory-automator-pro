@@ -26,8 +26,11 @@ export function useLogs() {
 
   // Function to fetch logs from Supabase
   const fetchLogs = useCallback(
-    async ({ pageParam = page }): Promise<ActivityLog[]> => {
+    async ({ queryKey }: { queryKey: (string | number)[] }) => {
       try {
+        // Get the page from the query key (queryKey[1])
+        const currentPage = queryKey[1] as number;
+        
         // Create the base query
         let query = supabase
           .from("activity_logs")
@@ -40,7 +43,7 @@ export function useLogs() {
         }
 
         // Add pagination
-        const from = (pageParam - 1) * pageSize;
+        const from = (currentPage - 1) * pageSize;
         const to = from + pageSize - 1;
 
         // Execute query with pagination and ordering
@@ -64,7 +67,7 @@ export function useLogs() {
         return [];
       }
     },
-    [searchQuery, page, pageSize]
+    [searchQuery, pageSize]
   );
 
   // Use React Query to fetch logs
