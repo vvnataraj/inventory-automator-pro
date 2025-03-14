@@ -59,9 +59,10 @@ export function useInventoryPage() {
     locationFilter
   );
   
-  // This function properly returns a Promise<void> to satisfy the TypeScript requirements
+  // Create a wrapper function that explicitly returns a Promise<void>
   const fetchItemsAsync = async (): Promise<void> => {
-    return fetchItems(); // Directly return the Promise from fetchItems
+    // This is the key fix - we need to make sure fetchItems returns a Promise
+    return Promise.resolve(fetchItems());
   };
   
   // Sync with URL parameters
@@ -139,8 +140,10 @@ export function useInventoryPage() {
         console.log("Calling refresh with forceRefresh:", forceRefresh);
         try {
           await refresh();
+          return Promise.resolve();
         } catch (error) {
           console.error("Error refreshing data:", error);
+          return Promise.reject(error);
         }
       },
       handleReactivateAllItems
