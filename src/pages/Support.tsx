@@ -2,8 +2,13 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Headphones, Mail, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Support() {
+  const openEmailClient = () => {
+    window.location.href = "mailto:support@company.com";
+  };
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -27,7 +32,7 @@ export default function Support() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={openEmailClient}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
