@@ -2,12 +2,16 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Video, Users, X } from "lucide-react";
+import { BookOpen, Video, Users, X, Calendar, CalendarPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Training() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoTitle, setVideoTitle] = useState<string>("");
+  const [showWebinarSignup, setShowWebinarSignup] = useState(false);
+  const [selectedWebinar, setSelectedWebinar] = useState<string>("");
   
   const openVideo = (url: string, title: string) => {
     setVideoUrl(url);
@@ -16,6 +20,17 @@ export default function Training() {
   
   const closeVideo = () => {
     setVideoUrl(null);
+  };
+
+  const openWebinarSignup = (webinarTitle: string) => {
+    setSelectedWebinar(webinarTitle);
+    setShowWebinarSignup(true);
+  };
+  
+  const handleSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success(`Successfully signed up for ${selectedWebinar}!`);
+    setShowWebinarSignup(false);
   };
   
   return (
@@ -66,14 +81,36 @@ export default function Training() {
             <CardDescription>Join interactive training sessions</CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
+            <ul className="space-y-4">
               <li>
-                <p className="font-medium">New User Orientation</p>
-                <p className="text-sm text-muted-foreground">Every Monday at 2pm EST</p>
+                <div className="flex flex-col space-y-1">
+                  <p className="font-medium">New User Orientation</p>
+                  <p className="text-sm text-muted-foreground">Every Monday at 2pm EST</p>
+                  <Button 
+                    onClick={() => openWebinarSignup("New User Orientation")}
+                    variant="outline" 
+                    size="sm"
+                    className="mt-1 w-full"
+                  >
+                    <CalendarPlus className="mr-2 h-4 w-4" />
+                    Sign me up
+                  </Button>
+                </div>
               </li>
               <li>
-                <p className="font-medium">Advanced Features Workshop</p>
-                <p className="text-sm text-muted-foreground">Every Wednesday at 1pm EST</p>
+                <div className="flex flex-col space-y-1">
+                  <p className="font-medium">Advanced Features Workshop</p>
+                  <p className="text-sm text-muted-foreground">Every Wednesday at 1pm EST</p>
+                  <Button 
+                    onClick={() => openWebinarSignup("Advanced Features Workshop")}
+                    variant="outline" 
+                    size="sm"
+                    className="mt-1 w-full"
+                  >
+                    <CalendarPlus className="mr-2 h-4 w-4" />
+                    Sign me up
+                  </Button>
+                </div>
               </li>
             </ul>
           </CardContent>
@@ -122,6 +159,54 @@ export default function Training() {
               ></iframe>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Webinar Signup Dialog */}
+      <Dialog open={showWebinarSignup} onOpenChange={setShowWebinarSignup}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Sign up for {selectedWebinar}</DialogTitle>
+            <DialogClose className="absolute right-4 top-4">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </DialogHeader>
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="grid gap-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                Full Name
+              </label>
+              <input 
+                id="name" 
+                type="text" 
+                required
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground" 
+                placeholder="Enter your name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email Address
+              </label>
+              <input 
+                id="email" 
+                type="email" 
+                required
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground" 
+                placeholder="Enter your email"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setShowWebinarSignup(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                <Calendar className="mr-2 h-4 w-4" />
+                Confirm Registration
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </MainLayout>
