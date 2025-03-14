@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Purchase, PurchaseStatus } from "@/types/purchase";
@@ -5,17 +6,31 @@ import { Purchase, PurchaseStatus } from "@/types/purchase";
 // Utility function to map database purchase to Purchase type
 const mapDbPurchaseToPurchase = (dbPurchase: any): Purchase => ({
   id: dbPurchase.id,
-  poNumber: dbPurchase.poNumber,
+  poNumber: dbPurchase.poNumber || dbPurchase.ponumber,
   supplier: dbPurchase.supplier,
-  orderDate: dbPurchase.orderDate,
-  expectedDeliveryDate: dbPurchase.expectedDeliveryDate,
-  receivedDate: dbPurchase.receivedDate,
+  orderDate: dbPurchase.orderDate || dbPurchase.orderdate,
+  expectedDeliveryDate: dbPurchase.expectedDeliveryDate || dbPurchase.expecteddeliverydate,
+  receivedDate: dbPurchase.receivedDate || dbPurchase.receiveddate,
   status: dbPurchase.status as PurchaseStatus,
-  totalCost: dbPurchase.totalCost,
+  totalCost: dbPurchase.totalCost || dbPurchase.totalcost,
   items: dbPurchase.items || [],
-  createdAt: dbPurchase.createdAt,
-  updatedAt: dbPurchase.updatedAt,
+  // Remove the createdAt and updatedAt properties as they aren't in the Purchase type
 });
+
+// Utility function to map Purchase type to database structure
+const mapPurchaseToDbFormat = (purchase: Purchase) => {
+  return {
+    id: purchase.id,
+    ponumber: purchase.poNumber,
+    supplier: purchase.supplier,
+    orderdate: purchase.orderDate,
+    expecteddeliverydate: purchase.expectedDeliveryDate,
+    receiveddate: purchase.receivedDate || null,
+    status: purchase.status,
+    totalcost: purchase.totalCost,
+    notes: purchase.notes || null
+  };
+};
 
 export function usePurchasesWithDB(
   initialPage: number = 1,
@@ -40,8 +55,8 @@ export function usePurchasesWithDB(
         const { data, error, count } = await supabase
           .from('purchases')
           .select('*, items:purchase_items(*)', { count: 'exact' })
-          .like('poNumber', `%${searchQuery}%`)
-          .order('createdAt', { ascending: false })
+          .like('ponumber', `%${searchQuery}%`)
+          .order('created_at', { ascending: false })
           .range((page - 1) * pageSize, page * pageSize - 1);
 
         if (error) {
@@ -69,10 +84,13 @@ export function usePurchasesWithDB(
   const addPurchase = async (newPurchase: Purchase) => {
     setIsLoading(true);
     try {
+      // Convert the Purchase object to database format
+      const dbPurchase = mapPurchaseToDbFormat(newPurchase);
+      
       const { data, error } = await supabase
         .from('purchases')
-        .insert([newPurchase])
-        .select()
+        .insert([dbPurchase])
+        .select();
 
       if (error) {
         console.error('Error adding purchase to database:', error);
@@ -93,11 +111,14 @@ export function usePurchasesWithDB(
   const updatePurchase = async (updatedPurchase: Purchase) => {
     setIsLoading(true);
     try {
+      // Convert the Purchase object to database format
+      const dbPurchase = mapPurchaseToDbFormat(updatedPurchase);
+      
       const { data, error } = await supabase
         .from('purchases')
-        .update(updatedPurchase)
+        .update(dbPurchase)
         .eq('id', updatedPurchase.id)
-        .select()
+        .select();
 
       if (error) {
         console.error('Error updating purchase in database:', error);
@@ -124,7 +145,7 @@ export function usePurchasesWithDB(
       const { error } = await supabase
         .from('purchases')
         .delete()
-        .eq('id', purchaseId)
+        .eq('id', purchaseId);
 
       if (error) {
         console.error('Error deleting purchase from database:', error);
@@ -149,7 +170,7 @@ export function usePurchasesWithDB(
         .from('purchases')
         .update({ status: newStatus })
         .eq('id', purchaseId)
-        .select()
+        .select();
 
       if (error) {
         console.error('Error updating purchase status in database:', error);
@@ -179,8 +200,8 @@ export function usePurchasesWithDB(
       const { data, error, count } = await supabase
         .from('purchases')
         .select('*, items:purchase_items(*)', { count: 'exact' })
-        .like('poNumber', `%${searchQuery}%`)
-        .order('createdAt', { ascending: false })
+        .like('ponumber', `%${searchQuery}%`)
+        .order('created_at', { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1);
       
       if (error) {

@@ -1,3 +1,4 @@
+
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Purchase } from "@/types/purchase";
 import { purchaseOrders } from "./mockData";
@@ -26,8 +27,9 @@ export async function getInventoryItems(
       );
       
       if (!error && data.length > 0) {
+        const mappedItems = data.map(item => mapDatabaseItemToInventoryItem(item));
         return {
-          items: data,
+          items: mappedItems,
           total: count || 0
         };
       }
