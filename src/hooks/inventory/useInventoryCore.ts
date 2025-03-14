@@ -10,8 +10,8 @@ export function useInventoryCore(
   searchQuery: string = "",
   sortField: SortField = 'name',
   sortDirection: SortDirection = 'asc',
-  categoryFilter?: string,
-  locationFilter?: string
+  categoryFilter?: string | null,
+  locationFilter?: string | null
 ) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -62,15 +62,16 @@ export function useInventoryCore(
       });
       
       // Make sure we pass the actual values, not object representations
+      // Also handle null values by converting them to undefined
       const cleanCategoryFilter = 
         categoryFilter && typeof categoryFilter === 'object' && '_type' in categoryFilter 
           ? undefined 
-          : categoryFilter;
+          : (categoryFilter === null ? undefined : categoryFilter);
       
       const cleanLocationFilter = 
         locationFilter && typeof locationFilter === 'object' && '_type' in locationFilter
           ? undefined
-          : locationFilter;
+          : (locationFilter === null ? undefined : locationFilter);
       
       // Try to fetch from Supabase first
       const { items: dbItems, count, error: dbError } = await fetchFromSupabase(
