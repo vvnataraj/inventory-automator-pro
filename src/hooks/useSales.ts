@@ -17,8 +17,8 @@ export function useSales(
   
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['sales', page, pageSize, searchQuery, statusFilter],
-    queryFn: () => {
-      const result = getSales(page, pageSize, searchQuery);
+    queryFn: async () => {
+      const result = await getSales(page, pageSize, searchQuery);
       // Note: In a real app, we would pass statusFilter to getSales and filter on the server
       // For the demo app, we're filtering here
       if (statusFilter && result.items) {

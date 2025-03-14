@@ -37,8 +37,8 @@ export default function Inventory() {
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || undefined;
     const location = searchParams.get("location") || undefined;
-    const sort = searchParams.get("sort") || "name";
-    const order = searchParams.get("order") as "asc" | "desc" || "asc";
+    const sort = searchParams.get("sort") as SortField || "name";
+    const order = searchParams.get("order") as SortDirection || "asc";
     const view = searchParams.get("view") as "grid" | "table" || "table";
     
     setCurrentPage(page);
