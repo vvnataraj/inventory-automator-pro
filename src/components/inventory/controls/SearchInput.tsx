@@ -56,9 +56,11 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     };
   }, []);
   
-  // Update the local input value if the searchQuery prop changes (e.g., from URL parameters)
+  // Update the local input value if the searchQuery prop changes from external sources
+  // This is crucial - only update if the prop differs from the local state
   useEffect(() => {
     if (searchQuery !== inputValue) {
+      console.log("External searchQuery changed, updating input value:", searchQuery);
       setInputValue(searchQuery);
     }
   }, [searchQuery]);

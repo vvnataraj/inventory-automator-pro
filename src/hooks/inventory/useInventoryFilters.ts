@@ -46,9 +46,15 @@ export function useInventoryFilters() {
     setLocationFilter(location === "undefined" ? undefined : location);
   }, []);
 
+  // Add a custom search handler
+  const handleSetSearchQuery = useCallback((query: string) => {
+    console.log(`Setting search query to: ${query}`);
+    setSearchQuery(query);
+  }, []);
+
   return {
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSetSearchQuery,
     categoryFilter,
     setCategoryFilter: handleSetCategoryFilter,
     locationFilter,
