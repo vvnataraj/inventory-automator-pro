@@ -1,3 +1,4 @@
+
 import React from "react";
 import { 
   Pagination, 
@@ -9,6 +10,7 @@ import {
   PaginationEllipsis
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 interface InventoryPaginationProps {
@@ -119,7 +121,7 @@ export const InventoryPagination: React.FC<InventoryPaginationProps> = ({
                 className="cursor-pointer"
                 aria-label="Go to previous page"
               >
-                <PaginationPrevious className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
             </PaginationItem>
             
@@ -155,7 +157,7 @@ export const InventoryPagination: React.FC<InventoryPaginationProps> = ({
                 className="cursor-pointer"
                 aria-label="Go to next page"
               >
-                <PaginationNext className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </PaginationItem>
           </PaginationContent>
