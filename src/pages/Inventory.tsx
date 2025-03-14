@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -14,7 +14,8 @@ import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { getInventoryItems, syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
 
 export default function Inventory() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [syncingDb, setSyncingDb] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -145,6 +146,10 @@ export default function Inventory() {
     }
   };
   
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
   return (
     <MainLayout>
       <div className="flex flex-col gap-6">
@@ -223,7 +228,7 @@ export default function Inventory() {
               currentPage={currentPage}
               itemsPerPage={itemsPerPage}
               totalItems={totalItems}
-              onPageChange={setCurrentPage}
+              onPageChange={handlePageChange}
             />
           </>
         )}

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Pagination, 
@@ -10,6 +9,7 @@ import {
   PaginationEllipsis
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 interface InventoryPaginationProps {
   currentPage: number;
@@ -25,6 +25,8 @@ export const InventoryPagination: React.FC<InventoryPaginationProps> = ({
   onPageChange,
 }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Generate an array of page numbers to display
   const getPageNumbers = () => {
@@ -76,15 +78,26 @@ export const InventoryPagination: React.FC<InventoryPaginationProps> = ({
     return pageNumbers;
   };
 
-  // Ensure page change actually triggers data refresh
+  // Ensure page change actually triggers data refresh and updates URL
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       console.log(`Changing to page ${page}`);
+      
+      // Update the URL with the new page number
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("page", page.toString());
+      navigate(`?${newParams.toString()}`);
+      
+      // Call the onPageChange handler
       onPageChange(page);
     }
   };
 
   const pageNumbers = getPageNumbers();
+
+  // Determine if previous/next buttons should be disabled
+  const isPrevDisabled = currentPage <= 1;
+  const isNextDisabled = currentPage >= totalPages;
 
   return (
     <div className="flex justify-between items-center mt-4">
@@ -98,11 +111,16 @@ export const InventoryPagination: React.FC<InventoryPaginationProps> = ({
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious 
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={isPrevDisabled}
                 onClick={() => handlePageChange(currentPage - 1)}
-                className={`cursor-pointer ${currentPage === 1 ? "pointer-events-none opacity-50" : "hover:bg-accent"}`}
-                tabIndex={currentPage === 1 ? -1 : 0}
-              />
+                className="cursor-pointer"
+                aria-label="Go to previous page"
+              >
+                <PaginationPrevious className="h-4 w-4" />
+              </Button>
             </PaginationItem>
             
             {pageNumbers.map((page, index) => {
@@ -129,11 +147,16 @@ export const InventoryPagination: React.FC<InventoryPaginationProps> = ({
             })}
             
             <PaginationItem>
-              <PaginationNext 
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={isNextDisabled}
                 onClick={() => handlePageChange(currentPage + 1)}
-                className={`cursor-pointer ${currentPage === totalPages ? "pointer-events-none opacity-50" : "hover:bg-accent"}`}
-                tabIndex={currentPage === totalPages ? -1 : 0}
-              />
+                className="cursor-pointer"
+                aria-label="Go to next page"
+              >
+                <PaginationNext className="h-4 w-4" />
+              </Button>
             </PaginationItem>
           </PaginationContent>
         </Pagination>
