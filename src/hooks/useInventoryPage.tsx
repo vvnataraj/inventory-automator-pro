@@ -10,11 +10,7 @@ export function useInventoryPage() {
   // Get filter state
   const {
     searchQuery,
-    setSearchQuery,
-    categoryFilter,
-    setCategoryFilter,
-    locationFilter,
-    setLocationFilter
+    setSearchQuery
   } = useInventoryFilters();
   
   // Get view mode and sorting state
@@ -54,13 +50,8 @@ export function useInventoryPage() {
     1, // Default page, will be overridden by URL sync
     searchQuery,
     sortField,
-    sortDirection,
-    categoryFilter,
-    locationFilter
+    sortDirection
   );
-  
-  // fetchItems from useInventoryItems now properly returns a Promise<void>
-  // No need for a wrapper function anymore
   
   // Sync with URL parameters
   const {
@@ -68,12 +59,12 @@ export function useInventoryPage() {
     setCurrentPage
   } = useInventoryUrlSync(
     setSearchQuery,
-    setCategoryFilter,
-    setLocationFilter,
+    () => {}, // Empty function for setCategoryFilter
+    () => {}, // Empty function for setLocationFilter
     setSortField,
     setSortDirection,
     setViewMode,
-    fetchItems // This now accepts a function that returns Promise<void>
+    fetchItems
   );
   
   // Get inventory action handlers
@@ -111,8 +102,8 @@ export function useInventoryPage() {
       isLoading,
       totalItems,
       itemsPerPage,
-      categoryFilter,
-      locationFilter
+      categoryFilter: undefined,
+      locationFilter: undefined
     },
     actions: {
       setSearchQuery,
@@ -122,8 +113,8 @@ export function useInventoryPage() {
       setSortDirection,
       setReorderDialogOpen,
       setSelectedItem,
-      setCategoryFilter,
-      setLocationFilter,
+      setCategoryFilter: () => {}, // Empty function
+      setLocationFilter: () => {}, // Empty function
       handleSort,
       handleSaveItem,
       handleAddItem,

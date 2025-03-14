@@ -9,9 +9,7 @@ export function useInventoryCore(
   page: number = 1, 
   searchQuery: string = "",
   sortField: SortField = 'name',
-  sortDirection: SortDirection = 'asc',
-  categoryFilter?: string | null,
-  locationFilter?: string | null
+  sortDirection: SortDirection = 'asc'
 ) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -45,8 +43,6 @@ export function useInventoryCore(
     console.log("Fetching inventory items with forceRefresh:", forceRefresh);
     console.log("Current page:", page);
     console.log("Search query:", searchQuery);
-    console.log("Category filter:", categoryFilter);
-    console.log("Location filter:", locationFilter);
     
     isFetchingRef.current = true;
     setIsLoading(true);
@@ -56,42 +52,20 @@ export function useInventoryCore(
         page, 
         searchQuery, 
         sortField, 
-        sortDirection,
-        categoryFilter,
-        locationFilter
+        sortDirection
       });
-      
-      // Make sure we pass the actual values, not object representations
-      // Also handle null values by converting them to undefined
-      const cleanCategoryFilter = 
-        categoryFilter && typeof categoryFilter === 'object' && '_type' in categoryFilter 
-          ? undefined 
-          : (categoryFilter === null ? undefined : categoryFilter);
-      
-      const cleanLocationFilter = 
-        locationFilter && typeof locationFilter === 'object' && '_type' in locationFilter
-          ? undefined
-          : (locationFilter === null ? undefined : locationFilter);
       
       // Try to fetch from Supabase first
       const { items: dbItems, count, error: dbError } = await fetchFromSupabase(
-        page, searchQuery, sortField, sortDirection, cleanCategoryFilter, cleanLocationFilter
+        page, searchQuery, sortField, sortDirection
       );
       
       if (dbError || dbItems.length === 0) {
         // Fallback to local data if Supabase fetch fails or returns no results
         console.log("Falling back to local data");
         
-        // Get the clean string value or undefined for local fetch
-        // Ensure we're passing either a string or undefined to fetchFromLocal
-        const categoryValue = categoryFilter === null ? undefined : 
-          (typeof categoryFilter === 'string' ? categoryFilter : undefined);
-        
-        const locationValue = locationFilter === null ? undefined : 
-          (typeof locationFilter === 'string' ? locationFilter : undefined);
-        
         const { items: localItems, total } = fetchFromLocal(
-          page, searchQuery, sortField, sortDirection, categoryValue, locationValue
+          page, searchQuery, sortField, sortDirection
         );
         
         setItems(localItems);
@@ -114,15 +88,8 @@ export function useInventoryCore(
       console.error("Failed to fetch inventory items:", err);
       
       // Fallback to local data
-      // Ensure we're passing either a string or undefined to fetchFromLocal
-      const categoryValue = categoryFilter === null ? undefined : 
-        (typeof categoryFilter === 'string' ? categoryFilter : undefined);
-      
-      const locationValue = locationFilter === null ? undefined : 
-        (typeof locationFilter === 'string' ? locationFilter : undefined);
-      
       const { items: localItems, total } = fetchFromLocal(
-        page, searchQuery, sortField, sortDirection, categoryValue, locationValue
+        page, searchQuery, sortField, sortDirection
       );
       
       setItems(localItems);
@@ -137,7 +104,7 @@ export function useInventoryCore(
     }
     
     return Promise.resolve();
-  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchFromSupabase, fetchFromLocal]);
+  }, [page, searchQuery, sortField, sortDirection, fetchFromSupabase, fetchFromLocal]);
   
   // Create a separate method to explicitly trigger refresh
   const refreshData = useCallback((): Promise<void> => {
@@ -145,9 +112,8 @@ export function useInventoryCore(
     console.log("Explicitly refreshing data with refreshData()");
     console.log("Current page:", page);
     console.log("Current search query:", searchQuery);
-    console.log("Current filters - category:", categoryFilter, "location:", locationFilter);
     return fetchItems(true); // Always force refresh when explicitly called
-  }, [fetchItems, categoryFilter, locationFilter, searchQuery, page]);
+  }, [fetchItems, searchQuery, page]);
 
   // Use a single effect to fetch items and avoid multiple triggers
   useEffect(() => {
@@ -163,7 +129,7 @@ export function useInventoryCore(
       console.log("Fetching items due to search/filter/sort changes");
       fetchItems();
     }
-  }, [searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);
+  }, [searchQuery, sortField, sortDirection, fetchItems]);
 
   return { 
     items, 
