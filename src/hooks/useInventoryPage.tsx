@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { toast } from "sonner";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 
 export function useInventoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -12,10 +13,35 @@ export function useInventoryPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Effect to set category filter from URL when the component mounts
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if (category) {
+      console.log(`Setting category filter from URL: ${category}`);
+      setCategoryFilter(category);
+    } else {
+      setCategoryFilter(undefined);
+    }
+  }, [searchParams]);
+  
+  // Reset filter when navigating away from inventory page
+  useEffect(() => {
+    return () => {
+      if (location.pathname !== "/inventory") {
+        setCategoryFilter(undefined);
+      }
+    };
+  }, [location.pathname]);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, categoryFilter]);
   
   const { 
     items, 
@@ -33,7 +59,8 @@ export function useInventoryPage() {
     currentPage, 
     searchQuery,
     sortField,
-    sortDirection
+    sortDirection,
+    categoryFilter
   );
   
   const itemsPerPage = 20;
@@ -46,6 +73,16 @@ export function useInventoryPage() {
       setSortDirection('asc');
     }
   };
+  
+  const handleCategoryFilterChange = useCallback((category: string | undefined) => {
+    setCategoryFilter(category);
+    // Update URL to reflect the category filter
+    if (category) {
+      navigate(`/inventory?category=${encodeURIComponent(category)}`, { replace: true });
+    } else {
+      navigate('/inventory', { replace: true });
+    }
+  }, [navigate]);
 
   const handleSaveItem = useCallback(async (updatedItem: InventoryItem) => {
     const success = await updateItem(updatedItem);
@@ -140,6 +177,7 @@ export function useInventoryPage() {
       isLoading,
       totalItems,
       itemsPerPage,
+      categoryFilter,
     },
     actions: {
       setSearchQuery,
@@ -157,6 +195,7 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
+      setCategoryFilter: handleCategoryFilterChange,
       fetchItems: (forceRefresh = false) => {
         console.log("Calling refresh with forceRefresh:", forceRefresh);
         return refresh();

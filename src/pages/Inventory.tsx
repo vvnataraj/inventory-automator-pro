@@ -11,6 +11,7 @@ import { InventoryItem } from "@/types/inventory";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { CategoryFilter } from "@/components/inventory/controls/CategoryFilter";
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
@@ -18,8 +19,13 @@ export default function Inventory() {
   
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
-    
     actions.fetchItems(true);
+    
+    // Cleanup function to reset the filter when unmounting
+    return () => {
+      console.log("Inventory page unmounting, resetting filter");
+      actions.setCategoryFilter(undefined);
+    };
   }, [searchParams]); 
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
@@ -54,16 +60,27 @@ export default function Inventory() {
           />
         </div>
         
-        <InventoryControls 
-          searchQuery={state.searchQuery}
-          setSearchQuery={actions.setSearchQuery}
-          viewMode={state.viewMode}
-          setViewMode={actions.setViewMode}
-          sortField={state.sortField}
-          sortDirection={state.sortDirection}
-          onSort={actions.handleSort}
-          onSortDirectionChange={actions.setSortDirection}
-        />
+        <div className="flex items-center gap-4 mb-4">
+          <InventoryControls 
+            searchQuery={state.searchQuery}
+            setSearchQuery={actions.setSearchQuery}
+            viewMode={state.viewMode}
+            setViewMode={actions.setViewMode}
+            sortField={state.sortField}
+            sortDirection={state.sortDirection}
+            onSort={actions.handleSort}
+            onSortDirectionChange={actions.setSortDirection}
+          />
+          
+          {state.categoryFilter && (
+            <div className="flex items-center gap-2">
+              <CategoryFilter 
+                categoryFilter={state.categoryFilter} 
+                onCategoryFilterChange={actions.setCategoryFilter}
+              />
+            </div>
+          )}
+        </div>
 
         {state.isLoading ? (
           <div className="flex justify-center items-center h-64">
