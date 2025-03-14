@@ -59,6 +59,15 @@ export function useInventoryPage() {
     locationFilter
   );
   
+  // This function properly returns a Promise<void> to satisfy the TypeScript requirements
+  const fetchItemsAsync = async (): Promise<void> => {
+    try {
+      await fetchItems();
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
+  };
+  
   // Sync with URL parameters
   const {
     currentPage,
@@ -70,14 +79,7 @@ export function useInventoryPage() {
     setSortField,
     setSortDirection,
     setViewMode,
-    // Fix: Properly ensure this always returns a Promise<void>
-    async (): Promise<void> => {
-      try {
-        await fetchItems();
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    }
+    fetchItemsAsync // Pass the properly typed async function
   );
   
   // Get inventory action handlers
@@ -136,7 +138,7 @@ export function useInventoryPage() {
       handleOpenReorderDialog,
       handleReorderStock,
       handleTransferItem,
-      // Fix: Properly ensure this always returns a Promise<void>
+      // Create a properly typed async function that returns Promise<void>
       fetchItems: async (forceRefresh = false): Promise<void> => {
         console.log("Calling refresh with forceRefresh:", forceRefresh);
         try {
