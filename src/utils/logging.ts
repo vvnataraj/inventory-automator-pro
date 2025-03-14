@@ -23,30 +23,12 @@ export const logActivity = async (entry: LogEntry): Promise<boolean> => {
     
     if (user && !entry.user_id) {
       entry.user_id = user.id;
-      
-      // Fetch user email from profile
-      if (!entry.username) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', user.id)
-          .single();
-        
-        if (profileData?.username) {
-          entry.username = profileData.username;
-        } else {
-          // Use email as fallback
-          entry.username = user.email;
-        }
-      }
     }
 
     // Set user agent
     if (!entry.user_agent && typeof window !== 'undefined') {
       entry.user_agent = window.navigator.userAgent;
     }
-
-    console.log("Logging activity:", entry);
 
     const { error } = await supabase
       .from('activity_logs')

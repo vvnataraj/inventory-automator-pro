@@ -23,8 +23,6 @@ export function useInventoryCore(
   const isFetchingRef = useRef(false);
   // Add a ref to track current page to detect changes
   const currentPageRef = useRef(page);
-  // Track the first fetch
-  const initialFetchDoneRef = useRef(false);
   
   const { fetchFromSupabase, fetchFromLocal } = useInventoryDatabase();
   
@@ -32,13 +30,6 @@ export function useInventoryCore(
     // Prevent duplicate fetches unless forced
     if (isFetchingRef.current && !forceRefresh) {
       console.log("Already fetching, skip duplicate request");
-      return Promise.resolve();
-    }
-    
-    // Skip duplicate fetch calls with the same parameters unless forced
-    if (initialFetchDoneRef.current && !forceRefresh && 
-        currentPageRef.current === page) {
-      console.log("Parameters unchanged, skipping fetch");
       return Promise.resolve();
     }
     
@@ -87,7 +78,6 @@ export function useInventoryCore(
       }
       
       setError(null);
-      initialFetchDoneRef.current = true;
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to fetch inventory items"));
       console.error("Failed to fetch inventory items:", err);
@@ -121,21 +111,18 @@ export function useInventoryCore(
     return fetchItems(true); // Always force refresh when explicitly called
   }, [fetchItems, categoryFilter, locationFilter, searchQuery, page]);
 
-  // Use a single effect to fetch items and avoid multiple triggers
+  // Use effect to fetch items when dependencies change
   useEffect(() => {
-    if (!initialFetchDoneRef.current || currentPageRef.current !== page) {
-      console.log("Fetching items due to page change or initial load");
-      fetchItems();
-    }
-  }, [page, fetchItems]);
-
-  // Separate effect for search and filter changes to prevent unnecessary fetches
-  useEffect(() => {
-    if (initialFetchDoneRef.current) {
-      console.log("Fetching items due to search/filter/sort changes");
-      fetchItems();
-    }
-  }, [searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);
+    console.log("Dependencies changed, fetching items...");
+    console.log("Current page:", page);
+    console.log("Previous page ref:", currentPageRef.current);
+    console.log("Current search query:", searchQuery);
+    console.log("Current category filter:", categoryFilter);
+    
+    // Force refresh if page changed
+    const pageChanged = currentPageRef.current !== page;
+    fetchItems(pageChanged);
+  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);
 
   return { 
     items, 

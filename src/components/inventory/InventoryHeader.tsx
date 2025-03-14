@@ -1,102 +1,32 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import React from "react";
+import { AddInventoryItem } from "./AddInventoryItem";
 import { InventoryItem } from "@/types/inventory";
-import { syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
-import { logInventoryActivity } from "@/utils/logging";
+import { ExportInventoryButton } from "./ExportInventoryButton";
+import { ImportInventoryButton } from "./ImportInventoryButton";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 interface InventoryHeaderProps {
   onAddItem: (newItem: InventoryItem) => void;
   items: InventoryItem[];
-  onImportItems: (items: InventoryItem[]) => void;
+  onImportItems?: (items: InventoryItem[]) => void;
 }
 
-export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
-  onAddItem,
+export const InventoryHeader: React.FC<InventoryHeaderProps> = ({ 
+  onAddItem, 
   items,
-  onImportItems
+  onImportItems 
 }) => {
+  const { isManager } = useUserRoles();
+  
   return (
-    <div className="flex flex-col space-y-2">
-      <div className="flex items-center">
-        <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-0 gap-4 w-full">
+      <h1 className="text-3xl font-semibold tracking-tight">Inventory</h1>
+      <div className="flex flex-wrap gap-2 justify-end ml-auto">
+        {isManager() && <ImportInventoryButton onImport={onImportItems} />}
+        {isManager() && <ExportInventoryButton items={items} />}
+        {isManager() && <AddInventoryItem onAdd={onAddItem} />}
       </div>
-      <p className="text-muted-foreground">
-        {items.length} items in your inventory
-      </p>
-    </div>
-  );
-};
-
-interface InventoryHeaderWithActionsProps {
-  onAddItem: (newItem: InventoryItem) => void;
-  items: InventoryItem[];
-  onImportItems: (items: InventoryItem[]) => void;
-  onRefreshItems: (forceRefresh?: boolean) => Promise<void>;
-}
-
-export const InventoryHeaderWithActions: React.FC<InventoryHeaderWithActionsProps> = ({
-  onAddItem,
-  items,
-  onImportItems,
-  onRefreshItems
-}) => {
-  const [syncingDb, setSyncingDb] = useState(false);
-
-  const handleSyncToDatabase = async () => {
-    setSyncingDb(true);
-    try {
-      const result = await syncInventoryItemsToSupabase();
-      if (result.success) {
-        toast.success(result.message);
-        await logInventoryActivity('sync_to_database', 'batch', 'All Items', { 
-          result: 'success',
-          message: result.message
-        });
-        await onRefreshItems(true);
-      } else {
-        toast.error(result.message);
-        await logInventoryActivity('sync_to_database', 'batch', 'All Items', { 
-          result: 'error',
-          message: result.message
-        });
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      toast.error(`Failed to sync inventory: ${errorMessage}`);
-      await logInventoryActivity('sync_to_database', 'batch', 'All Items', { 
-        result: 'error',
-        message: errorMessage
-      });
-    } finally {
-      setSyncingDb(false);
-    }
-  };
-
-  return (
-    <div className="flex justify-between items-center">
-      <InventoryHeader 
-        onAddItem={onAddItem} 
-        items={items}
-        onImportItems={onImportItems}
-      />
-      <Button 
-        onClick={handleSyncToDatabase} 
-        disabled={syncingDb}
-        variant="outline"
-        className="ml-2 h-10"
-      >
-        {syncingDb ? (
-          <>
-            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-            Syncing...
-          </>
-        ) : (
-          <>Sync to Database</>
-        )}
-      </Button>
     </div>
   );
 };

@@ -14,9 +14,8 @@ export function useInventoryUrlSync(
 ) {
   const [searchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
-  // Sync URL parameters with state, but only fetch once
+  // Sync URL parameters with state
   useEffect(() => {
     const page = parseInt(searchParams.get("page") || "1");
     const search = searchParams.get("search") || "";
@@ -34,14 +33,11 @@ export function useInventoryUrlSync(
     setSortDirection(order);
     setViewMode(view);
     
-    // Only call fetchItems once during initial load
-    if (!initialLoadComplete) {
-      fetchItems().catch(err => console.error("Error fetching items:", err));
-      setInitialLoadComplete(true);
-    }
-  }, [searchParams, setSearchQuery, setCategoryFilter, setLocationFilter, setSortField, setSortDirection, setViewMode, fetchItems, initialLoadComplete]);
+    // We need to call this asynchronously but don't need to await it
+    fetchItems().catch(err => console.error("Error fetching items:", err));
+  }, [searchParams, setSearchQuery, setCategoryFilter, setLocationFilter, setSortField, setSortDirection, setViewMode, fetchItems]);
   
-  // Reset to page 1 when filters change, but don't fetch
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchParams.get("search"), searchParams.get("category"), searchParams.get("location")]);
