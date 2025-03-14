@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Order } from "@/types/order";
 import { format } from "date-fns";
 import { jsPDF } from "jspdf";
@@ -29,6 +29,28 @@ export const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
   onClose,
 }) => {
   if (!order) return null;
+  
+  const [logoImage, setLogoImage] = useState<string | null>(null);
+  
+  // Load the logo image
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/lovable-uploads/f849ba67-c0f4-4e4b-9f84-e91df8d9b64d.png";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        setLogoImage(canvas.toDataURL("image/png"));
+      }
+    };
+    img.onerror = () => {
+      console.error("Failed to load logo image");
+      setLogoImage(null);
+    };
+  }, []);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
@@ -38,32 +60,51 @@ export const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
   const printInvoice = () => {
     const doc = new jsPDF();
     
-    // Add company header
-    doc.setFontSize(20);
-    doc.text("INVOICE", 105, 20, { align: "center" });
+    // Add logo and company name to header
+    if (logoImage) {
+      doc.addImage(logoImage, "PNG", 20, 10, 20, 20);
+    }
     
+    // Add company name and tagline with gradient-like styling (in PDF we can't do gradients easily)
+    doc.setFontSize(18);
+    doc.setTextColor(75, 0, 130); // Purple-ish color
+    doc.text("STOCK", 45, 20);
+    doc.setTextColor(128, 0, 128); // More purple
+    doc.text("topus", 77, 20);
+    
+    // Add tagline
     doc.setFontSize(10);
-    doc.text("Your Company Name", 20, 30);
-    doc.text("123 Business Street", 20, 35);
-    doc.text("City, State, Zip", 20, 40);
-    doc.text("Phone: (123) 456-7890", 20, 45);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Inventory Management", 45, 25);
+    
+    // Add invoice title
+    doc.setFontSize(20);
+    doc.setTextColor(0, 0, 0);
+    doc.text("INVOICE", 105, 35, { align: "center" });
+    
+    // Add company details
+    doc.setFontSize(10);
+    doc.text("STOCKtopus Inc.", 20, 45);
+    doc.text("123 Business Street", 20, 50);
+    doc.text("City, State, Zip", 20, 55);
+    doc.text("Phone: (123) 456-7890", 20, 60);
     
     // Add invoice info
     doc.setFontSize(12);
-    doc.text(`Invoice #: ${order.orderNumber}`, 150, 30, { align: "right" });
-    doc.text(`Date: ${formatDate(order.createdAt)}`, 150, 35, { align: "right" });
-    doc.text(`Status: ${order.status}`, 150, 40, { align: "right" });
+    doc.text(`Invoice #: ${order.orderNumber}`, 150, 45, { align: "right" });
+    doc.text(`Date: ${formatDate(order.createdAt)}`, 150, 50, { align: "right" });
+    doc.text(`Status: ${order.status}`, 150, 55, { align: "right" });
     
     // Add customer info
     doc.setFontSize(12);
-    doc.text("Bill To:", 20, 60);
-    doc.text(order.customer.name, 20, 65);
-    doc.text(order.shippingAddress.line1, 20, 70);
+    doc.text("Bill To:", 20, 75);
+    doc.text(order.customer.name, 20, 80);
+    doc.text(order.shippingAddress.line1, 20, 85);
     if (order.shippingAddress.line2) {
-      doc.text(order.shippingAddress.line2, 20, 75);
+      doc.text(order.shippingAddress.line2, 20, 90);
     }
-    doc.text(`${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}`, 20, order.shippingAddress.line2 ? 80 : 75);
-    doc.text(order.shippingAddress.country, 20, order.shippingAddress.line2 ? 85 : 80);
+    doc.text(`${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}`, 20, order.shippingAddress.line2 ? 95 : 90);
+    doc.text(order.shippingAddress.country, 20, order.shippingAddress.line2 ? 100 : 95);
     
     // Add order items table
     const tableColumn = ["Item", "Quantity", "Price", "Subtotal"];
@@ -74,7 +115,7 @@ export const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
       `$${item.subtotal.toFixed(2)}`,
     ]);
     
-    const startY = order.shippingAddress.line2 ? 95 : 90;
+    const startY = order.shippingAddress.line2 ? 110 : 105;
     
     autoTable(doc, {
       head: [tableColumn],
@@ -111,10 +152,11 @@ export const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
     // Add footer
     doc.setFontSize(10);
     doc.text("Thank you for your business!", 105, grandTotalY + 20, { align: "center" });
+    doc.text("STOCKtopus - Making inventory management easier", 105, grandTotalY + 25, { align: "center" });
     
     // Save or print the document
     try {
-      doc.save(`Invoice-${order.orderNumber}.pdf`);
+      doc.save(`STOCKtopus-Invoice-${order.orderNumber}.pdf`);
       toast.success("Invoice downloaded successfully");
     } catch (error) {
       console.error("Error generating invoice:", error);
