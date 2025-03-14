@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { RefreshCw } from "lucide-react"; // Changed from ReloadIcon to RefreshCw from lucide-react
 
 export default function Inventory() {
   const { state, actions } = useInventoryPage();
@@ -93,7 +93,7 @@ export default function Inventory() {
           >
             {syncingDb ? (
               <>
-                <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                 Syncing...
               </>
             ) : (
