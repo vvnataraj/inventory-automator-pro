@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Truck, ChevronUp, ChevronDown, Check, X } from "lucide-react";
+import { Truck, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -35,6 +36,8 @@ import { EditPurchaseModal } from "@/components/purchases/EditPurchaseModal";
 import { Purchase, PurchaseStatus } from "@/types/purchase";
 import { ListControls } from "@/components/common/ListControls";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { InventoryPagination } from "@/components/inventory/InventoryPagination";
+import { toast } from "@/components/ui/use-toast";
 
 export default function Purchases() {
   const { isManager } = useUserRoles();
@@ -76,12 +79,30 @@ export default function Purchases() {
     if (purchaseToDelete) {
       deletePurchase(purchaseToDelete);
       setPurchaseToDelete(null);
+      toast({
+        title: "Purchase deleted",
+        description: "The purchase order has been deleted successfully",
+      });
     }
     setDeleteConfirmOpen(false);
   };
 
   const handleStatusChange = (purchaseId: string, status: PurchaseStatus) => {
     updatePurchaseStatus(purchaseId, status);
+    
+    // Show success toast with appropriate message
+    const statusMessages = {
+      pending: "marked as Pending",
+      ordered: "marked as Ordered",
+      shipped: "marked as Shipped",
+      delivered: "marked as Delivered",
+      cancelled: "marked as Cancelled"
+    };
+    
+    toast({
+      title: "Status updated",
+      description: `Purchase order ${statusMessages[status]}`,
+    });
   };
 
   const sortOptions = [
@@ -118,6 +139,11 @@ export default function Purchases() {
         return valueA < valueB ? 1 : -1;
       }
     });
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -208,6 +234,7 @@ export default function Purchases() {
                           )}
                           {purchase.status !== "shipped" && (
                             <DropdownMenuItem onClick={() => handleStatusChange(purchase.id, "shipped")}>
+                              <Truck className="mr-2 h-4 w-4" />
                               Mark as Shipped
                             </DropdownMenuItem>
                           )}
@@ -241,33 +268,12 @@ export default function Purchases() {
           )}
 
           {purchases.length > 0 && (
-            <div className="flex justify-between items-center mt-6">
-              <div className="text-sm text-muted-foreground">
-                Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-                <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalPurchases)}</span> of{" "}
-                <span className="font-medium">{totalPurchases}</span> purchases
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            <InventoryPagination 
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalPurchases}
+              onPageChange={handlePageChange}
+            />
           )}
         </>
       )}
