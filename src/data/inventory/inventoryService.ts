@@ -5,19 +5,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { inventoryItems } from "@/data/inventoryData";
 
-export const getInventoryItems = async (
+export async function getInventoryItems(
   page: number = 1,
   pageSize: number = 20,
   searchQuery: string = "",
-  sortField: string = "name",
-  sortDirection: "asc" | "desc" = "asc",
+  sortField: SortField = "name",
+  sortDirection: SortDirection = "asc",
   categoryFilter?: string,
-  locationFilter?: string
-): Promise<{ items: InventoryItem[], total: number }> => {
+  locationFilter?: string,
+  forceRefresh: boolean = false
+): Promise<{ items: InventoryItem[], total: number }> {
   try {
-    console.log("Fetching inventory items from database with params:", {
-      page, pageSize, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+    console.log("Getting inventory items with params:", {
+      page, pageSize, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, forceRefresh
     });
+    
+    if (forceRefresh) {
+      const { data, count, error } = await fetchFromSupabase(
+        page, pageSize, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+      );
+      
+      if (!error && data.length > 0) {
+        return {
+          items: data,
+          total: count || 0
+        };
+      }
+      
+      console.warn("Database refresh failed, falling back to local data");
+    }
     
     let query = supabase
       .from('inventory_items')
@@ -56,11 +72,53 @@ export const getInventoryItems = async (
       total: count || 0
     };
   } catch (error) {
-    console.error("Exception in getInventoryItems:", error);
+    console.error("Error in getInventoryItems:", error);
     toast.error("Failed to load inventory items. Please try again.");
     return { items: [], total: 0 };
   }
-};
+}
+
+async function fetchFromSupabase(
+  page: number,
+  pageSize: number,
+  searchQuery: string,
+  sortField: SortField,
+  sortDirection: SortDirection,
+  categoryFilter?: string,
+  locationFilter?: string
+) {
+  let query = supabase
+    .from('inventory_items')
+    .select('*', { count: 'exact' });
+  
+  if (searchQuery.trim()) {
+    const searchTerm = searchQuery.toLowerCase().trim();
+    query = query.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+  }
+  
+  if (categoryFilter && categoryFilter !== "undefined") {
+    query = query.eq('category', categoryFilter);
+  }
+  
+  if (locationFilter && locationFilter !== "undefined") {
+    query = query.eq('location', locationFilter);
+  }
+  
+  const dbSortField = sortField === 'rrp' ? 'rrp' : sortField;
+  query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+  
+  const start = (page - 1) * pageSize;
+  query = query.range(start, start + pageSize - 1);
+  
+  const { data, error, count } = await query;
+  
+  if (error) {
+    console.error("Error fetching inventory items from Supabase:", error);
+    throw error;
+  }
+  
+  return { data, count, error };
+}
 
 export const getPurchases = (
   page: number = 1,
@@ -109,7 +167,7 @@ const mapDatabaseItemToInventoryItem = (item: any): InventoryItem => {
   };
 };
 
-export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean, message: string, count: number}> => {
+export async function syncInventoryItemsToSupabase() {
   try {
     console.log("Starting inventory sync to Supabase...");
     
@@ -200,4 +258,4 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
       count: 0
     };
   }
-};
+}

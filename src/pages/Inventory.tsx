@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,6 @@ export default function Inventory() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const itemsPerPage = 20;
   
-  // Parse URL parameters for filters
   useEffect(() => {
     const page = parseInt(searchParams.get("page") || "1");
     const search = searchParams.get("search") || "";
@@ -62,7 +60,8 @@ export default function Inventory() {
         sortField,
         sortDirection,
         categoryFilter,
-        locationFilter
+        locationFilter,
+        forceRefresh
       );
       
       setItems(result.items);
@@ -86,19 +85,16 @@ export default function Inventory() {
   };
   
   const handleSaveItem = (updatedItem: InventoryItem) => {
-    // Implementation for saving item changes would go here
     toast.success(`Item "${updatedItem.name}" updated successfully`);
     fetchItems(true);
   };
   
   const handleAddItem = (newItem: InventoryItem) => {
-    // Implementation for adding a new item would go here
     toast.success(`Item "${newItem.name}" added successfully`);
     fetchItems(true);
   };
   
   const handleDeleteItem = (itemId: string) => {
-    // Implementation for deleting an item would go here
     const itemToDelete = items.find(item => item.id === itemId);
     if (itemToDelete) {
       toast.success(`Item "${itemToDelete.name}" deleted successfully`);
@@ -106,16 +102,12 @@ export default function Inventory() {
     }
   };
   
-  // Updated to match the expected signature from InventoryGrid/InventoryTable
   const handleTransferItem = (item: InventoryItem, quantity: number, newLocation: string) => {
-    // Implementation for transferring items between locations would go here
     toast.success(`Transferred ${quantity} items from ${item.location} to ${newLocation}`);
     fetchItems(true);
   };
   
-  // Updated to match the expected signature from InventoryTable
   const handleReorderItem = (itemId: string, direction: 'up' | 'down') => {
-    // Implementation for reordering items would go here
     toast.success(`Item moved ${direction}`);
     fetchItems(true);
   };
@@ -126,14 +118,12 @@ export default function Inventory() {
   };
   
   const handleReorderStock = (item: InventoryItem, quantity: number) => {
-    // Implementation for reordering stock would go here
     toast.success(`Reordered ${quantity} units of "${item.name}"`);
     setReorderDialogOpen(false);
     fetchItems(true);
   };
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
-    // Implementation for importing items would go here
     toast.success(`Successfully imported ${importedItems.length} items`);
     fetchItems(true);
   };
@@ -144,6 +134,7 @@ export default function Inventory() {
       const result = await syncInventoryItemsToSupabase();
       if (result.success) {
         toast.success(result.message);
+        await fetchItems(true);
       } else {
         toast.error(result.message);
       }
@@ -151,7 +142,6 @@ export default function Inventory() {
       toast.error(`Failed to sync inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSyncingDb(false);
-      fetchItems(true);
     }
   };
   

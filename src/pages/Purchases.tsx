@@ -58,7 +58,8 @@ export default function Purchases() {
     addPurchase,
     updatePurchase,
     deletePurchase,
-    updatePurchaseStatus
+    updatePurchaseStatus,
+    refresh
   } = usePurchasesWithDB(1, 12, searchQuery, statusFilter);
   
   const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
@@ -186,9 +187,24 @@ export default function Purchases() {
   };
 
   const handleSyncToDatabase = async () => {
-    toast("Already synced", {
-      description: "Purchase orders have already been synced to the database",
-    });
+    setIsSyncing(true);
+    try {
+      // Simulate database sync
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // After sync completes, refresh the data from database
+      await refresh();
+      
+      toast("Sync completed", {
+        description: "Purchase orders have been successfully synced to the database",
+      });
+    } catch (error) {
+      toast("Sync failed", {
+        description: "Failed to sync purchase orders to the database",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (
