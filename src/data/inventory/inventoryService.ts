@@ -1,11 +1,10 @@
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Purchase } from "@/types/purchase";
-import { inventoryItems } from "./inventoryItems";
 import { purchaseOrders } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const getInventoryItems = (
+export const getInventoryItems = async (
   page: number = 1,
   pageSize: number = 20,
   searchQuery: string = "",
@@ -13,32 +12,55 @@ export const getInventoryItems = (
   sortDirection: "asc" | "desc" = "asc",
   categoryFilter?: string,
   locationFilter?: string
-): { items: InventoryItem[], total: number } => {
-  let filteredItems = inventoryItems.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (categoryFilter) {
-    filteredItems = filteredItems.filter(item => 
-      item.category === categoryFilter
-    );
+): Promise<{ items: InventoryItem[], total: number }> => {
+  try {
+    console.log("Fetching inventory items from database with params:", {
+      page, pageSize, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
+    });
+    
+    let query = supabase
+      .from('inventory_items')
+      .select('*', { count: 'exact' });
+    
+    if (searchQuery.trim()) {
+      const searchTerm = searchQuery.toLowerCase().trim();
+      query = query.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+    }
+    
+    if (categoryFilter && categoryFilter !== "undefined") {
+      query = query.eq('category', categoryFilter);
+    }
+    
+    if (locationFilter && locationFilter !== "undefined") {
+      query = query.eq('location', locationFilter);
+    }
+    
+    // Map sort field to database column name if needed
+    const dbSortField = sortField === 'rrp' ? 'rrp' : sortField;
+    query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+    
+    const start = (page - 1) * pageSize;
+    query = query.range(start, start + pageSize - 1);
+    
+    const { data, error, count } = await query;
+    
+    if (error) {
+      console.error("Error fetching inventory items:", error);
+      throw error;
+    }
+    
+    // Map the database items to our InventoryItem interface
+    const mappedItems = data.map(item => mapDatabaseItemToInventoryItem(item));
+    
+    return {
+      items: mappedItems,
+      total: count || 0
+    };
+  } catch (error) {
+    console.error("Exception in getInventoryItems:", error);
+    toast.error("Failed to load inventory items. Please try again.");
+    return { items: [], total: 0 };
   }
-
-  if (locationFilter) {
-    filteredItems = filteredItems.filter(item => 
-      item.location === locationFilter
-    );
-  }
-
-  const start = (page - 1) * pageSize;
-  const paginatedItems = filteredItems.slice(start, start + pageSize);
-
-  return {
-    items: paginatedItems,
-    total: filteredItems.length
-  };
 };
 
 export const getPurchases = (
@@ -46,6 +68,7 @@ export const getPurchases = (
   pageSize: number = 20,
   searchQuery: string = ""
 ): { items: Purchase[], total: number } => {
+  // Keep using mock data for purchases for now
   const filteredPurchases = purchaseOrders.filter(purchase =>
     purchase.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
     purchase.supplier.toLowerCase().includes(searchQuery.toLowerCase())
@@ -57,6 +80,35 @@ export const getPurchases = (
   return {
     items: paginatedPurchases,
     total: filteredPurchases.length
+  };
+};
+
+// Helper function to map database item to our InventoryItem interface
+const mapDatabaseItemToInventoryItem = (item: any): InventoryItem => {
+  return {
+    id: item.id || "",
+    sku: item.sku || "",
+    name: item.name || "",
+    description: item.description || "",
+    category: item.category || "",
+    subcategory: item.subcategory || "",
+    brand: item.brand || "",
+    price: typeof item.price === 'number' ? item.price : 0,
+    rrp: typeof item.rrp === 'number' ? item.rrp : (typeof item.price === 'number' ? item.price : 0),
+    cost: typeof item.cost === 'number' ? item.cost : 0,
+    stock: typeof item.stock === 'number' ? item.stock : 0,
+    lowStockThreshold: typeof item.low_stock_threshold === 'number' ? item.low_stock_threshold : 5,
+    minStockCount: typeof item.min_stock_count === 'number' ? item.min_stock_count : 1,
+    location: item.location || "",
+    barcode: item.barcode || "",
+    dateAdded: item.date_added || new Date().toISOString(),
+    lastUpdated: item.last_updated || new Date().toISOString(),
+    imageUrl: item.image_url || "",
+    dimensions: item.dimensions || undefined,
+    weight: item.weight || undefined,
+    isActive: typeof item.is_active === 'boolean' ? item.is_active : true,
+    supplier: item.supplier || "",
+    tags: Array.isArray(item.tags) ? item.tags : []
   };
 };
 

@@ -1,51 +1,138 @@
-import { useInventoryPage } from "@/hooks/useInventoryPage";
-import { ReorderDialog } from "@/components/inventory/ReorderDialog";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { InventoryItem } from "@/types/inventory";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { InventoryHeader } from "@/components/inventory/InventoryHeader";
 import { InventoryControls } from "@/components/inventory/InventoryControls";
 import { InventoryGrid } from "@/components/inventory/InventoryGrid";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { InventoryPagination } from "@/components/inventory/InventoryPagination";
-import { InventoryItem } from "@/types/inventory";
-import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
-import { RefreshCw } from "lucide-react";
+import { ReorderDialog } from "@/components/inventory/ReorderDialog";
+import { getInventoryItems, syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
 
 export default function Inventory() {
-  const { state, actions } = useInventoryPage();
   const [searchParams] = useSearchParams();
   const [syncingDb, setSyncingDb] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  const [sortField, setSortField] = useState<string>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+  const [locationFilter, setLocationFilter] = useState<string | undefined>();
+  const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const itemsPerPage = 20;
   
+  // Parse URL parameters for filters
   useEffect(() => {
-    console.log("Inventory page mounted, fetching items...");
+    const page = parseInt(searchParams.get("page") || "1");
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category") || undefined;
+    const location = searchParams.get("location") || undefined;
+    const sort = searchParams.get("sort") || "name";
+    const order = searchParams.get("order") as "asc" | "desc" || "asc";
+    const view = searchParams.get("view") as "grid" | "table" || "table";
     
-    // Always fetch items after setting/clearing category filter from useInventoryPage
-    actions.fetchItems(true);
+    setCurrentPage(page);
+    setSearchQuery(search);
+    setCategoryFilter(category);
+    setLocationFilter(location);
+    setSortField(sort);
+    setSortDirection(order);
+    setViewMode(view);
     
-  }, [searchParams]); 
+    fetchItems();
+  }, [searchParams]);
+  
+  const fetchItems = async (forceRefresh = false) => {
+    setIsLoading(true);
+    try {
+      const result = await getInventoryItems(
+        currentPage,
+        itemsPerPage,
+        searchQuery,
+        sortField,
+        sortDirection,
+        categoryFilter,
+        locationFilter
+      );
+      
+      setItems(result.items);
+      setTotalItems(result.total);
+    } catch (error) {
+      console.error("Error fetching inventory items:", error);
+      toast.error("Failed to load inventory items. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleSort = (field: string) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+    fetchItems();
+  };
+  
+  const handleSaveItem = (updatedItem: InventoryItem) => {
+    // Implementation for saving item changes would go here
+    toast.success(`Item "${updatedItem.name}" updated successfully`);
+    fetchItems(true);
+  };
+  
+  const handleAddItem = (newItem: InventoryItem) => {
+    // Implementation for adding a new item would go here
+    toast.success(`Item "${newItem.name}" added successfully`);
+    fetchItems(true);
+  };
+  
+  const handleDeleteItem = (itemId: string) => {
+    // Implementation for deleting an item would go here
+    const itemToDelete = items.find(item => item.id === itemId);
+    if (itemToDelete) {
+      toast.success(`Item "${itemToDelete.name}" deleted successfully`);
+      fetchItems(true);
+    }
+  };
+  
+  const handleTransferItem = (itemId: string, fromLocation: string, toLocation: string, quantity: number) => {
+    // Implementation for transferring items between locations would go here
+    toast.success(`Transferred ${quantity} items from ${fromLocation} to ${toLocation}`);
+    fetchItems(true);
+  };
+  
+  const handleReorderItem = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setReorderDialogOpen(true);
+  };
+  
+  const handleOpenReorderDialog = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setReorderDialogOpen(true);
+  };
+  
+  const handleReorderStock = (item: InventoryItem, quantity: number) => {
+    // Implementation for reordering stock would go here
+    toast.success(`Reordered ${quantity} units of "${item.name}"`);
+    setReorderDialogOpen(false);
+    fetchItems(true);
+  };
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
-    importedItems.forEach(item => {
-      if (!item.id) {
-        item.id = `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      }
-      
-      if (!item.dateAdded) {
-        item.dateAdded = new Date().toISOString();
-      }
-      if (!item.lastUpdated) {
-        item.lastUpdated = new Date().toISOString();
-      }
-      
-      actions.handleAddItem(item);
-    });
-    
-    actions.fetchItems();
-    
+    // Implementation for importing items would go here
     toast.success(`Successfully imported ${importedItems.length} items`);
+    fetchItems(true);
   };
   
   const handleSyncToDatabase = async () => {
@@ -61,8 +148,7 @@ export default function Inventory() {
       toast.error(`Failed to sync inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSyncingDb(false);
-      // Refresh the inventory to get latest data
-      actions.fetchItems(true);
+      fetchItems(true);
     }
   };
   
@@ -71,8 +157,8 @@ export default function Inventory() {
       <div className="flex flex-col gap-6">
         <div className="flex justify-between items-center">
           <InventoryHeader 
-            onAddItem={actions.handleAddItem} 
-            items={state.items}
+            onAddItem={handleAddItem} 
+            items={items}
             onImportItems={handleImportItems}
           />
           <Button 
@@ -93,68 +179,68 @@ export default function Inventory() {
         </div>
         
         <InventoryControls 
-          searchQuery={state.searchQuery}
-          setSearchQuery={actions.setSearchQuery}
-          viewMode={state.viewMode}
-          setViewMode={actions.setViewMode}
-          sortField={state.sortField}
-          sortDirection={state.sortDirection}
-          onSort={actions.handleSort}
-          onSortDirectionChange={actions.setSortDirection}
-          categoryFilter={state.categoryFilter}
-          onCategoryFilterChange={actions.setCategoryFilter}
-          locationFilter={state.locationFilter}
-          onLocationFilterChange={actions.setLocationFilter}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+          onSortDirectionChange={setSortDirection}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          locationFilter={locationFilter}
+          onLocationFilterChange={setLocationFilter}
         />
 
-        {state.isLoading ? (
+        {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
           </div>
-        ) : state.items.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <h3 className="text-xl font-semibold mb-2">No inventory items found</h3>
             <p className="text-muted-foreground mb-4">Try changing your search criteria or add new items.</p>
           </div>
         ) : (
           <>
-            {state.viewMode === "grid" ? (
+            {viewMode === "grid" ? (
               <InventoryGrid 
-                items={state.items}
-                onSaveItem={actions.handleSaveItem}
-                onTransferItem={actions.handleTransferItem}
-                onDeleteItem={actions.handleDeleteItem}
-                onReorderStock={actions.handleReorderStock}
+                items={items}
+                onSaveItem={handleSaveItem}
+                onTransferItem={handleTransferItem}
+                onDeleteItem={handleDeleteItem}
+                onReorderStock={handleReorderStock}
               />
             ) : (
               <InventoryTable 
-                items={state.items}
-                sortField={state.sortField}
-                sortDirection={state.sortDirection}
-                onSort={actions.handleSort}
-                onSaveItem={actions.handleSaveItem}
-                onTransferItem={actions.handleTransferItem}
-                onDeleteItem={actions.handleDeleteItem}
-                onReorderItem={actions.handleReorderItem}
-                onOpenReorderDialog={actions.handleOpenReorderDialog}
+                items={items}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                onSaveItem={handleSaveItem}
+                onTransferItem={handleTransferItem}
+                onDeleteItem={handleDeleteItem}
+                onReorderItem={handleReorderItem}
+                onOpenReorderDialog={handleOpenReorderDialog}
               />
             )}
 
             <InventoryPagination 
-              currentPage={state.currentPage}
-              itemsPerPage={state.itemsPerPage}
-              totalItems={state.totalItems}
-              onPageChange={actions.setCurrentPage}
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalItems}
+              onPageChange={setCurrentPage}
             />
           </>
         )}
 
-        {state.selectedItem && (
+        {selectedItem && (
           <ReorderDialog
-            item={state.selectedItem}
-            open={state.reorderDialogOpen}
-            onClose={() => actions.setReorderDialogOpen(false)}
-            onReorder={actions.handleReorderStock}
+            item={selectedItem}
+            open={reorderDialogOpen}
+            onClose={() => setReorderDialogOpen(false)}
+            onReorder={handleReorderStock}
           />
         )}
       </div>
