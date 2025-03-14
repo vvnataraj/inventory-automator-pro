@@ -550,6 +550,33 @@ export type Database = {
           },
         ]
       }
+      webinar_registrations: {
+        Row: {
+          id: string
+          registration_date: string | null
+          status: string | null
+          user_email: string
+          user_name: string
+          webinar_title: string
+        }
+        Insert: {
+          id?: string
+          registration_date?: string | null
+          status?: string | null
+          user_email: string
+          user_name: string
+          webinar_title: string
+        }
+        Update: {
+          id?: string
+          registration_date?: string | null
+          status?: string | null
+          user_email?: string
+          user_name?: string
+          webinar_title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       profiles: {

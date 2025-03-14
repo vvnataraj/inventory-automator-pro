@@ -6,12 +6,18 @@ import { BookOpen, Video, Users, X, Calendar, CalendarPlus } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Training() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoTitle, setVideoTitle] = useState<string>("");
   const [showWebinarSignup, setShowWebinarSignup] = useState(false);
   const [selectedWebinar, setSelectedWebinar] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+  });
   
   const openVideo = (url: string, title: string) => {
     setVideoUrl(url);
@@ -27,10 +33,56 @@ export default function Training() {
     setShowWebinarSignup(true);
   };
   
-  const handleSignup = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+  
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success(`Successfully signed up for ${selectedWebinar}!`);
-    setShowWebinarSignup(false);
+    
+    if (!formData.name || !formData.email) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Step 1: Store the registration in the database
+      const { error: dbError } = await supabase
+        .from('webinar_registrations')
+        .insert({
+          webinar_title: selectedWebinar,
+          user_name: formData.name,
+          user_email: formData.email
+        });
+      
+      if (dbError) throw dbError;
+      
+      // Step 2: Send confirmation email
+      const response = await supabase.functions.invoke('send-webinar-confirmation', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          webinarTitle: selectedWebinar
+        }
+      });
+      
+      if (response.error) throw new Error(response.error.message);
+      
+      toast.success(`Successfully signed up for ${selectedWebinar}!`);
+      setShowWebinarSignup(false);
+      setFormData({ name: "", email: "" });
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("There was a problem with your registration. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -181,6 +233,8 @@ export default function Training() {
                 id="name" 
                 type="text" 
                 required
+                value={formData.name}
+                onChange={handleInputChange}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground" 
                 placeholder="Enter your name"
               />
@@ -193,17 +247,33 @@ export default function Training() {
                 id="email" 
                 type="email" 
                 required
+                value={formData.email}
+                onChange={handleInputChange}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground" 
                 placeholder="Enter your email"
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowWebinarSignup(false)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowWebinarSignup(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
-              <Button type="submit">
-                <Calendar className="mr-2 h-4 w-4" />
-                Confirm Registration
+              <Button 
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>Processing...</>
+                ) : (
+                  <>
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Confirm Registration
+                  </>
+                )}
               </Button>
             </div>
           </form>
