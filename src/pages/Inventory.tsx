@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -6,8 +7,8 @@ import { InventoryControls } from "@/components/inventory/InventoryControls";
 import { InventoryHeaderWithActions } from "@/components/inventory/InventoryHeader";
 import { InventoryLoadingState } from "@/components/inventory/InventoryLoadingState";
 import { InventoryEmptyState } from "@/components/inventory/InventoryEmptyState";
-import { InventoryContent } from "@/components/inventory/InventoryContent";
 import { useInventoryPage } from "@/hooks/useInventoryPage";
+import { InventoryDisplay } from "@/components/inventory/InventoryDisplay";
 
 export default function Inventory() {
   const [searchParams] = useSearchParams();
@@ -97,9 +98,9 @@ export default function Inventory() {
         ) : items.length === 0 ? (
           <InventoryEmptyState />
         ) : (
-          <InventoryContent 
+          // New InventoryDisplay component that will handle item display
+          <InventoryDisplay 
             items={items}
-            isLoading={isLoading}
             viewMode={viewMode}
             sortField={sortField}
             sortDirection={sortDirection}
