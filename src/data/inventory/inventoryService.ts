@@ -1,11 +1,9 @@
-
 import { InventoryItem, SortField, SortDirection } from "@/types/inventory";
 import { Purchase } from "@/types/purchase";
 import { inventoryItems } from "./inventoryItems";
 import { purchaseOrders } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 
 export const getInventoryItems = (
   page: number = 1,
@@ -69,14 +67,8 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     const supabaseItems = inventoryItems.map(item => {
       const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
       
-      const itemId = isValidUUID ? item.id : uuidv4();
-      
-      if (!isValidUUID) {
-        console.log(`Item ${item.id} (${item.name}) doesn't have a valid UUID - generating new UUID: ${itemId}`);
-      }
-      
       return {
-        id: itemId,
+        ...(isValidUUID ? { id: item.id } : {}),
         sku: item.sku,
         name: item.name,
         description: item.description || "",
@@ -104,7 +96,6 @@ export const syncInventoryItemsToSupabase = async (): Promise<{success: boolean,
     
     console.log(`Preparing to sync ${supabaseItems.length} items to Supabase...`);
     
-    // Fix: Don't use .select('count') which causes the "aggregate functions are not allowed in RETURNING" error
     const { error } = await supabase
       .from('inventory_items')
       .upsert(supabaseItems, { 
