@@ -70,9 +70,9 @@ export function useInventoryPage() {
     setSortField,
     setSortDirection,
     setViewMode,
-    // Fix #1: Wrap fetchItems to ensure it returns a Promise<void>
-    () => {
-      return fetchItems();
+    // Fix #1: Ensure fetchItems returns a Promise<void>
+    (): Promise<void> => {
+      return fetchItems() || Promise.resolve();
     }
   );
   
@@ -135,7 +135,7 @@ export function useInventoryPage() {
       // Fix #2: Ensure fetchItems returns a Promise<void>
       fetchItems: (forceRefresh = false): Promise<void> => {
         console.log("Calling refresh with forceRefresh:", forceRefresh);
-        return refresh(); // refresh() already returns a Promise<void>
+        return refresh() || Promise.resolve();
       },
       handleReactivateAllItems
     }
