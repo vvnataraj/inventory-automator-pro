@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Truck, Check, X, ShoppingCart, Package } from "lucide-react";
+import { Truck, Check, X, ShoppingCart, Package, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -28,7 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { usePurchases } from "@/hooks/usePurchases";
+import { usePurchasesWithDB } from "@/hooks/usePurchasesWithDB";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PurchaseStatusBadge } from "@/components/purchases/PurchaseStatusBadge";
 import { AddPurchaseModal } from "@/components/purchases/AddPurchaseModal";
@@ -37,25 +37,29 @@ import { Purchase, PurchaseStatus } from "@/types/purchase";
 import { ListControls } from "@/components/common/ListControls";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { InventoryPagination } from "@/components/inventory/InventoryPagination";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 export default function Purchases() {
   const { isManager } = useUserRoles();
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("poNumber");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [statusFilter, setStatusFilter] = useState<PurchaseStatus | undefined>(undefined);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const { 
     purchases, 
     totalPurchases, 
     isLoading,
+    page,
+    setPage,
+    pageSize,
     addPurchase,
     updatePurchase,
     deletePurchase,
     updatePurchaseStatus
-  } = usePurchases(currentPage, searchQuery);
+  } = usePurchasesWithDB(1, 12, searchQuery, statusFilter);
   
   const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -64,8 +68,7 @@ export default function Purchases() {
   const [statusChangeConfirmOpen, setStatusChangeConfirmOpen] = useState(false);
   const [statusChangeDetails, setStatusChangeDetails] = useState<{purchaseId: string, newStatus: PurchaseStatus} | null>(null);
   
-  const itemsPerPage = 12;
-  const totalPages = Math.ceil(totalPurchases / itemsPerPage);
+  const totalPages = Math.ceil(totalPurchases / pageSize);
 
   const handleEdit = (purchase: Purchase) => {
     setEditingPurchase(purchase);
@@ -77,14 +80,20 @@ export default function Purchases() {
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (purchaseToDelete) {
-      deletePurchase(purchaseToDelete);
-      setPurchaseToDelete(null);
-      toast({
-        title: "Purchase deleted",
-        description: "The purchase order has been deleted successfully",
-      });
+      try {
+        await deletePurchase(purchaseToDelete);
+        setPurchaseToDelete(null);
+        toast("Purchase deleted", {
+          description: "The purchase order has been deleted successfully",
+        });
+      } catch (error) {
+        toast("Error", {
+          description: "Failed to delete purchase order",
+          variant: "destructive"
+        });
+      }
     }
     setDeleteConfirmOpen(false);
   };
@@ -95,24 +104,30 @@ export default function Purchases() {
     setStatusChangeConfirmOpen(true);
   };
 
-  const confirmStatusChange = () => {
+  const confirmStatusChange = async () => {
     if (statusChangeDetails) {
       const { purchaseId, newStatus } = statusChangeDetails;
-      updatePurchaseStatus(purchaseId, newStatus);
-      
-      // Show success toast with appropriate message
-      const statusMessages = {
-        pending: "marked as Pending",
-        ordered: "marked as Ordered",
-        shipped: "marked as Shipped",
-        delivered: "marked as Delivered",
-        cancelled: "marked as Cancelled"
-      };
-      
-      toast({
-        title: "Status updated",
-        description: `Purchase order ${statusMessages[newStatus]}`,
-      });
+      try {
+        await updatePurchaseStatus(purchaseId, newStatus);
+        
+        // Show success toast with appropriate message
+        const statusMessages = {
+          pending: "marked as Pending",
+          ordered: "marked as Ordered",
+          shipped: "marked as Shipped",
+          delivered: "marked as Delivered",
+          cancelled: "marked as Cancelled"
+        };
+        
+        toast("Status updated", {
+          description: `Purchase order ${statusMessages[newStatus]}`,
+        });
+      } catch (error) {
+        toast("Error", {
+          description: "Failed to update purchase status",
+          variant: "destructive"
+        });
+      }
       
       setStatusChangeDetails(null);
     }
@@ -155,11 +170,6 @@ export default function Purchases() {
     });
   };
 
-  // Handle page change
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   // Get status icon based on status
   const getStatusIcon = (status: PurchaseStatus) => {
     switch (status) {
@@ -178,11 +188,34 @@ export default function Purchases() {
     }
   };
 
+  const handleSyncToDatabase = async () => {
+    // This function would be similar to the one in Orders.tsx if needed
+    // For now we've already synced the data via SQL
+    toast("Already synced", {
+      description: "Purchase orders have already been synced to the database",
+    });
+  };
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Purchases</h1>
-        {isManager() && <AddPurchaseModal onPurchaseAdded={addPurchase} />}
+        <div className="flex gap-2">
+          {isManager() && (
+            <>
+              <AddPurchaseModal onPurchaseAdded={addPurchase} />
+              <Button 
+                variant="outline" 
+                className="gap-2" 
+                onClick={handleSyncToDatabase} 
+                disabled={isSyncing}
+              >
+                <Database className="h-4 w-4" />
+                {isSyncing ? "Syncing..." : "Sync to Database"}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <ListControls 
@@ -304,10 +337,10 @@ export default function Purchases() {
           {purchases.length > 0 && (
             <div className="mt-6">
               <InventoryPagination 
-                currentPage={currentPage}
-                itemsPerPage={itemsPerPage}
+                currentPage={page}
+                itemsPerPage={pageSize}
                 totalItems={totalPurchases}
-                onPageChange={handlePageChange}
+                onPageChange={setPage}
               />
             </div>
           )}

@@ -5,9 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 import { Purchase, PurchaseStatus, PurchaseDB, PurchaseItemDB } from "@/types/purchase";
 
-export const usePurchases = (page = 1, searchQuery = "") => {
+export const usePurchasesWithDB = (page = 1, pageSize = 12, searchQuery = "", statusFilter?: PurchaseStatus) => {
   const [currentPage, setCurrentPage] = useState(page);
-  const pageSize = 12; // Fixed page size
 
   // Fetch purchases from the database
   const fetchPurchases = async (): Promise<Purchase[]> => {
@@ -22,6 +21,11 @@ export const usePurchases = (page = 1, searchQuery = "") => {
     // Apply search filter if provided
     if (searchQuery) {
       query = query.or(`ponumber.ilike.%${searchQuery}%,supplier.ilike.%${searchQuery}%`);
+    }
+
+    // Apply status filter if provided
+    if (statusFilter) {
+      query = query.eq('status', statusFilter);
     }
 
     // Apply pagination
@@ -75,6 +79,11 @@ export const usePurchases = (page = 1, searchQuery = "") => {
     // Apply search filter if provided
     if (searchQuery) {
       query = query.or(`ponumber.ilike.%${searchQuery}%,supplier.ilike.%${searchQuery}%`);
+    }
+
+    // Apply status filter if provided
+    if (statusFilter) {
+      query = query.eq('status', statusFilter);
     }
 
     const { count, error } = await query;
@@ -241,13 +250,13 @@ export const usePurchases = (page = 1, searchQuery = "") => {
 
   // Query for purchases
   const { data: purchases = [], isLoading, error } = useQuery({
-    queryKey: ['purchases', currentPage, pageSize, searchQuery],
+    queryKey: ['purchases', currentPage, pageSize, searchQuery, statusFilter],
     queryFn: fetchPurchases,
   });
 
   // Query for total purchases count
   const { data: totalPurchases = 0 } = useQuery({
-    queryKey: ['purchasesCount', searchQuery],
+    queryKey: ['purchasesCount', searchQuery, statusFilter],
     queryFn: fetchTotalPurchases,
   });
 
@@ -285,17 +294,18 @@ export const usePurchases = (page = 1, searchQuery = "") => {
     },
   });
 
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-  };
-
   return {
     purchases,
     totalPurchases,
     isLoading,
     error,
     page: currentPage,
-    setPage: handlePageChange,
+    setPage,
+    pageSize,
+    setPageSize: (newPageSize: number) => {
+      // Reset to page 1 when changing page size
+      setCurrentPage(1);
+    },
     addPurchase: addPurchaseMutation,
     updatePurchase: updatePurchaseMutation,
     deletePurchase: deletePurchaseMutation,
