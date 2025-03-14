@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 export default function Documentation() {
   const openEmailSupport = () => {
-    window.location.href = "mailto:support@company.com";
+    window.location.href = "mailto:support@stocktopus.com";
   };
 
   return (

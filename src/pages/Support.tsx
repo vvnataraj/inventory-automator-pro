@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Support() {
   const openEmailClient = () => {
-    window.location.href = "mailto:support@company.com";
+    window.location.href = "mailto:support@stocktopus.com";
   };
 
   return (
@@ -41,7 +41,7 @@ export default function Support() {
             <CardDescription>Send us an email anytime</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-lg font-medium">support@company.com</p>
+            <p className="text-lg font-medium">support@stocktopus.com</p>
             <p className="text-sm text-muted-foreground mt-1">
               We'll respond within 24 hours
             </p>
