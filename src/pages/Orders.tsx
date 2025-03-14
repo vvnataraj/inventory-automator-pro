@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ChevronUp, ChevronDown } from "lucide-react";
-import { useOrders } from "@/hooks/useOrders";
+import { useOrdersWithDB } from "@/hooks/useOrdersWithDB"; // Updated import
 import { OrderCard } from "@/components/orders/OrderCard";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Order, OrderStatus } from "@/types/order";
@@ -19,6 +20,7 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { ListControls, ViewMode } from "@/components/common/ListControls";
 import { OrderDetailsDialog } from "@/components/orders/OrderDetailsDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { InventoryPagination } from "@/components/inventory/InventoryPagination"; // Added for better pagination
 
 type SortField = "orderNumber" | "customerName" | "createdAt" | "total" | "status";
 type SortDirection = "asc" | "desc";
@@ -27,7 +29,6 @@ export default function Orders() {
   const { isManager } = useUserRoles();
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [badgeDisplayMode, setBadgeDisplayMode] = useState<"inline" | "stacked">("inline");
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [sortField, setSortField] = useState<SortField>("createdAt");
@@ -36,8 +37,9 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
   
-  const { orders, totalOrders, isLoading, page, setPage, pageSize, setPageSize } = useOrders(
-    currentPage, 
+  // Updated to use the database hook
+  const { orders, totalOrders, isLoading, page, setPage, pageSize, setPageSize } = useOrdersWithDB(
+    1, 
     12, 
     searchQuery,
     statusFilter
@@ -52,8 +54,7 @@ export default function Orders() {
     setIsOrderDetailsOpen(false);
   };
 
-  const itemsPerPage = 12;
-  const totalPages = Math.ceil(totalOrders / itemsPerPage);
+  const totalPages = Math.ceil(totalOrders / pageSize);
 
   const toggleBadgeDisplayMode = () => {
     setBadgeDisplayMode(prev => prev === "inline" ? "stacked" : "inline");
@@ -233,33 +234,12 @@ export default function Orders() {
             </div>
           )}
 
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-muted-foreground">
-              Showing <span className="font-medium">{(currentPage - 1) * 12 + 1}</span> to{" "}
-              <span className="font-medium">{Math.min(currentPage * 12, totalOrders)}</span> of{" "}
-              <span className="font-medium">{totalOrders}</span> orders
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <InventoryPagination
+            currentPage={page}
+            itemsPerPage={pageSize}
+            totalItems={totalOrders}
+            onPageChange={setPage}
+          />
         </>
       )}
 

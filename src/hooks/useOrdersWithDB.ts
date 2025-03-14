@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Order, OrderStatus, OrderDB, OrderItemDB, CustomerDB } from "@/types/order";
 import { InventoryItem } from "@/types/inventory";
 
-export const useOrders = (page = 1, pageSize = 10, searchQuery = "", statusFilter?: OrderStatus) => {
+export const useOrdersWithDB = (page = 1, pageSize = 10, searchQuery = "", statusFilter?: OrderStatus) => {
   const [currentPage, setCurrentPage] = useState(page);
   const [itemsPerPage, setItemsPerPage] = useState(pageSize);
 
