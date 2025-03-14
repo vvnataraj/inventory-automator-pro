@@ -95,7 +95,7 @@ export default function Inventory() {
             onClick={handleSyncToDatabase} 
             disabled={syncingDb}
             variant="outline"
-            className="ml-2"
+            className="ml-2 h-10" // Added h-10 to match the height of the Add New Item button
           >
             {syncingDb ? (
               <>

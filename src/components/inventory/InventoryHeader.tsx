@@ -20,7 +20,7 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   const { isManager } = useUserRoles();
   
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 w-full">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-0 gap-4 w-full">
       <h1 className="text-3xl font-semibold tracking-tight">Inventory</h1>
       <div className="flex flex-wrap gap-2 justify-end ml-auto">
         {isManager() && <ImportInventoryButton onImport={onImportItems} />}
