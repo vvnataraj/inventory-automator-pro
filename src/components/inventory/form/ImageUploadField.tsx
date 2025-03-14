@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ImageUploadFieldProps {
   imageUrl?: string;
@@ -20,11 +21,11 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if the inventory-images bucket exists
-    checkInventoryImagesBucket();
+    // Check if the inventory-images bucket exists and create it if needed
+    checkAndCreateBucket();
   }, []);
 
-  async function checkInventoryImagesBucket() {
+  async function checkAndCreateBucket() {
     try {
       // Check if the bucket exists
       const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -37,12 +38,26 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       const inventoryBucketExists = buckets.some(bucket => bucket.name === 'inventory-images');
       
       if (!inventoryBucketExists) {
-        console.log("Inventory images bucket doesn't exist yet");
-        // This operation requires admin privileges and might fail in client-side code
-        // We'll handle this gracefully
+        console.log("Creating inventory-images bucket");
+        try {
+          const { data, error } = await supabase.storage.createBucket('inventory-images', {
+            public: true,
+            fileSizeLimit: 5 * 1024 * 1024, // 5MB
+            allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+          });
+          
+          if (error) {
+            console.error("Error creating bucket:", error);
+            toast.error("Failed to create storage bucket. Image uploads may not work.");
+          } else {
+            console.log("Successfully created inventory-images bucket", data);
+          }
+        } catch (createError) {
+          console.error("Exception creating bucket:", createError);
+        }
       }
     } catch (error) {
-      console.error("Error checking inventory-images bucket:", error);
+      console.error("Error in checkAndCreateBucket:", error);
     }
   }
 
@@ -61,16 +76,17 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     try {
       console.log("Uploading inventory image:", filePath);
       
-      // Upload file to Supabase storage with caching and upsert options
+      // Upload file to Supabase storage
       const { data, error } = await supabase.storage
         .from('inventory-images')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true // Changed to true to overwrite existing files
         });
 
       if (error) {
         console.error("Upload error:", error);
+        toast.error("Failed to upload image: " + error.message);
         throw error;
       }
 
@@ -88,8 +104,10 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       
       // Update form data with image URL
       onImageChange(publicUrl);
+      toast.success("Image uploaded successfully");
     } catch (error) {
       console.error('Error uploading image:', error);
+      toast.error("Image upload failed");
     } finally {
       setUploading(false);
     }
