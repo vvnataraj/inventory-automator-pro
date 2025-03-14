@@ -19,7 +19,18 @@ export default function Inventory() {
   useEffect(() => {
     console.log("Inventory page mounted, fetching items...");
     
+    // Check if there's a category filter in the URL parameters
+    const categoryFromUrl = searchParams.get("category");
+    if (categoryFromUrl) {
+      actions.setCategoryFilter(categoryFromUrl);
+    }
+    
     actions.fetchItems(true);
+    
+    // Cleanup function to reset category filter when navigating away
+    return () => {
+      actions.setCategoryFilter(undefined);
+    };
   }, [searchParams]); 
   
   const handleImportItems = (importedItems: InventoryItem[]) => {
@@ -63,6 +74,10 @@ export default function Inventory() {
           sortDirection={state.sortDirection}
           onSort={actions.handleSort}
           onSortDirectionChange={actions.setSortDirection}
+          categoryFilter={state.categoryFilter}
+          onCategoryFilterChange={actions.setCategoryFilter}
+          locationFilter={state.locationFilter}
+          onLocationFilterChange={actions.setLocationFilter}
         />
 
         {state.isLoading ? (

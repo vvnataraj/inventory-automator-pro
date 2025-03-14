@@ -12,10 +12,12 @@ export function useInventoryPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  const [locationFilter, setLocationFilter] = useState<string | undefined>(undefined);
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, categoryFilter, locationFilter]);
   
   const { 
     items, 
@@ -33,7 +35,9 @@ export function useInventoryPage() {
     currentPage, 
     searchQuery,
     sortField,
-    sortDirection
+    sortDirection,
+    categoryFilter,
+    locationFilter
   );
   
   const itemsPerPage = 20;
@@ -140,6 +144,8 @@ export function useInventoryPage() {
       isLoading,
       totalItems,
       itemsPerPage,
+      categoryFilter,
+      locationFilter
     },
     actions: {
       setSearchQuery,
@@ -149,6 +155,8 @@ export function useInventoryPage() {
       setSortDirection,
       setReorderDialogOpen,
       setSelectedItem,
+      setCategoryFilter,
+      setLocationFilter,
       handleSort,
       handleSaveItem,
       handleAddItem,

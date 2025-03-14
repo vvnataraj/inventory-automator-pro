@@ -9,7 +9,9 @@ export function useInventoryCore(
   page: number = 1, 
   searchQuery: string = "",
   sortField: SortField = 'name',
-  sortDirection: SortDirection = 'asc'
+  sortDirection: SortDirection = 'asc',
+  categoryFilter?: string,
+  locationFilter?: string
 ) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -39,19 +41,21 @@ export function useInventoryCore(
         page, 
         searchQuery, 
         sortField, 
-        sortDirection
+        sortDirection,
+        categoryFilter,
+        locationFilter
       });
       
       // Try to fetch from Supabase first
       const { items: dbItems, count, error: dbError } = await fetchFromSupabase(
-        page, searchQuery, sortField, sortDirection
+        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
       );
       
       if (dbError || dbItems.length === 0) {
         // Fallback to local data if Supabase fetch fails or returns no results
         console.log("Falling back to local data");
         const { items: localItems, total } = fetchFromLocal(
-          page, searchQuery, sortField, sortDirection
+          page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
         );
         
         setItems(localItems);
@@ -74,7 +78,7 @@ export function useInventoryCore(
       
       // Fallback to local data
       const { items: localItems, total } = fetchFromLocal(
-        page, searchQuery, sortField, sortDirection
+        page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter
       );
       
       setItems(localItems);
@@ -85,7 +89,7 @@ export function useInventoryCore(
       setIsLoading(false);
       isFetchingRef.current = false;
     }
-  }, [page, searchQuery, sortField, sortDirection, fetchFromSupabase, fetchFromLocal]);
+  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchFromSupabase, fetchFromLocal]);
   
   // Create a separate method to explicitly trigger refresh
   const refreshData = useCallback(() => {
@@ -98,7 +102,7 @@ export function useInventoryCore(
   useEffect(() => {
     console.log("Dependencies changed, fetching items...");
     fetchItems();
-  }, [page, searchQuery, sortField, sortDirection, fetchItems]);
+  }, [page, searchQuery, sortField, sortDirection, categoryFilter, locationFilter, fetchItems]);
 
   return { 
     items, 
