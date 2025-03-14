@@ -9,9 +9,9 @@ import { InventoryHeader } from "@/components/inventory/InventoryHeader";
 import { InventoryControls } from "@/components/inventory/InventoryControls";
 import { InventoryGrid } from "@/components/inventory/InventoryGrid";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
-import { InventoryPagination } from "@/components/inventory/InventoryPagination";
 import { ReorderDialog } from "@/components/inventory/ReorderDialog";
 import { getInventoryItems, syncInventoryItemsToSupabase } from "@/data/inventory/inventoryService";
+import { SimplePagination } from "@/components/common/SimplePagination";
 
 export default function Inventory() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -147,8 +147,15 @@ export default function Inventory() {
   };
   
   const handlePageChange = (page: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", page.toString());
+    navigate(`?${newParams.toString()}`);
+    
     setCurrentPage(page);
+    fetchItems();
   };
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
   
   return (
     <MainLayout>
@@ -224,12 +231,13 @@ export default function Inventory() {
               />
             )}
 
-            <InventoryPagination 
-              currentPage={currentPage}
-              itemsPerPage={itemsPerPage}
-              totalItems={totalItems}
-              onPageChange={handlePageChange}
-            />
+            {totalItems > 0 && (
+              <SimplePagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
           </>
         )}
 

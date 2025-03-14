@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ChevronUp, ChevronDown, Database } from "lucide-react";
@@ -20,7 +19,7 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { ListControls, ViewMode } from "@/components/common/ListControls";
 import { OrderDetailsDialog } from "@/components/orders/OrderDetailsDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
-import { InventoryPagination } from "@/components/inventory/InventoryPagination";
+import { SimplePagination } from "@/components/common/SimplePagination";
 import { migrateOrdersData } from "@/data/migrateOrdersData";
 import { toast } from "sonner";
 
@@ -40,8 +39,7 @@ export default function Orders() {
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   
-  // Updated to use the database hook
-  const { orders, totalOrders, isLoading, page, setPage, pageSize, setPageSize } = useOrdersWithDB(
+  const { orders, totalOrders, isLoading, page, setPage, pageSize } = useOrdersWithDB(
     1, 
     12, 
     searchQuery,
@@ -261,12 +259,13 @@ export default function Orders() {
             </div>
           )}
 
-          <InventoryPagination
-            currentPage={page}
-            itemsPerPage={pageSize}
-            totalItems={totalOrders}
-            onPageChange={setPage}
-          />
+          {totalOrders > 0 && (
+            <SimplePagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          )}
         </>
       )}
 

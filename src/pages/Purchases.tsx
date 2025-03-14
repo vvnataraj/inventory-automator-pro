@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Truck, Check, X, ShoppingCart, Package, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,7 @@ import { EditPurchaseModal } from "@/components/purchases/EditPurchaseModal";
 import { Purchase, PurchaseStatus } from "@/types/purchase";
 import { ListControls } from "@/components/common/ListControls";
 import { useUserRoles } from "@/hooks/useUserRoles";
-import { InventoryPagination } from "@/components/inventory/InventoryPagination";
+import { SimplePagination } from "@/components/common/SimplePagination";
 import { toast } from "sonner";
 
 export default function Purchases() {
@@ -99,7 +98,6 @@ export default function Purchases() {
   };
 
   const handleStatusChangeRequest = (purchaseId: string, status: PurchaseStatus) => {
-    // Skip confirmation for certain status changes if desired
     setStatusChangeDetails({ purchaseId, newStatus: status });
     setStatusChangeConfirmOpen(true);
   };
@@ -110,7 +108,6 @@ export default function Purchases() {
       try {
         await updatePurchaseStatus(purchaseId, newStatus);
         
-        // Show success toast with appropriate message
         const statusMessages = {
           pending: "marked as Pending",
           ordered: "marked as Ordered",
@@ -189,10 +186,8 @@ export default function Purchases() {
   const handleSyncToDatabase = async () => {
     setIsSyncing(true);
     try {
-      // Simulate database sync
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // After sync completes, refresh the data from database
       await refresh();
       
       toast("Sync completed", {
@@ -346,14 +341,11 @@ export default function Purchases() {
           )}
 
           {purchases.length > 0 && (
-            <div className="mt-6">
-              <InventoryPagination 
-                currentPage={page}
-                itemsPerPage={pageSize}
-                totalItems={totalPurchases}
-                onPageChange={setPage}
-              />
-            </div>
+            <SimplePagination 
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           )}
         </>
       )}
