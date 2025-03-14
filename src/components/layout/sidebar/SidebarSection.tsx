@@ -40,6 +40,9 @@ export function SidebarSection({
 }: SidebarSectionProps) {
   const location = useLocation();
   
+  // Ensure items is an array before mapping
+  const navItems = Array.isArray(items) ? items : [];
+  
   return (
     <Collapsible 
       open={isOpen || isActive} 
@@ -65,7 +68,7 @@ export function SidebarSection({
         )}
       </CollapsibleTrigger>
       <CollapsibleContent className={cn("mt-1 space-y-1", collapsed ? "pl-1" : "pl-4")}>
-        {items.map((item) => (
+        {navItems.map((item) => (
           <SidebarNavItem
             key={item.name}
             name={item.name}
