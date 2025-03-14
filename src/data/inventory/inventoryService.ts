@@ -9,21 +9,13 @@ export const getInventoryItems = (
   pageSize: number = 20,
   searchQuery: string = "",
   sortField: string = "name",
-  sortDirection: "asc" | "desc" = "asc",
-  categoryFilter?: string
+  sortDirection: "asc" | "desc" = "asc"
 ): { items: InventoryItem[], total: number } => {
   let filteredItems = inventoryItems.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
-  // Apply category filter if provided
-  if (categoryFilter) {
-    filteredItems = filteredItems.filter(item => 
-      item.category === categoryFilter
-    );
-  }
 
   const start = (page - 1) * pageSize;
   const paginatedItems = filteredItems.slice(start, start + pageSize);
