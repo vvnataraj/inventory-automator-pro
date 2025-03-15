@@ -28,33 +28,9 @@ export default function ProfileTab() {
   
   useEffect(() => {
     if (user) {
-      // Check if avatars bucket exists, if not create it
-      checkAndCreateAvatarsBucket();
       fetchProfile();
     }
   }, [user]);
-  
-  async function checkAndCreateAvatarsBucket() {
-    try {
-      // Check if the bucket exists
-      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-      
-      if (listError) {
-        console.error("Error checking buckets:", listError);
-        return;
-      }
-      
-      const avatarsBucketExists = buckets.some(bucket => bucket.name === 'avatars');
-      
-      if (!avatarsBucketExists) {
-        console.log("Avatars bucket doesn't exist, attempting to create it");
-        // This operation requires admin privileges and might fail in client-side code
-        // We'll handle this gracefully and show a user-friendly message if needed
-      }
-    } catch (error) {
-      console.error("Error checking/creating avatars bucket:", error);
-    }
-  }
   
   async function fetchProfile() {
     try {
@@ -70,6 +46,7 @@ export default function ProfileTab() {
         .single();
         
       if (error) {
+        console.error("Error fetching profile:", error);
         throw error;
       }
       
@@ -91,36 +68,71 @@ export default function ProfileTab() {
       
       if (!user) return;
       
-      // Important: Only update the profiles table
-      const updates = {
-        username,
+      const currentTime = new Date().toISOString();
+      
+      // Use the RPC function to update the profile
+      const { data, error } = await supabase.rpc('update_user_profile', {
+        user_id: user.id,
+        username: username,
         avatar_url: avatarUrl,
-        updated_at: new Date().toISOString(),
-      };
+        updated_at: currentTime
+      });
       
-      console.log("Updating profile with:", updates);
-      
-      // Only update the profiles table
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
-      
-      // Debug the response
-      console.log("Update response:", { data, error });
+      console.log("Update profile response:", data);
         
       if (error) {
         console.error("Error updating profile:", error);
         throw error;
       }
       
+      if (data && !data.success) {
+        console.error("Failed to update profile:", data.message);
+        throw new Error(data.message);
+      }
+      
       toast.success("Profile updated successfully");
       fetchProfile();
     } catch (error: any) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
+      toast.error("Failed to update profile: " + (error.message || "Unknown error"));
     } finally {
       setLoading(false);
+    }
+  }
+  
+  async function ensureAvatarsBucket() {
+    try {
+      // Check if the bucket exists first
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error("Error checking buckets:", listError);
+        return false;
+      }
+      
+      const avatarsBucketExists = buckets.some(bucket => bucket.name === 'avatars');
+      
+      if (!avatarsBucketExists) {
+        console.log("Avatars bucket doesn't exist, creating it");
+        
+        // Create the avatars bucket
+        const { data, error } = await supabase.storage.createBucket('avatars', {
+          public: true,
+          fileSizeLimit: 2 * 1024 * 1024 // 2MB limit
+        });
+        
+        if (error) {
+          console.error("Error creating avatars bucket:", error);
+          return false;
+        }
+        
+        console.log("Avatars bucket created successfully");
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error ensuring avatars bucket exists:", error);
+      return false;
     }
   }
   
@@ -129,6 +141,13 @@ export default function ProfileTab() {
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+      
+      // First ensure the avatars bucket exists
+      const bucketExists = await ensureAvatarsBucket();
+      if (!bucketExists) {
+        toast.error("Could not create storage bucket");
         return;
       }
       
@@ -160,6 +179,7 @@ export default function ProfileTab() {
       if (avatarUrl) {
         const previousPath = avatarUrl.split('/').slice(-2).join('/');
         if (previousPath.startsWith(user.id)) {
+          console.log("Removing previous avatar:", previousPath);
           const { error: deleteError } = await supabase.storage
             .from('avatars')
             .remove([previousPath]);
@@ -199,21 +219,23 @@ export default function ProfileTab() {
       // Update state with new avatar URL
       setAvatarUrl(publicUrl);
       
-      // Immediately update profile with new avatar
-      const { error } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
+      // Update profile with new avatar using the RPC function
+      const { data: updateData, error: updateError } = await supabase.rpc('update_user_profile', {
+        user_id: user.id,
+        username: username || null,
+        avatar_url: publicUrl,
+        updated_at: new Date().toISOString()
+      });
       
-      if (error) {
-        console.error("Error updating profile with new avatar:", error);
-        throw error;
+      if (updateError || (updateData && !updateData.success)) {
+        console.error("Error updating profile with new avatar:", updateError || updateData.message);
+        throw updateError || new Error(updateData.message);
       }
       
       toast.success("Avatar uploaded successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading avatar:", error);
-      toast.error("Failed to upload avatar");
+      toast.error("Failed to upload avatar: " + (error.message || "Unknown error"));
     } finally {
       setUploading(false);
       // Reset file input
@@ -248,21 +270,24 @@ export default function ProfileTab() {
         console.log("Avatar successfully removed from storage");
       }
       
-      // Update profile with null avatar URL
-      const { error } = await supabase
-        .from('profiles')
-        .update({ avatar_url: null })
-        .eq('id', user.id);
-        
-      if (error) {
-        throw error;
+      // Update profile with null avatar URL using the RPC function
+      const { data, error } = await supabase.rpc('update_user_profile', {
+        user_id: user.id,
+        username: username || null,
+        avatar_url: null,
+        updated_at: new Date().toISOString()
+      });
+      
+      if (error || (data && !data.success)) {
+        console.error("Error updating profile after removing avatar:", error || data.message);
+        throw error || new Error(data.message);
       }
       
       setAvatarUrl(null);
       toast.success("Avatar removed successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error removing avatar:", error);
-      toast.error("Failed to remove avatar");
+      toast.error("Failed to remove avatar: " + (error.message || "Unknown error"));
     } finally {
       setLoading(false);
     }
