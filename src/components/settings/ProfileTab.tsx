@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,57 +82,26 @@ export default function ProfileTab() {
         updatedAt: currentTime
       });
       
-      // Use the edge function to update the profile
-      const { data, error } = await supabase.functions.invoke<ProfileUpdateResponse>('update-profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: {
-          userId: user.id,
+      // Skip edge function and use direct database update
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
           username: username,
-          avatarUrl: avatarUrl,
-          updatedAt: currentTime
-        }
-      });
+          avatar_url: avatarUrl,
+          updated_at: currentTime
+        })
+        .eq('id', user.id);
       
-      console.log("Update profile response:", data);
-        
-      if (error) {
-        console.error("Error updating profile:", error);
-        throw error;
+      if (updateError) {
+        console.error("Error updating profile:", updateError);
+        throw updateError;
       }
       
-      if (data && data.success) {
-        toast.success(data.message || "Profile updated successfully");
-        fetchProfile();
-      } else {
-        // If we get a response but success is false
-        throw new Error(data?.message || "Failed to update profile");
-      }
+      toast.success("Profile updated successfully");
+      fetchProfile();
     } catch (error: any) {
       console.error("Error updating profile:", error);
-      
-      // Try direct update as fallback
-      try {
-        console.log("Attempting fallback update method");
-        const currentTime = new Date().toISOString();
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            username: username,
-            avatar_url: avatarUrl,
-            updated_at: currentTime
-          })
-          .eq('id', user.id);
-          
-        if (updateError) throw updateError;
-        
-        toast.success("Profile updated successfully (fallback method)");
-        fetchProfile();
-      } catch (fallbackError: any) {
-        toast.error("Failed to update profile: " + (error.message || fallbackError.message || "Unknown error"));
-      }
+      toast.error("Failed to update profile: " + (error.message || "Unknown error"));
     } finally {
       setLoading(false);
     }
