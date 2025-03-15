@@ -67,12 +67,7 @@ redirect_uri = ""
 # or any other third-party OIDC providers.
 url = ""
 
+# Functions configuration
 [functions]
 # Port to use for Functions.
 port = 54328
-
-[observability]
-# Port to use for the OTel collector.
-otel_collector_port = 54329
-# Set this to false if you don't want to capture telemetry.
-enable_otel = false
