@@ -20,6 +20,12 @@ export default function Users() {
     try {
       setLoading(true);
       
+      // Get all users with email from the auth.users table using the get_users function
+      const { data: userData, error: userError } = await supabase
+        .rpc('get_users');
+      
+      if (userError) throw userError;
+      
       // Get all profiles
       const { data: profiles, error } = await supabase
         .from('profiles')
@@ -34,18 +40,28 @@ export default function Users() {
       
       if (rolesError) throw rolesError;
       
-      // Map roles to profiles
+      // Create a map of user data by id for easier lookup
+      const userMap = userData.reduce((acc, user) => {
+        if (user && user.id) {
+          acc[user.id] = user;
+        }
+        return acc;
+      }, {});
+      
+      // Map roles to profiles and include email from auth.users
       const usersWithRoles = profiles.map(profile => {
         const roles = userRoles
           .filter(role => role.user_id === profile.id)
           .map(role => role.role);
         
+        const userData = userMap[profile.id] || {};
+        
         return {
           id: profile.id,
-          email: profile.username || 'No email',
+          email: userData.email || profile.username || 'No email', // Try to use email from auth.users
           username: profile.username,
           created_at: profile.created_at,
-          last_sign_in_at: null, // Not available with current permissions
+          last_sign_in_at: userData.last_sign_in_at || null,
           roles: roles.length > 0 ? roles : ['user'], // Default to user if no roles
           is_disabled: false // Not available with current permissions
         };
