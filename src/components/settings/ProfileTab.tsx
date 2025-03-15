@@ -72,6 +72,7 @@ export default function ProfileTab() {
         throw error;
       }
       
+      console.log("Fetched profile data:", data);
       setProfile(data);
       setUsername(data.username || "");
       setAvatarUrl(data.avatar_url || null);
@@ -89,13 +90,14 @@ export default function ProfileTab() {
       
       if (!user) return;
       
+      // Update only the profiles table, not the auth.users table
       const updates = {
-        id: user.id,
         username,
         avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
       };
       
+      // Update the profiles table only
       const { error } = await supabase
         .from('profiles')
         .update(updates)
