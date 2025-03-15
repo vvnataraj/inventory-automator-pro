@@ -17,12 +17,6 @@ interface UserProfile {
   avatar_url: string | null;
 }
 
-// Define the response type for our edge function
-interface ProfileUpdateResponse {
-  success: boolean;
-  message: string;
-}
-
 export default function ProfileTab() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -75,14 +69,14 @@ export default function ProfileTab() {
       
       const currentTime = new Date().toISOString();
       
-      console.log("Calling update-profile function with data:", {
+      console.log("Updating profile with data:", {
         userId: user.id,
         username: username,
         avatarUrl: avatarUrl,
         updatedAt: currentTime
       });
       
-      // Skip edge function and use direct database update
+      // Update only the profiles table, not auth.users
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
