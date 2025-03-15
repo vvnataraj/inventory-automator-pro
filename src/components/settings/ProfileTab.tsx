@@ -76,8 +76,19 @@ export default function ProfileTab() {
       
       const currentTime = new Date().toISOString();
       
+      console.log("Calling update-profile function with data:", {
+        userId: user.id,
+        username: username,
+        avatarUrl: avatarUrl,
+        updatedAt: currentTime
+      });
+      
       // Use the edge function to update the profile
       const { data, error } = await supabase.functions.invoke<ProfileUpdateResponse>('update-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: {
           userId: user.id,
           username: username,
@@ -105,6 +116,7 @@ export default function ProfileTab() {
       
       // Try direct update as fallback
       try {
+        console.log("Attempting fallback update method");
         const currentTime = new Date().toISOString();
         const { error: updateError } = await supabase
           .from('profiles')
