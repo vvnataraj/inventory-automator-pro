@@ -6,9 +6,24 @@ import { ThemeSelector } from "@/components/theme/ThemeSelector";
 import { EmailField } from "./EmailField";
 import { UsernameField } from "./UsernameField";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { toast } from "sonner";
 
 export function ProfileForm() {
   const { user, username, setUsername, loading, updateProfile } = useUserProfile();
+  
+  const handleUpdateProfile = async () => {
+    if (!username.trim()) {
+      toast.error("Username cannot be empty");
+      return;
+    }
+    
+    try {
+      await updateProfile();
+    } catch (error) {
+      console.error("ProfileForm: Error updating profile:", error);
+      toast.error("Failed to save profile changes. Please try again.");
+    }
+  };
   
   return (
     <Card>
@@ -32,7 +47,7 @@ export function ProfileForm() {
       </CardContent>
       <CardFooter>
         <Button 
-          onClick={updateProfile}
+          onClick={handleUpdateProfile}
           disabled={loading}
         >
           {loading ? 'Saving...' : 'Save Changes'}
