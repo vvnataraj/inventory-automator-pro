@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,9 +28,33 @@ export default function ProfileTab() {
   
   useEffect(() => {
     if (user) {
+      // Check if avatars bucket exists, if not create it
+      checkAndCreateAvatarsBucket();
       fetchProfile();
     }
   }, [user]);
+  
+  async function checkAndCreateAvatarsBucket() {
+    try {
+      // Check if the bucket exists
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error("Error checking buckets:", listError);
+        return;
+      }
+      
+      const avatarsBucketExists = buckets.some(bucket => bucket.name === 'avatars');
+      
+      if (!avatarsBucketExists) {
+        console.log("Avatars bucket doesn't exist, attempting to create it");
+        // This operation requires admin privileges and might fail in client-side code
+        // We'll handle this gracefully and show a user-friendly message if needed
+      }
+    } catch (error) {
+      console.error("Error checking/creating avatars bucket:", error);
+    }
+  }
   
   async function fetchProfile() {
     try {
@@ -37,7 +62,6 @@ export default function ProfileTab() {
       
       if (!user) return;
       
-      // Get profile from profiles table
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -45,7 +69,6 @@ export default function ProfileTab() {
         .single();
         
       if (error) {
-        console.error("Error fetching profile:", error);
         throw error;
       }
       
@@ -67,73 +90,30 @@ export default function ProfileTab() {
       
       if (!user) return;
       
-      const currentTime = new Date().toISOString();
+      // Update only the profiles table, not the auth.users table
+      const updates = {
+        username,
+        avatar_url: avatarUrl,
+        updated_at: new Date().toISOString(),
+      };
       
-      console.log("Updating profile with data:", {
-        userId: user.id,
-        username: username,
-        avatarUrl: avatarUrl,
-        updatedAt: currentTime
-      });
-      
-      // Update only the profiles table, not auth.users
-      const { error: updateError } = await supabase
+      // Update the profiles table only
+      const { error } = await supabase
         .from('profiles')
-        .update({
-          username: username,
-          avatar_url: avatarUrl,
-          updated_at: currentTime
-        })
+        .update(updates)
         .eq('id', user.id);
-      
-      if (updateError) {
-        console.error("Error updating profile:", updateError);
-        throw updateError;
+        
+      if (error) {
+        throw error;
       }
       
       toast.success("Profile updated successfully");
       fetchProfile();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile: " + (error.message || "Unknown error"));
+      toast.error("Failed to update profile");
     } finally {
       setLoading(false);
-    }
-  }
-  
-  async function ensureAvatarsBucket() {
-    try {
-      // Check if the bucket exists first
-      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-      
-      if (listError) {
-        console.error("Error checking buckets:", listError);
-        return false;
-      }
-      
-      const avatarsBucketExists = buckets.some(bucket => bucket.name === 'avatars');
-      
-      if (!avatarsBucketExists) {
-        console.log("Avatars bucket doesn't exist, creating it");
-        
-        // Create the avatars bucket
-        const { data, error } = await supabase.storage.createBucket('avatars', {
-          public: true,
-          fileSizeLimit: 2 * 1024 * 1024 // 2MB limit
-        });
-        
-        if (error) {
-          console.error("Error creating avatars bucket:", error);
-          return false;
-        }
-        
-        console.log("Avatars bucket created successfully");
-      }
-      
-      return true;
-    } catch (error) {
-      console.error("Error ensuring avatars bucket exists:", error);
-      return false;
     }
   }
   
@@ -142,13 +122,6 @@ export default function ProfileTab() {
       setUploading(true);
       
       if (!event.target.files || event.target.files.length === 0) {
-        return;
-      }
-      
-      // First ensure the avatars bucket exists
-      const bucketExists = await ensureAvatarsBucket();
-      if (!bucketExists) {
-        toast.error("Could not create storage bucket");
         return;
       }
       
@@ -180,7 +153,6 @@ export default function ProfileTab() {
       if (avatarUrl) {
         const previousPath = avatarUrl.split('/').slice(-2).join('/');
         if (previousPath.startsWith(user.id)) {
-          console.log("Removing previous avatar:", previousPath);
           const { error: deleteError } = await supabase.storage
             .from('avatars')
             .remove([previousPath]);
@@ -220,25 +192,16 @@ export default function ProfileTab() {
       // Update state with new avatar URL
       setAvatarUrl(publicUrl);
       
-      // Update profile with new avatar
-      const currentTime = new Date().toISOString();
-      const { error: updateError } = await supabase
+      // Immediately update profile with new avatar
+      await supabase
         .from('profiles')
-        .update({
-          avatar_url: publicUrl,
-          updated_at: currentTime
-        })
+        .update({ avatar_url: publicUrl })
         .eq('id', user.id);
       
-      if (updateError) {
-        console.error("Error updating profile with new avatar:", updateError);
-        throw updateError;
-      }
-      
       toast.success("Avatar uploaded successfully");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error uploading avatar:", error);
-      toast.error("Failed to upload avatar: " + (error.message || "Unknown error"));
+      toast.error("Failed to upload avatar");
     } finally {
       setUploading(false);
       // Reset file input
@@ -274,24 +237,20 @@ export default function ProfileTab() {
       }
       
       // Update profile with null avatar URL
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .update({
-          avatar_url: null,
-          updated_at: new Date().toISOString()
-        })
+        .update({ avatar_url: null })
         .eq('id', user.id);
-      
-      if (updateError) {
-        console.error("Error updating profile after removing avatar:", updateError);
-        throw updateError;
+        
+      if (error) {
+        throw error;
       }
       
       setAvatarUrl(null);
       toast.success("Avatar removed successfully");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error removing avatar:", error);
-      toast.error("Failed to remove avatar: " + (error.message || "Unknown error"));
+      toast.error("Failed to remove avatar");
     } finally {
       setLoading(false);
     }
