@@ -18,7 +18,7 @@ interface UserProfile {
   avatar_url: string | null;
 }
 
-// Define the response type for our custom RPC function
+// Define the response type for our edge function
 interface ProfileUpdateResponse {
   success: boolean;
   message: string;
@@ -76,9 +76,8 @@ export default function ProfileTab() {
       
       const currentTime = new Date().toISOString();
       
-      // Use our custom function to update the profile
-      // Cast the response using 'as any as ProfileUpdateResponse' to handle TypeScript issue
-      const { data, error } = await supabase.functions.invoke('update-profile', {
+      // Use the edge function to update the profile
+      const { data, error } = await supabase.functions.invoke<ProfileUpdateResponse>('update-profile', {
         body: {
           userId: user.id,
           username: username,
@@ -94,8 +93,19 @@ export default function ProfileTab() {
         throw error;
       }
       
-      // Update profile directly as a fallback if the function isn't available yet
-      if (!data) {
+      if (data && data.success) {
+        toast.success(data.message || "Profile updated successfully");
+        fetchProfile();
+      } else {
+        // If we get a response but success is false
+        throw new Error(data?.message || "Failed to update profile");
+      }
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      
+      // Try direct update as fallback
+      try {
+        const currentTime = new Date().toISOString();
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -106,13 +116,12 @@ export default function ProfileTab() {
           .eq('id', user.id);
           
         if (updateError) throw updateError;
+        
+        toast.success("Profile updated successfully (fallback method)");
+        fetchProfile();
+      } catch (fallbackError: any) {
+        toast.error("Failed to update profile: " + (error.message || fallbackError.message || "Unknown error"));
       }
-      
-      toast.success("Profile updated successfully");
-      fetchProfile();
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      toast.error("Failed to update profile: " + (error.message || "Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -238,11 +247,12 @@ export default function ProfileTab() {
       setAvatarUrl(publicUrl);
       
       // Update profile with new avatar
+      const currentTime = new Date().toISOString();
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           avatar_url: publicUrl,
-          updated_at: new Date().toISOString()
+          updated_at: currentTime
         })
         .eq('id', user.id);
       
