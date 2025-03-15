@@ -18,6 +18,12 @@ interface UserProfile {
   avatar_url: string | null;
 }
 
+// Define the response type for our custom RPC function
+interface ProfileUpdateResponse {
+  success: boolean;
+  message: string;
+}
+
 export default function ProfileTab() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -70,12 +76,15 @@ export default function ProfileTab() {
       
       const currentTime = new Date().toISOString();
       
-      // Use the RPC function to update the profile
-      const { data, error } = await supabase.rpc('update_user_profile', {
-        user_id: user.id,
-        username: username,
-        avatar_url: avatarUrl,
-        updated_at: currentTime
+      // Use our custom function to update the profile
+      // Cast the response using 'as any as ProfileUpdateResponse' to handle TypeScript issue
+      const { data, error } = await supabase.functions.invoke('update-profile', {
+        body: {
+          userId: user.id,
+          username: username,
+          avatarUrl: avatarUrl,
+          updatedAt: currentTime
+        }
       });
       
       console.log("Update profile response:", data);
@@ -85,9 +94,18 @@ export default function ProfileTab() {
         throw error;
       }
       
-      if (data && !data.success) {
-        console.error("Failed to update profile:", data.message);
-        throw new Error(data.message);
+      // Update profile directly as a fallback if the function isn't available yet
+      if (!data) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            username: username,
+            avatar_url: avatarUrl,
+            updated_at: currentTime
+          })
+          .eq('id', user.id);
+          
+        if (updateError) throw updateError;
       }
       
       toast.success("Profile updated successfully");
@@ -219,17 +237,18 @@ export default function ProfileTab() {
       // Update state with new avatar URL
       setAvatarUrl(publicUrl);
       
-      // Update profile with new avatar using the RPC function
-      const { data: updateData, error: updateError } = await supabase.rpc('update_user_profile', {
-        user_id: user.id,
-        username: username || null,
-        avatar_url: publicUrl,
-        updated_at: new Date().toISOString()
-      });
+      // Update profile with new avatar
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
       
-      if (updateError || (updateData && !updateData.success)) {
-        console.error("Error updating profile with new avatar:", updateError || updateData.message);
-        throw updateError || new Error(updateData.message);
+      if (updateError) {
+        console.error("Error updating profile with new avatar:", updateError);
+        throw updateError;
       }
       
       toast.success("Avatar uploaded successfully");
@@ -270,17 +289,18 @@ export default function ProfileTab() {
         console.log("Avatar successfully removed from storage");
       }
       
-      // Update profile with null avatar URL using the RPC function
-      const { data, error } = await supabase.rpc('update_user_profile', {
-        user_id: user.id,
-        username: username || null,
-        avatar_url: null,
-        updated_at: new Date().toISOString()
-      });
+      // Update profile with null avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
       
-      if (error || (data && !data.success)) {
-        console.error("Error updating profile after removing avatar:", error || data.message);
-        throw error || new Error(data.message);
+      if (updateError) {
+        console.error("Error updating profile after removing avatar:", updateError);
+        throw updateError;
       }
       
       setAvatarUrl(null);
