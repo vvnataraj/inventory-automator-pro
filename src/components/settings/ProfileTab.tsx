@@ -62,6 +62,7 @@ export default function ProfileTab() {
       
       if (!user) return;
       
+      // Get profile from profiles table
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -90,26 +91,32 @@ export default function ProfileTab() {
       
       if (!user) return;
       
-      // Update only the profiles table, not the auth.users table
+      // Important: Only update the profiles table
       const updates = {
         username,
         avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
       };
       
-      // Update the profiles table only
-      const { error } = await supabase
+      console.log("Updating profile with:", updates);
+      
+      // Only update the profiles table
+      const { data, error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user.id);
+      
+      // Debug the response
+      console.log("Update response:", { data, error });
         
       if (error) {
+        console.error("Error updating profile:", error);
         throw error;
       }
       
       toast.success("Profile updated successfully");
       fetchProfile();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
     } finally {
@@ -193,10 +200,15 @@ export default function ProfileTab() {
       setAvatarUrl(publicUrl);
       
       // Immediately update profile with new avatar
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
         .eq('id', user.id);
+      
+      if (error) {
+        console.error("Error updating profile with new avatar:", error);
+        throw error;
+      }
       
       toast.success("Avatar uploaded successfully");
     } catch (error) {
