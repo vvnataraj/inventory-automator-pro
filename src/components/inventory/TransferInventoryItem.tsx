@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { InventoryItem, TransferData } from "@/types/inventory";
 import { useLocations } from "@/hooks/useLocations";
 import { PackingSlipDialog } from "./PackingSlipDialog";
@@ -118,81 +119,83 @@ export const TransferInventoryItem = ({ item, onTransfer, showLabel = false }: T
               Move {item.name} between locations
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="fromLocation" className="text-right">From Location</Label>
-                <div className="col-span-3">
-                  <Select
-                    value={fromLocation}
-                    onValueChange={setFromLocation}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select source location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableLocations.map(location => (
-                        <SelectItem key={location} value={location}>
-                          {location}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="toLocation" className="text-right">To Location</Label>
-                <div className="col-span-3">
-                  <Select
-                    value={toLocation}
-                    onValueChange={setToLocation}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select destination location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableLocations
-                        .filter(loc => loc !== fromLocation)
-                        .map(location => (
+          <ScrollArea className="max-h-[60vh]">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="fromLocation" className="text-right">From Location</Label>
+                  <div className="col-span-3">
+                    <Select
+                      value={fromLocation}
+                      onValueChange={setFromLocation}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select source location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableLocations.map(location => (
                           <SelectItem key={location} value={location}>
                             {location}
                           </SelectItem>
                         ))}
-                    </SelectContent>
-                  </Select>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="toLocation" className="text-right">To Location</Label>
+                  <div className="col-span-3">
+                    <Select
+                      value={toLocation}
+                      onValueChange={setToLocation}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select destination location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableLocations
+                          .filter(loc => loc !== fromLocation)
+                          .map(location => (
+                            <SelectItem key={location} value={location}>
+                              {location}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="quantity" className="text-right">Quantity</Label>
+                  <Input
+                    id="quantity"
+                    name="quantity"
+                    type="number"
+                    min={1}
+                    max={availableStock}
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="col-span-3"
+                  />
+                  <div className="col-span-4 text-xs text-right text-muted-foreground">
+                    Available at {fromLocation}: {availableStock}
+                  </div>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="quantity" className="text-right">Quantity</Label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  type="number"
-                  min={1}
-                  max={availableStock}
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                  className="col-span-3"
-                />
-                <div className="col-span-4 text-xs text-right text-muted-foreground">
-                  Available at {fromLocation}: {availableStock}
-                </div>
+              <div className="flex justify-end gap-3 pt-2 pb-2">
+                <Button type="button" variant="outline" onClick={handleDialogClose}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={quantity <= 0 || quantity > availableStock || !toLocation || fromLocation === toLocation}
+                >
+                  Transfer
+                </Button>
               </div>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={handleDialogClose}>
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={quantity <= 0 || quantity > availableStock || !toLocation || fromLocation === toLocation}
-              >
-                Transfer
-              </Button>
-            </div>
-          </form>
+            </form>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
       

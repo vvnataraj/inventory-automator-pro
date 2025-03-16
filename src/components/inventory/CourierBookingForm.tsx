@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { TransferData } from "@/types/inventory";
 import { ArrowLeft, Check, Truck } from "lucide-react";
 import { format } from "date-fns";
@@ -62,100 +63,102 @@ export const CourierBookingForm = ({ transferData, onCancel, onComplete }: Couri
         <DialogTitle>Book a Courier</DialogTitle>
       </DialogHeader>
       
-      <form onSubmit={handleSubmit} className="space-y-4 my-4">
-        <div className="space-y-2">
-          <Label htmlFor="reference">Reference Number</Label>
-          <Input 
-            id="reference" 
-            value={transferData.referenceNumber} 
-            readOnly 
-            className="bg-gray-50"
-          />
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
+      <ScrollArea className="max-h-[60vh]">
+        <form onSubmit={handleSubmit} className="space-y-4 my-4 px-1">
           <div className="space-y-2">
-            <Label htmlFor="fromLocation">From Location</Label>
+            <Label htmlFor="reference">Reference Number</Label>
             <Input 
-              id="fromLocation" 
-              value={transferData.fromLocation} 
+              id="reference" 
+              value={transferData.referenceNumber} 
               readOnly 
               className="bg-gray-50"
             />
           </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fromLocation">From Location</Label>
+              <Input 
+                id="fromLocation" 
+                value={transferData.fromLocation} 
+                readOnly 
+                className="bg-gray-50"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="toLocation">To Location</Label>
+              <Input 
+                id="toLocation" 
+                value={transferData.toLocation} 
+                readOnly 
+                className="bg-gray-50"
+              />
+            </div>
+          </div>
+          
           <div className="space-y-2">
-            <Label htmlFor="toLocation">To Location</Label>
+            <Label htmlFor="courier">Courier Service</Label>
+            <Select 
+              value={courierService} 
+              onValueChange={setCourierService}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select courier service" />
+              </SelectTrigger>
+              <SelectContent>
+                {COURIER_SERVICES.map(service => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="pickupDate">Pickup Date</Label>
+              <Input 
+                id="pickupDate" 
+                type="date" 
+                value={pickupDate}
+                min={format(new Date(), "yyyy-MM-dd")}
+                onChange={(e) => setPickupDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pickupTime">Pickup Time</Label>
+              <Input 
+                id="pickupTime" 
+                type="time" 
+                value={pickupTime}
+                onChange={(e) => setPickupTime(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="instructions">Special Instructions (Optional)</Label>
             <Input 
-              id="toLocation" 
-              value={transferData.toLocation} 
-              readOnly 
-              className="bg-gray-50"
+              id="instructions" 
+              value={specialInstructions}
+              onChange={(e) => setSpecialInstructions(e.target.value)}
+              placeholder="Any special instructions for the courier"
             />
           </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="courier">Courier Service</Label>
-          <Select 
-            value={courierService} 
-            onValueChange={setCourierService}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select courier service" />
-            </SelectTrigger>
-            <SelectContent>
-              {COURIER_SERVICES.map(service => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="pickupDate">Pickup Date</Label>
-            <Input 
-              id="pickupDate" 
-              type="date" 
-              value={pickupDate}
-              min={format(new Date(), "yyyy-MM-dd")}
-              onChange={(e) => setPickupDate(e.target.value)}
-            />
+          
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h3 className="font-medium text-sm mb-2">Shipment Details</h3>
+            <p className="text-sm text-gray-600">
+              Item: {transferData.item.name}<br />
+              Quantity: {transferData.quantity}<br />
+              Weight: {transferData.item.weight ? `${transferData.item.weight.value} ${transferData.item.weight.unit}` : "N/A"}
+            </p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="pickupTime">Pickup Time</Label>
-            <Input 
-              id="pickupTime" 
-              type="time" 
-              value={pickupTime}
-              onChange={(e) => setPickupTime(e.target.value)}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="instructions">Special Instructions (Optional)</Label>
-          <Input 
-            id="instructions" 
-            value={specialInstructions}
-            onChange={(e) => setSpecialInstructions(e.target.value)}
-            placeholder="Any special instructions for the courier"
-          />
-        </div>
-        
-        <div className="bg-gray-50 p-4 rounded-md">
-          <h3 className="font-medium text-sm mb-2">Shipment Details</h3>
-          <p className="text-sm text-gray-600">
-            Item: {transferData.item.name}<br />
-            Quantity: {transferData.quantity}<br />
-            Weight: {transferData.item.weight ? `${transferData.item.weight.value} ${transferData.item.weight.unit}` : "N/A"}
-          </p>
-        </div>
-      </form>
+        </form>
+      </ScrollArea>
       
-      <DialogFooter className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:space-x-2">
+      <DialogFooter className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:space-x-2 mt-4">
         <Button 
           type="button" 
           variant="outline" 
