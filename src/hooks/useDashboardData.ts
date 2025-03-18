@@ -34,7 +34,7 @@ export function useDashboardData() {
       },
       {
         name: "Low Stock Items",
-        value: "23",
+        value: "Loading...",
         change: "-12%",
         icon: null,
         link: "/low-stock",
@@ -109,25 +109,47 @@ export function useDashboardData() {
   };
 
   const calculateLowStockItems = () => {
-    const lowStockItems = inventoryItems.filter(item => {
-      const sameSkuItems = inventoryItems.filter(invItem => invItem.sku === item.sku);
-      const totalStock = sameSkuItems.reduce((sum, curr) => sum + curr.stock, 0);
-      
-      const bufferedThreshold = item.lowStockThreshold * 1.1;
-      
-      return totalStock <= bufferedThreshold;
+    // Group items by SKU to get accurate stock counts
+    const skuMap = new Map();
+    
+    // First collect all items by SKU
+    inventoryItems.forEach(item => {
+      if (!skuMap.has(item.sku)) {
+        skuMap.set(item.sku, {
+          ...item,
+          totalStock: item.stock,
+          items: [item]
+        });
+      } else {
+        const existing = skuMap.get(item.sku);
+        existing.totalStock += item.stock;
+        existing.items.push(item);
+      }
     });
     
-    const uniqueLowStockItems = Array.from(
-      new Set(lowStockItems.map(item => item.sku))
-    ).map(sku => lowStockItems.find(item => item.sku === sku));
+    // Then filter for low stock (matches logic in RestockAlerts.tsx)
+    const criticalItems = [];
+    const warningItems = [];
     
-    const count = uniqueLowStockItems.length;
-    setLowStockCount(count);
+    skuMap.forEach(groupedItem => {
+      // Critical: at or below threshold
+      if (groupedItem.totalStock <= groupedItem.lowStockThreshold) {
+        criticalItems.push(groupedItem);
+      } 
+      // Warning: within 2x of threshold but not critical
+      else if (groupedItem.totalStock <= groupedItem.lowStockThreshold * 2) {
+        warningItems.push(groupedItem);
+      }
+    });
+    
+    const totalLowStockCount = criticalItems.length + warningItems.length;
+    console.log(`Dashboard found ${criticalItems.length} critical and ${warningItems.length} warning stock items`);
+    
+    setLowStockCount(totalLowStockCount);
     
     setStats(prevStats => prevStats.map(stat => 
       stat.name === "Low Stock Items" 
-        ? { ...stat, value: count.toString() } 
+        ? { ...stat, value: totalLowStockCount.toString() } 
         : stat
     ));
   };
