@@ -16,7 +16,7 @@ export const LoginBranding = () => {
         <span className="font-bold text-6xl bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent mb-2">
           STOCK<span className="text-purple-600">topus</span>
         </span>
-        <span className="text-2xl text-gray-600">Many hands make light work</span>
+        <span className="text-2xl text-gray-600">It's like having 8 arms but better, it's like having 9 arms.</span>
       </div>
       <p className="mt-6 text-lg text-gray-700 max-w-md">
         Efficiently manage your inventory, track orders, and analyze sales all in one place. Take control of your business today.
