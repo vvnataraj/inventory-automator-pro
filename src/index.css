@@ -59,6 +59,18 @@
     @apply bg-background text-foreground font-inter;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* Fix for gradient text in export */
+  .gradient-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+  
+  .force-gradient {
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    color: transparent !important;
+  }
 }
 
 @layer utilities {
