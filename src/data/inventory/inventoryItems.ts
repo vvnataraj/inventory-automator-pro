@@ -8,7 +8,7 @@ import { storageItems } from "./categories/storage";
 import { paintItems } from "./categories/paint";
 import { electricalItems } from "./categories/electrical";
 import { gardenItems } from "./categories/garden";
-import { kitchenItems } from "./categories/kitchen";
+import { kitchenItems, graniteCatItems } from "./categories/kitchen";
 
 // Combine all inventory items from different categories
 export const staticInventoryItems: InventoryItem[] = [
@@ -20,7 +20,8 @@ export const staticInventoryItems: InventoryItem[] = [
   ...paintItems,
   ...electricalItems,
   ...gardenItems,
-  ...kitchenItems
+  ...kitchenItems,
+  ...graniteCatItems
 ];
 
 // Generate the inventory items once

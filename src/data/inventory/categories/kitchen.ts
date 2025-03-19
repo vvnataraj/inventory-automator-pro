@@ -502,4 +502,3 @@ export const graniteCatItems: InventoryItem[] = [
     tags: ["cat", "statue", "granite", "decor", "garden", "pair"]
   }
 ];
-
