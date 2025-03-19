@@ -2,6 +2,7 @@
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import html2canvas from "html2canvas";
 
 export const LoginBranding = () => {
   const logoTextRef = useRef<HTMLDivElement>(null);
@@ -11,32 +12,18 @@ export const LoginBranding = () => {
     
     const element = logoTextRef.current;
     
-    // Create canvas with proper dimensions
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    if (!context) return;
-    
-    // Get element dimensions and set canvas size
+    // Get element dimensions
     const rect = element.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    
-    // Set transparent background
-    context.clearRect(0, 0, canvas.width, canvas.height);
     
     // Convert HTML to image
-    const html2canvas = window.html2canvas;
-    if (!html2canvas) {
-      console.error("html2canvas not available");
-      return;
-    }
-    
     html2canvas(element, {
       backgroundColor: null, // Transparent background
       scale: 2, // Better quality
       logging: false,
       useCORS: true,
       allowTaint: true,
+      width: rect.width,
+      height: rect.height
     }).then(canvas => {
       // Convert canvas to blob and download
       canvas.toBlob((blob) => {
